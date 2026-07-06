@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-blue: #0B1D56;
+  --color-brand-gray: #F8F8F8;
+  --color-brand-white: #FFFFFF;
+  --font-sans: var(--font-inter);
+}
+
+@layer base {
+  :root {
+    --background: #FFFFFF;
+    --foreground: #000000;
+  }
+  
+  body {
+    background-color: var(--color-brand-white);
+    color: var(--color-brand-blue);
+    font-family: var(--font-sans), sans-serif;
+  }
+
+  h1 {
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  h2 {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  h3 {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  h4 {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+  h5 {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  h6 {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.5;
+  }
+  /* Since H7 and H8 are non-standard HTML tags, we'll create classes for them, but HTML only supports up to H6 natively.
+     We will use classes like .text-h7, .text-h8 for those, and .text-grande, .text-corrido etc. */
+}
+
+@layer utilities {
+  .text-h7 {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .text-h8 {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .text-grande {
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  .text-corrido {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  .text-corrido-bold {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .text-menor {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  .text-menor-bold {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .text-legenda {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  .text-legenda-bold {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .text-legenda-menor {
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-blue text-brand-white px-[39px] py-[13px] rounded-[25px] font-semibold text-[16px] leading-[1.5] transition-opacity hover:opacity-90 inline-flex items-center justify-center cursor-pointer;
+  }
+  .btn-outlined {
+    @apply bg-transparent text-brand-blue border border-brand-blue px-[39px] py-[13px] rounded-[25px] font-semibold text-[16px] leading-[1.5] transition-colors hover:bg-brand-blue hover:text-brand-white inline-flex items-center justify-center cursor-pointer;
+  }
+  .btn-outlined-white {
+    @apply bg-transparent text-brand-white border border-brand-white px-[39px] py-[13px] rounded-[25px] font-semibold text-[16px] leading-[1.5] transition-colors hover:bg-brand-white hover:text-brand-blue inline-flex items-center justify-center cursor-pointer;
+  }
+}
