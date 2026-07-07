@@ -1,57 +1,64 @@
 import { NextResponse } from "next/server";
-import Papa from "papaparse";
-import fs from "fs";
-import path from "path";
+import { prisma } from "@/lib/db";
+
+// ISR: Configura a revalidação estática da rota API de carros pública para a cada 5 minutos (300 segundos)
+export const revalidate = 300;
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const showAll = searchParams.get("all") === "true";
-    let csvContent = "";
-    
-    // Check if there is an environment variable for Google Sheets CSV URL
-    const sheetUrl = process.env.NEXT_PUBLIC_SHEET_CSV_URL;
-    
-    if (sheetUrl) {
-      // Fetch from Google Sheets and revalidate cache every 60 seconds, with tag "cars" for manual revalidation
-      const response = await fetch(sheetUrl, { next: { revalidate: 60, tags: ["cars"] } });
-      if (response.ok) {
-        csvContent = await response.text();
-      }
-    }
-    
-    // Fallback: If no sheetUrl or fetch failed, read local CSV file
-    if (!csvContent) {
-      const filePath = path.join(process.cwd(), "public", "data", "veiculos.csv");
-      csvContent = fs.readFileSync(filePath, "utf8");
-    }
 
-    // Parse CSV to JSON
-    const parsed = Papa.parse(csvContent, {
-      header: true,
-      skipEmptyLines: true,
+    // Busca os carros ordenando do mais recente para o mais antigo
+    const dbCars = await prisma.car.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
-    // Format fields (convert categories, accessories to array, ensure prices/mileage are readable)
-    const cars = parsed.data
+    // Mapeia e traduz os campos para manter total compatibilidade com o frontend do site
+    const formattedCars = dbCars
       .map((car) => {
-        // Split accessories by comma and trim whitespaces
+        // Converte os acessórios em string para um array esperado pelo frontend
         const accessoriesList = car.accessories 
           ? car.accessories.split(",").map(item => item.trim()).filter(Boolean)
           : [];
 
+        // Trata o array de fotos no Supabase Storage.imageUrl aponta para a primeira foto
+        const primaryImage = car.images && car.images.length > 0 
+          ? car.images[0] 
+          : "/images/ford ka.png"; // Fallback caso esteja sem imagem
+
+        // Traduz o status do banco para compatibilidade da listagem administrativa em português
+        const statusPt = car.status === "sold" ? "Vendido" : "Ativo";
+
         return {
-          ...car,
+          id: car.id,
+          brand: car.brand,
+          model: car.model,
+          title: `${car.brand} ${car.model}`,
+          subtitle: car.description || "",
+          year: car.year,
+          mileage: car.mileage,
+          transmission: car.transmission,
+          price: car.price,
+          category: car.category,
+          imageUrl: primaryImage,
+          images: car.images,
           accessories: accessoriesList,
+          status: statusPt,
+          // Logs CRM
+          buyerName: car.buyerName || "",
+          salePrice: car.salePrice || "",
+          saleDate: car.saleDate || "",
         };
       })
-      // Filter: show all if requested, otherwise show only active (or blank status)
-      .filter((car) => showAll || !car.status || car.status.toLowerCase() === "ativo");
+      // Se showAll for falso, filtra apenas carros Ativos (esconde os vendidos do catálogo público)
+      .filter((car) => showAll || car.status.toLowerCase() === "ativo");
 
-
-    return NextResponse.json(cars);
+    return NextResponse.json(formattedCars);
   } catch (error) {
-    console.error("Backend Database Error:", error);
-    return NextResponse.json({ error: "Failed to retrieve database content" }, { status: 500 });
+    console.error("Erro na leitura de veículos (GET /api/cars):", error);
+    return NextResponse.json({ error: "Falha ao carregar catálogo do banco PostgreSQL." }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { signIn, signOut } from "next-auth/react";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -44,20 +45,30 @@ export default function AdminPage() {
   });
 
   // Identificação rápida dos cargos
-  const isAdmin = user?.cargo?.toLowerCase() === "admin";
-  const isGerente = user?.cargo?.toLowerCase() === "gerente";
-  const isVendedor = user?.cargo?.toLowerCase() === "vendedor";
+  const isAdmin = user?.role?.toLowerCase() === "admin";
+  const isGerente = user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "admin"; // Gerente ou Admin
+  const isVendedor = user?.role?.toLowerCase() === "seller";
 
-  // Verifica autenticação inicial
+  // Tradução do cargo para exibição amigável
+  const getRoleBadge = (role) => {
+    switch (role?.toLowerCase()) {
+      case "admin": return "Administrador";
+      case "manager": return "Gerente";
+      case "seller": return "Vendedor";
+      default: return "Funcionário";
+    }
+  };
+
+  // Verifica autenticação inicial usando a rota nativa do NextAuth
   useEffect(() => {
     async function checkAuth() {
       try {
-        const res = await fetch("/api/admin/auth");
+        const res = await fetch("/api/auth/session");
         if (res.ok) {
-          const data = await res.json();
-          if (data.isAuthenticated && data.user) {
+          const session = await res.json();
+          if (session && session.user) {
             setIsAuthenticated(true);
-            setUser(data.user);
+            setUser(session.user);
             fetchCars();
           }
         }
@@ -88,50 +99,52 @@ export default function AdminPage() {
     }
   }
 
-  // Login do Administrador/Funcionário
+  // Login do Administrador/Funcionário via NextAuth
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ login, password }),
+      // Executa o signin no NextAuth usando o credentials provider
+      const res = await signIn("credentials", {
+        redirect: false,
+        login,
+        password,
       });
-      if (res.ok) {
-        const data = await res.json();
-        setIsAuthenticated(true);
-        setUser(data.user);
+
+      if (res.ok && !res.error) {
+        // Busca a sessão recém criada para recuperar dados do funcionário
+        const sessionRes = await fetch("/api/auth/session");
+        const session = await sessionRes.json();
         
-        if (data.user.cargo.toLowerCase() === "vendedor") {
+        setIsAuthenticated(true);
+        setUser(session.user);
+        
+        if (session.user.role.toLowerCase() === "seller") {
           setActiveTab("estoque");
         }
         
         fetchCars();
       } else {
-        const data = await res.json();
-        setError(data.error || "Login ou senha incorretos.");
+        setError(res.error || "Login ou senha incorretos.");
       }
     } catch (err) {
-      setError("Erro ao autenticar.");
+      setError("Erro ao se comunicar com o servidor de autenticação.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Logout do Administrador
+  // Logout via NextAuth
   const handleLogout = async () => {
     try {
-      const res = await fetch("/api/admin/auth", { method: "DELETE" });
-      if (res.ok) {
-        setIsAuthenticated(false);
-        setUser(null);
-        setCars([]);
-        setLogin("");
-        setPassword("");
-        clearUploadStates();
-      }
+      await signOut({ redirect: false });
+      setIsAuthenticated(false);
+      setUser(null);
+      setCars([]);
+      setLogin("");
+      setPassword("");
+      clearUploadStates();
     } catch (err) {
       console.error("Erro ao efetuar logout:", err);
     }
@@ -214,11 +227,42 @@ export default function AdminPage() {
     setActionLoading(true);
     setError("");
 
+    let finalImageUrl = formCar.imageUrl;
+
+    // 1. Se houver imagem local selecionada do celular, faz upload no Supabase Storage primeiro
+    if (uploadedImage) {
+      try {
+        const uploadRes = await fetch("/api/admin/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: uploadedImage, imageName: uploadedImageName }),
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Erro de comunicação com o servidor de upload.");
+        }
+
+        const uploadResult = await uploadRes.json();
+
+        if (uploadResult.error) {
+          throw new Error(uploadResult.error);
+        }
+
+        finalImageUrl = uploadResult.imageUrl;
+      } catch (err) {
+        setError(`Falha ao fazer upload da imagem: ${err.message}`);
+        setActionLoading(false);
+        return;
+      }
+    }
+
+    // 2. Envia os dados do carro e a URL pública para o banco de dados (Prisma/PostgreSQL)
     const action = editingCar ? "update" : "create";
     const requestBody = {
       action,
       car: {
         ...formCar,
+        imageUrl: finalImageUrl, // URL final salva no banco
         accessories: typeof formCar.accessories === "string" 
           ? formCar.accessories 
           : formCar.accessories.join(", "),
@@ -227,12 +271,6 @@ export default function AdminPage() {
 
     if (editingCar) {
       requestBody.id = editingCar.id;
-    }
-
-    // Se houver uma foto carregada do celular, anexa no corpo
-    if (uploadedImage) {
-      requestBody.image = uploadedImage;
-      requestBody.imageName = uploadedImageName;
     }
 
     try {
@@ -260,10 +298,10 @@ export default function AdminPage() {
         setActiveTab("estoque");
         fetchCars();
       } else {
-        setError(result.error || "Ocorreu um erro ao atualizar a planilha.");
+        setError(result.error || "Ocorreu um erro ao atualizar os dados.");
       }
     } catch (err) {
-      setError("Erro ao salvar alterações.");
+      setError("Erro ao salvar alterações no banco de dados.");
     } finally {
       setActionLoading(false);
     }
@@ -273,7 +311,7 @@ export default function AdminPage() {
   const handleDeleteCar = async (id) => {
     if (!isAdmin) return; 
     
-    if (!confirm("Tem certeza que deseja excluir permanentemente este veículo da planilha?")) return;
+    if (!confirm("Tem certeza que deseja excluir permanentemente este veículo?")) return;
     setActionLoading(true);
     try {
       const res = await fetch("/api/admin/cars", {
@@ -418,14 +456,14 @@ export default function AdminPage() {
         <main className="flex-grow flex items-center justify-center p-6">
           <div className="bg-white border border-gray-200 rounded-[20px] p-8 w-full max-w-[450px] shadow-lg">
             <h2 className="text-[28px] font-extrabold text-brand-blue uppercase mb-2 text-center">Painel Dri-Car</h2>
-            <p className="text-gray-500 text-sm text-center mb-6">Autenticação de Funcionários</p>
+            <p className="text-gray-500 text-sm text-center mb-6">Autenticação de Funcionários (NextAuth)</p>
             
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Usuário (Login)</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">E-mail (Login)</label>
                 <input 
-                  type="text"
-                  placeholder="Ex: gabriel, carlos.gerente"
+                  type="email"
+                  placeholder="Ex: gabriel@dricar.com"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue bg-white text-gray-800"
@@ -473,8 +511,8 @@ export default function AdminPage() {
           <div>
             <h1 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none">Painel de Controle</h1>
             <p className="text-gray-500 text-sm mt-2">
-              Funcionário: <strong className="text-brand-blue">{user?.nome}</strong> 
-              <span className="ml-2 bg-brand-blue/10 text-brand-blue px-2.5 py-0.5 rounded-full text-xs font-bold uppercase">{user?.cargo}</span>
+              Funcionário: <strong className="text-brand-blue">{user?.name}</strong> 
+              <span className="ml-2 bg-brand-blue/10 text-brand-blue px-2.5 py-0.5 rounded-full text-xs font-bold uppercase">{getRoleBadge(user?.role)}</span>
             </p>
           </div>
           <button 
@@ -528,7 +566,7 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* Indicadores CRM */}
+        {/* Indicadores CRM (Apenas Admin) */}
         {activeTab !== "cadastrar" && isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
@@ -554,7 +592,7 @@ export default function AdminPage() {
         )}
         {actionLoading && (
           <div className="text-brand-blue text-sm font-semibold bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 animate-pulse">
-            Processando gravação e upload de imagem no Google Drive... Aguarde.
+            Processando gravação no banco de dados e upload de imagem no Supabase Storage... Aguarde.
           </div>
         )}
 
@@ -582,7 +620,7 @@ export default function AdminPage() {
                   ) : (
                     activeCars.map((car) => (
                       <tr key={car.id} className="hover:bg-gray-50/50">
-                        <td className="p-4 text-sm font-bold text-gray-600">{car.id}</td>
+                        <td className="p-4 text-sm font-bold text-gray-600">{car.id.substring(0, 8)}...</td>
                         <td className="p-4">
                           <div className="font-bold text-brand-blue text-sm flex items-center gap-3">
                             {car.imageUrl && (
@@ -655,7 +693,7 @@ export default function AdminPage() {
                   ) : (
                     soldCars.map((car) => (
                       <tr key={car.id} className="hover:bg-gray-50/50">
-                        <td className="p-4 text-sm font-bold text-gray-600">{car.id}</td>
+                        <td className="p-4 text-sm font-bold text-gray-600">{car.id.substring(0, 8)}...</td>
                         <td className="p-4">
                           <div className="font-bold text-brand-blue text-sm flex items-center gap-3">
                             {car.imageUrl && (
@@ -701,7 +739,7 @@ export default function AdminPage() {
         {activeTab === "cadastrar" && !isVendedor && (
           <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm max-w-[800px] mx-auto">
             <h3 className="text-xl font-extrabold text-brand-blue uppercase mb-6">
-              {editingCar ? `Editar Veículo (ID: ${editingCar.id})` : "Cadastrar Novo Veículo"}
+              {editingCar ? `Editar Veículo (ID: ${editingCar.id.substring(0, 8)}...)` : "Cadastrar Novo Veículo"}
             </h3>
 
             <form onSubmit={handleFormSubmit} className="flex flex-col gap-6">
@@ -718,7 +756,7 @@ export default function AdminPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Versão / Motorização</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Versão / Motorização (Descrição)</label>
                   <input 
                     type="text" 
                     placeholder="Ex: SE 1.0 MT FLEX"
@@ -792,7 +830,6 @@ export default function AdminPage() {
                   </select>
                 </div>
                 
-                {/* DUAL IMAGE UPLOAD SYSTEM */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Imagem do Veículo</label>
                   <div className="flex flex-col gap-2">
@@ -829,7 +866,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Pré-visualização da Imagem selecionada */}
+              {/* Pré-visualização da Imagem */}
               {(uploadedImage || formCar.imageUrl) && (
                 <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 flex flex-col items-center justify-center">
                   <span className="text-[10px] font-bold text-gray-400 uppercase mb-2">Pré-visualização da Foto</span>

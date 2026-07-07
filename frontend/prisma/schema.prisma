@@ -1,0 +1,49 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  admin
+  manager
+  seller
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Senha criptografada com bcrypt
+  role      Role     @default(seller)
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+model Car {
+  id           String   @id @default(uuid())
+  brand        String   // Marca (ex: Ford)
+  model        String   // Modelo (ex: Ka)
+  year         String   // Ano (ex: 2016/2017)
+  mileage      String   // Quilometragem (ex: 51.000 km)
+  transmission String   // Câmbio (ex: Manual, Automático)
+  price        String   // Preço formatado (ex: R$ 44.599)
+  category     String   // Categoria (ex: Hatch, Sedan, SUVs, Picape)
+  description  String?  // Versão/Motorização ou Descrição (antigo subtitle)
+  accessories  String?  // Acessórios em texto separado por vírgulas
+  images       String[] // Array de URLs de imagens no Supabase Storage
+  status       String   @default("active") // active (ativo), sold (vendido)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Log de Venda (CRM)
+  buyerName    String?  @map("buyer_name")
+  salePrice    String?  @map("sale_price")
+  saleDate     String?  @map("sale_date")
+
+  @@map("cars")
+}

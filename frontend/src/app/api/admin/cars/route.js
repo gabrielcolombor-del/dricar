@@ -1,73 +1,150 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { revalidateTag } from "next/cache";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { prisma } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 
 export async function POST(request) {
   try {
-    // 1. Verificação de sessão (autenticação de admin)
-    const cookieStore = await cookies();
-    const session = cookieStore.get("admin_session");
-    if (!session?.value) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    // 1. Validação de sessão NextAuth no backend (RBAC)
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
     }
 
-    // Decodifica dados do usuário e obtém o cargo
-    const user = JSON.parse(Buffer.from(session.value, "base64").toString("utf-8"));
-    const cargo = user.cargo ? user.cargo.toLowerCase() : "";
+    const user = session.user;
+    const userRole = user.role ? user.role.toLowerCase() : "seller";
 
-    // 2. Extração dos parâmetros da requisição
     const body = await request.json();
-    const { action, status } = body;
+    const { action, id, car, status } = body;
 
-    // 3. Controle de Acesso Baseado em Cargos (RBAC) no Backend
-    // Vendedores possuem permissões restritas. Só podem dar baixa em carros (marcar como vendido).
-    if (cargo === "vendedor") {
+    // 2. Proteção baseada em cargo (Role-Based Access Control)
+    // Vendedores (seller) só podem marcar carros como vendidos (updateStatus -> Vendido)
+    if (userRole === "seller") {
       const isMarkingAsSold = action === "updateStatus" && status?.toLowerCase() === "vendido";
       if (!isMarkingAsSold) {
         return NextResponse.json(
-          { error: `Permissão insuficiente. O cargo 'Vendedor' não tem permissão para realizar esta operação (${action}).` },
+          { error: "Acesso negado. Vendedores só possuem permissão para registrar vendas." },
           { status: 403 }
         );
       }
     }
 
-    // Gerentes e Admins possuem acesso completo. Caso precise futuramente diferenciar Gerente de Admin:
-    // if (cargo === "gerente") { ... }
-
-    const googleScriptUrl = process.env.GOOGLE_SCRIPT_API_URL;
-
-    // Se estiver em desenvolvimento local inicial sem planilha
-    if (!googleScriptUrl) {
-      // Simula retorno de sucesso local
-      return NextResponse.json({ success: true, localDev: true });
+    // Apenas Administradores (admin) podem excluir registros permanentemente
+    if (action === "delete" && userRole !== "admin") {
+      return NextResponse.json(
+        { error: "Permissão insuficiente. Apenas Administradores podem deletar registros permanentemente." },
+        { status: 403 }
+      );
     }
 
-    // 4. Encaminha a ação para o Google Apps Script da planilha
-    const response = await fetch(googleScriptUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
+    // 3. Execução das operações no banco de dados Supabase via Prisma
 
-    if (!response.ok) {
-      throw new Error(`O script do Google Sheets retornou erro (status ${response.status})`);
+    // AÇÃO: CADASTRAR CARRO
+    if (action === "create") {
+      const parts = car.title.trim().split(" ");
+      const brand = parts[0] || "Sem Marca";
+      const model = parts.slice(1).join(" ") || "Sem Modelo";
+
+      const newCar = await prisma.car.create({
+        data: {
+          brand,
+          model,
+          year: car.year,
+          mileage: car.mileage,
+          transmission: car.transmission,
+          price: car.price,
+          category: car.category,
+          description: car.subtitle || "",
+          accessories: car.accessories || "",
+          images: car.imageUrl ? [car.imageUrl] : [],
+          status: "active",
+        },
+      });
+
+      // Limpa os caches estáticos do Next.js
+      revalidatePath("/veiculos");
+      revalidatePath("/");
+
+      return NextResponse.json({ success: true, id: newCar.id });
     }
 
-    const result = await response.json();
+    // AÇÃO: EDITAR CARRO
+    if (action === "update") {
+      const parts = car.title.trim().split(" ");
+      const brand = parts[0] || "Sem Marca";
+      const model = parts.slice(1).join(" ") || "Sem Modelo";
 
-    // 5. Se a ação na planilha foi bem-sucedida, limpa o cache de carros do Next.js
-    if (result.success) {
-      revalidateTag("cars");
+      const updateData = {
+        brand,
+        model,
+        year: car.year,
+        mileage: car.mileage,
+        transmission: car.transmission,
+        price: car.price,
+        category: car.category,
+        description: car.subtitle || "",
+        accessories: car.accessories || "",
+      };
+
+      // Se enviou uma nova imagem, substitui a atual
+      if (car.imageUrl) {
+        updateData.images = [car.imageUrl];
+      }
+
+      await prisma.car.update({
+        where: { id },
+        data: updateData,
+      });
+
+      // Revalida caches estáticos das páginas públicas
+      revalidatePath("/veiculos");
+      revalidatePath(`/veiculos/${id}`);
+      revalidatePath("/");
+
+      return NextResponse.json({ success: true });
     }
 
-    return NextResponse.json(result);
+    // AÇÃO: EXCLUIR CARRO
+    if (action === "delete") {
+      await prisma.car.delete({
+        where: { id },
+      });
+
+      revalidatePath("/veiculos");
+      revalidatePath(`/veiculos/${id}`);
+      revalidatePath("/");
+
+      return NextResponse.json({ success: true });
+    }
+
+    // AÇÃO: ATUALIZAR STATUS (VENDIDO OU ATIVO)
+    if (action === "updateStatus") {
+      const isSold = status.toLowerCase() === "vendido";
+      
+      await prisma.car.update({
+        where: { id },
+        data: {
+          status: isSold ? "sold" : "active",
+          // Se for vendido, insere dados do CRM, senão zera
+          buyerName: isSold ? body.buyerName : null,
+          salePrice: isSold ? body.salePrice : null,
+          saleDate: isSold ? body.saleDate : null,
+        },
+      });
+
+      // Limpa os caches das páginas estáticas do site
+      revalidatePath("/veiculos");
+      revalidatePath(`/veiculos/${id}`);
+      revalidatePath("/");
+
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: "Ação não suportada." }, { status: 400 });
+
   } catch (error) {
-    console.error("Erro no processamento de carros do admin:", error);
-    return NextResponse.json(
-      { success: false, error: error.message || "Falha na comunicação com o banco de dados." },
-      { status: 500 }
-    );
+    console.error("Erro na API administrativa de carros:", error);
+    return NextResponse.json({ error: `Erro na gravação: ${error.message}` }, { status: 500 });
   }
 }
