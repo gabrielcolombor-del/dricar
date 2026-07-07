@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-// ISR: Configura a revalidação estática da rota API de carros pública para a cada 5 minutos (300 segundos)
-export const revalidate = 300;
+// Rota dinâmica devido ao uso de query parameters (?all=true)
+export const dynamic = "force-dynamic";
 
 export async function GET(request) {
   try {
