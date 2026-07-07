@@ -5,12 +5,10 @@
  * 1. Na sua Planilha Google, clique em Extensões -> Apps Script.
  * 2. Cole este código no editor (substituindo todo o conteúdo atual).
  * 3. Clique em "Salvar" (ícone de disquete).
- * 4. Clique em "Implantar" (Deploy) -> "Nova implantação" (New deployment).
- * 5. Selecione o tipo "App da Web" (Web App).
- * 6. Em "Executar como", selecione "Eu (seu-email@gmail.com)".
- * 7. Em "Quem tem acesso", selecione "Qualquer pessoa" (Anyone) - Necessário para o Next.js conseguir enviar os dados.
- * 8. Clique em "Implantar" e conceda as permissões de acesso à planilha se solicitado.
- * 9. Copie a URL do App da Web gerada e adicione no arquivo `.env.local` na variável `GOOGLE_SCRIPT_API_URL`.
+ * 4. Clique em "Implantar" (Deploy) ➔ "Gerenciar implantações" (Manage deployments).
+ * 5. Clique no ícone de lápis (Editar) ao lado do seu Web App ativo.
+ * 6. Na opção "Versão" (Version), altere para "Nova versão" (New version).
+ * 7. Clique em "Implantar" (isso atualizará o script mantendo a mesma URL na Vercel!).
  */
 
 function doPost(e) {
@@ -56,7 +54,12 @@ function doPost(e) {
         throw new Error("Nenhum usuário cadastrado no sistema.");
       }
       
-      var userHeaders = usersSheet.getRange(1, 1, 1, usersSheet.getLastColumn()).getValues()[0];
+      // Obtém e padroniza cabeçalhos em minúsculo e sem espaços nas pontas
+      var rawUserHeaders = usersSheet.getRange(1, 1, 1, usersSheet.getLastColumn()).getValues()[0];
+      var userHeaders = rawUserHeaders.map(function(h) {
+        return h.toString().toLowerCase().trim();
+      });
+      
       var nameColIdx = userHeaders.indexOf("nome") + 1;
       var roleColIdx = userHeaders.indexOf("cargo") + 1;
       var loginColIdx = userHeaders.indexOf("login") + 1;
@@ -72,12 +75,14 @@ function doPost(e) {
         var row = usersData[u];
         var dbLogin = row[loginColIdx - 1].toString().trim();
         var dbPassword = row[passColIdx - 1].toString().trim();
+        var dbName = row[nameColIdx - 1].toString().trim();
+        var dbRole = row[roleColIdx - 1].toString().trim();
         
-        // Validação case-insensitive para o login
+        // Validação de login (case-insensitive) e senha (case-sensitive)
         if (dbLogin.toLowerCase() === reqLogin.toLowerCase() && dbPassword === reqPassword) {
           var matchedUser = {
-            nome: row[nameColIdx - 1].toString(),
-            cargo: row[roleColIdx - 1].toString(),
+            nome: dbName,
+            cargo: dbRole,
             login: dbLogin
           };
           return createJsonResponse({ success: true, user: matchedUser });
@@ -91,24 +96,25 @@ function doPost(e) {
     // GERENCIAMENTO DE CARROS (AÇÕES DO ESTOQUE E CRM)
     // ----------------------------------------------------
     var sheet = spreadsheet.getActiveSheet();
-    // Garante que não mexeremos na aba Usuários por engano ao manipular carros
     if (sheet.getName() === "Usuários") {
-      // Se estiver focado na aba de usuários por padrão, pega a primeira aba de carros (geralmente a aba principal)
       sheet = spreadsheet.getSheets()[0];
     }
     
     // Obtém cabeçalhos dos veículos
     var lastCol = Math.max(1, sheet.getLastColumn());
-    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var rawHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var headers = rawHeaders.map(function(h) {
+      return h.toString().toLowerCase().trim();
+    });
     
     function getOrAddColumn(colName) {
-      var idx = headers.indexOf(colName);
+      var idx = headers.indexOf(colName.toLowerCase().trim());
       if (idx !== -1) {
         return idx + 1;
       }
       var newColIndex = lastCol + 1;
       sheet.getRange(1, newColIndex).setValue(colName);
-      headers.push(colName);
+      headers.push(colName.toLowerCase().trim());
       lastCol = newColIndex;
       return newColIndex;
     }
