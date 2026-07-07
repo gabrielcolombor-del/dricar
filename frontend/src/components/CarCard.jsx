@@ -8,7 +8,7 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
       {/* Imagem */}
       <div className="relative h-[180px] w-full bg-[#E5E5E5]">
         {imageUrl ? (
-          <Image src={imageUrl} alt={title} fill className="object-cover" />
+          <img src={imageUrl} alt={title} className="w-full h-full object-cover animate-fade-in" />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-10 h-10 mb-2 opacity-50">

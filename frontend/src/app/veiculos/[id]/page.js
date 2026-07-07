@@ -79,7 +79,7 @@ export default function ProductPage() {
           <div className="flex-1">
             <div className="relative bg-gray-200 w-full aspect-[4/3] lg:aspect-video rounded-xl flex items-center justify-center text-gray-400 mb-4 overflow-hidden shadow-md">
               {car.imageUrl ? (
-                <Image src={car.imageUrl} alt={`${car.title} ${car.subtitle}`} fill className="object-cover" priority />
+                <img src={car.imageUrl} alt={`${car.title} ${car.subtitle}`} className="w-full h-full object-cover" />
               ) : (
                 <span className="text-sm">Sem Foto</span>
               )}
