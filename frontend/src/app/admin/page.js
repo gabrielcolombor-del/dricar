@@ -16,6 +16,16 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("estoque"); // estoque, vendas, cadastrar
 
+  // Estado para gerenciamento de usuários (Apenas Administrador)
+  const [usersList, setUsersList] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [newUserForm, setNewUserForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "seller",
+  });
+
   // Estado para cadastro/edição
   const [editingCar, setEditingCar] = useState(null);
   const [formCar, setFormCar] = useState({
@@ -98,6 +108,86 @@ export default function AdminPage() {
       setLoading(false);
     }
   }
+
+  // Busca todos os usuários cadastrados (Apenas Admin)
+  async function fetchUsers() {
+    setUsersLoading(true);
+    try {
+      const res = await fetch("/api/admin/users");
+      if (res.ok) {
+        const data = await res.json();
+        setUsersList(data);
+      } else {
+        const errData = await res.json();
+        setError(errData.error || "Erro ao carregar lista de funcionários.");
+      }
+    } catch (err) {
+      setError("Erro de rede ao buscar funcionários.");
+    } finally {
+      setUsersLoading(false);
+    }
+  }
+
+  // Cria um novo usuário (Apenas Admin)
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    setError("");
+    setActionLoading(true);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUserForm),
+      });
+
+      if (res.ok) {
+        setNewUserForm({
+          name: "",
+          email: "",
+          password: "",
+          role: "seller",
+        });
+        fetchUsers();
+      } else {
+        const errData = await res.json();
+        setError(errData.error || "Erro ao criar funcionário.");
+      }
+    } catch (err) {
+      setError("Erro ao se comunicar com o servidor.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Exclui um usuário (Apenas Admin)
+  const handleDeleteUser = async (id) => {
+    if (!confirm("Tem certeza que deseja excluir esta conta?")) return;
+    setError("");
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        fetchUsers();
+      } else {
+        const errData = await res.json();
+        setError(errData.error || "Erro ao excluir funcionário.");
+      }
+    } catch (err) {
+      setError("Erro ao se comunicar com o servidor.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Efeito para carregar usuários quando abrir a aba de gerenciamento
+  useEffect(() => {
+    if (activeTab === "usuarios" && isAdmin) {
+      fetchUsers();
+    }
+  }, [activeTab]);
 
   // Login do Administrador/Funcionário via NextAuth
   const handleLogin = async (e) => {
@@ -460,10 +550,10 @@ export default function AdminPage() {
             
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">E-mail (Login)</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Login / Usuário</label>
                 <input 
-                  type="email"
-                  placeholder="Ex: gabriel@dricar.com"
+                  type="text"
+                  placeholder="Ex: admdricar"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue bg-white text-gray-800"
@@ -564,10 +654,19 @@ export default function AdminPage() {
               {editingCar ? "✏️ Editando Veículo" : "➕ Cadastrar Veículo"}
             </button>
           )}
+
+          {isAdmin && (
+            <button 
+              onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
+              className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            >
+              👥 Gerenciar Contas
+            </button>
+          )}
         </div>
 
         {/* Indicadores CRM (Apenas Admin) */}
-        {activeTab !== "cadastrar" && isAdmin && (
+        {activeTab !== "cadastrar" && activeTab !== "usuarios" && isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
               <span className="text-xs text-gray-400 font-bold uppercase">Faturamento (CRM)</span>
@@ -914,6 +1013,141 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* TAB: GERENCIAR CONTAS (Apenas Admin) */}
+        {activeTab === "usuarios" && isAdmin && (
+          <div className="bg-white border border-gray-200 rounded-[20px] p-8 shadow-sm">
+            <h2 className="text-xl font-extrabold text-brand-blue uppercase mb-6 flex items-center gap-2">
+              👥 Gerenciar Contas de Funcionários
+            </h2>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Form de Cadastro */}
+              <div className="bg-gray-50 border border-gray-150 rounded-xl p-6 h-fit">
+                <h3 className="text-sm font-bold text-gray-700 uppercase mb-4">Cadastrar Novo Funcionário</h3>
+                
+                <form onSubmit={handleCreateUser} className="flex flex-col gap-4 text-gray-800">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Nome Completo</label>
+                    <input 
+                      type="text"
+                      placeholder="Ex: João Silva"
+                      value={newUserForm.name}
+                      onChange={(e) => setNewUserForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Login / Usuário</label>
+                    <input 
+                      type="text"
+                      placeholder="Ex: joaosilva"
+                      value={newUserForm.email}
+                      onChange={(e) => setNewUserForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
+                    <input 
+                      type="password"
+                      placeholder="Senha de acesso..."
+                      value={newUserForm.password}
+                      onChange={(e) => setNewUserForm(prev => ({ ...prev, password: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Cargo / Nível de Acesso</label>
+                    <select 
+                      value={newUserForm.role}
+                      onChange={(e) => setNewUserForm(prev => ({ ...prev, role: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
+                      required
+                    >
+                      <option value="seller">Vendedor</option>
+                      <option value="manager">Gerente</option>
+                      <option value="admin">Administrador</option>
+                    </select>
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={actionLoading}
+                    className="w-full bg-brand-blue text-white rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-opacity cursor-pointer mt-2"
+                  >
+                    {actionLoading ? "Cadastrando..." : "Cadastrar Funcionário"}
+                  </button>
+                </form>
+              </div>
+
+              {/* Tabela de Usuários */}
+              <div className="lg:col-span-2 overflow-x-auto">
+                <h3 className="text-sm font-bold text-gray-700 uppercase mb-4">Funcionários Ativos</h3>
+                
+                {usersLoading ? (
+                  <div className="py-8 text-center text-gray-400 font-medium">Carregando lista de funcionários...</div>
+                ) : usersList.length === 0 ? (
+                  <div className="py-8 text-center text-gray-400 font-medium">Nenhum funcionário cadastrado no momento.</div>
+                ) : (
+                  <div className="min-w-full overflow-hidden border border-gray-200 rounded-xl">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nome</th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Login</th>
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cargo</th>
+                          <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200 text-gray-700">
+                        {usersList.map((u) => {
+                          const isSelf = u.id === user?.id || u.email === user?.email;
+                          return (
+                            <tr key={u.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full uppercase ${
+                                  u.role?.toLowerCase() === "admin" 
+                                    ? "bg-purple-100 text-purple-800" 
+                                    : u.role?.toLowerCase() === "manager" 
+                                      ? "bg-blue-100 text-blue-800" 
+                                      : "bg-green-100 text-green-800"
+                                }`}>
+                                  {getRoleBadge(u.role)}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                {isSelf ? (
+                                  <span className="text-xs text-gray-400 italic font-medium px-3 py-1.5">Sua Conta</span>
+                                ) : (
+                                  <button 
+                                    onClick={() => handleDeleteUser(u.id)}
+                                    disabled={actionLoading}
+                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    Excluir
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </main>
