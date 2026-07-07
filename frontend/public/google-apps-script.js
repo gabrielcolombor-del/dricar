@@ -1,5 +1,5 @@
 /**
- * Google Apps Script - API de Integração e Autenticação por Cargos para Dricar
+ * Google Apps Script - API de Integração, Autenticação e Upload de Fotos para Dricar
  * 
  * INSTRUÇÕES:
  * 1. Na sua Planilha Google, clique em Extensões -> Apps Script.
@@ -142,6 +142,13 @@ function doPost(e) {
       car.id = nextId.toString();
       car.status = car.status || "Ativo";
       
+      // Se houver uma imagem em Base64 enviada, faz upload no Drive e usa o link gerado
+      if (requestData.image) {
+        var cleanTitle = (car.title || "veiculo").replace(/[^a-zA-Z0-9]/g, "_");
+        var imgName = cleanTitle + "_" + car.id + ".jpg";
+        car.imageUrl = uploadImageToDrive(requestData.image, imgName);
+      }
+      
       var newRow = [];
       for (var j = 0; j < headers.length; j++) {
         var colName = headers[j];
@@ -183,6 +190,14 @@ function doPost(e) {
     // AÇÃO: EDITAR VEÍCULO
     if (action === "update") {
       var updatedCar = requestData.car;
+      
+      // Se houver uma nova imagem em Base64 enviada, faz upload no Drive e atualiza o link
+      if (requestData.image) {
+        var cleanTitle = (updatedCar.title || "veiculo").replace(/[^a-zA-Z0-9]/g, "_");
+        var imgName = cleanTitle + "_" + targetId + "_edit.jpg";
+        updatedCar.imageUrl = uploadImageToDrive(requestData.image, imgName);
+      }
+
       for (var colIdx = 0; colIdx < headers.length; colIdx++) {
         var colName = headers[colIdx];
         if (colName !== "id" && updatedCar[colName] !== undefined) {
@@ -227,6 +242,42 @@ function doPost(e) {
     return createJsonResponse({ success: false, error: err.toString() });
   } finally {
     lock.releaseLock();
+  }
+}
+
+// Função auxiliar para decodificar e fazer upload da imagem no Google Drive
+function uploadImageToDrive(base64Data, fileName) {
+  try {
+    var rawData = base64Data;
+    // Remove o cabeçalho base64 se presente (ex: "data:image/jpeg;base64,")
+    if (base64Data.indexOf(",") !== -1) {
+      rawData = base64Data.split(",")[1];
+    }
+    
+    var decoded = Utilities.base64Decode(rawData);
+    
+    // Cria ou busca a pasta "Imagens Dri-Car" no Drive
+    var folderName = "Imagens Dri-Car";
+    var folders = DriveApp.getFoldersByName(folderName);
+    var folder;
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(folderName);
+    }
+    
+    var blob = Utilities.newBlob(decoded, "image/jpeg", fileName || "carro.jpg");
+    var file = folder.createFile(blob);
+    
+    // Define acesso público de leitura para o arquivo (necessário para incorporar no site)
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    // Link direto e estático de carregamento rápido
+    var fileId = file.getId();
+    var imageUrl = "https://lh3.googleusercontent.com/d/" + fileId;
+    return imageUrl;
+  } catch (err) {
+    throw new Error("Erro ao fazer upload da foto no Google Drive: " + err.toString());
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -28,6 +28,11 @@ export default function AdminPage() {
     category: "Hatch",
     accessories: "",
   });
+
+  // Upload de Foto Local
+  const [uploadedImage, setUploadedImage] = useState(null); // Base64 comprimida
+  const [uploadedImageName, setUploadedImageName] = useState("");
+  const fileInputRef = useRef(null);
 
   // Estado para modal de CRM (Venda)
   const [showCrmModal, setShowCrmModal] = useState(false);
@@ -99,7 +104,6 @@ export default function AdminPage() {
         setIsAuthenticated(true);
         setUser(data.user);
         
-        // Ajusta aba padrão se for vendedor (vendedores só veem estoque)
         if (data.user.cargo.toLowerCase() === "vendedor") {
           setActiveTab("estoque");
         }
@@ -126,9 +130,57 @@ export default function AdminPage() {
         setCars([]);
         setLogin("");
         setPassword("");
+        clearUploadStates();
       }
     } catch (err) {
       console.error("Erro ao efetuar logout:", err);
+    }
+  };
+
+  // Limpa estados de imagem
+  const clearUploadStates = () => {
+    setUploadedImage(null);
+    setUploadedImageName("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Selecionar arquivo do dispositivo e comprimir no Canvas
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const img = new Image();
+        img.src = reader.result;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1200; // Resolução otimizada para web
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Comprime como JPEG com 80% de qualidade (gera arquivos leves ~150KB)
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+          setUploadedImage(compressedDataUrl);
+          setUploadedImageName(file.name.replace(/\.[^/.]+$/, "") + ".jpg");
+          
+          // Esvazia o input de texto do link para evitar ambiguidade
+          setFormCar(prev => ({ ...prev, imageUrl: "" }));
+        };
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -157,7 +209,7 @@ export default function AdminPage() {
   // Submeter Criação / Edição de Carro
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (isVendedor) return; // Bloqueio preventivo no cliente
+    if (isVendedor) return; 
     
     setActionLoading(true);
     setError("");
@@ -175,6 +227,12 @@ export default function AdminPage() {
 
     if (editingCar) {
       requestBody.id = editingCar.id;
+    }
+
+    // Se houver uma foto carregada do celular, anexa no corpo
+    if (uploadedImage) {
+      requestBody.image = uploadedImage;
+      requestBody.imageName = uploadedImageName;
     }
 
     try {
@@ -197,6 +255,7 @@ export default function AdminPage() {
           category: "Hatch",
           accessories: "",
         });
+        clearUploadStates();
         setEditingCar(null);
         setActiveTab("estoque");
         fetchCars();
@@ -212,7 +271,7 @@ export default function AdminPage() {
 
   // Excluir Veículo
   const handleDeleteCar = async (id) => {
-    if (!isAdmin) return; // Apenas admin pode excluir permanentemente
+    if (!isAdmin) return; 
     
     if (!confirm("Tem certeza que deseja excluir permanentemente este veículo da planilha?")) return;
     setActionLoading(true);
@@ -279,7 +338,7 @@ export default function AdminPage() {
 
   // Reativar Carro Sold
   const handleReactivateCar = async (id) => {
-    if (isVendedor) return; // Vendedor não pode reativar
+    if (isVendedor) return; 
     
     setActionLoading(true);
     try {
@@ -309,6 +368,7 @@ export default function AdminPage() {
   const startEditCar = (car) => {
     if (isVendedor) return;
     
+    clearUploadStates();
     setEditingCar(car);
     setFormCar({
       title: car.title || "",
@@ -330,7 +390,7 @@ export default function AdminPage() {
   const activeCars = cars.filter(c => !c.status || c.status.toLowerCase() === "ativo");
   const soldCars = cars.filter(c => c.status && c.status.toLowerCase() === "vendido");
 
-  // Estatísticas CRM (Exibidas apenas para Administradores)
+  // Estatísticas CRM
   const totalSalesRevenue = soldCars.reduce((acc, curr) => {
     const val = Number(curr.salePrice ? curr.salePrice.replace(/\D/g, "") : curr.price.replace(/\D/g, ""));
     return acc + (isNaN(val) ? 0 : val);
@@ -425,30 +485,29 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Tabs Menu (Renderizado condicionalmente por cargo) */}
+        {/* Tabs Menu */}
         <div className="flex border-b border-gray-200 mb-8 gap-6 overflow-x-auto">
           <button 
-            onClick={() => { setActiveTab("estoque"); setEditingCar(null); }}
+            onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
             className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
           >
             📦 Estoque Ativo ({activeCars.length})
           </button>
 
-          {/* Apenas Admins e Gerentes podem ver histórico de vendas/CRM */}
           {!isVendedor && (
             <button 
-              onClick={() => { setActiveTab("vendas"); setEditingCar(null); }}
+              onClick={() => { setActiveTab("vendas"); setEditingCar(null); clearUploadStates(); }}
               className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "vendas" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
             >
               💰 Histórico de Vendas ({soldCars.length})
             </button>
           )}
 
-          {/* Apenas Admins e Gerentes podem cadastrar novos veículos */}
           {!isVendedor && (
             <button 
               onClick={() => {
                 setEditingCar(null);
+                clearUploadStates();
                 setFormCar({
                   title: "",
                   subtitle: "",
@@ -469,7 +528,7 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* Indicadores CRM (Visíveis apenas para Administrador) */}
+        {/* Indicadores CRM */}
         {activeTab !== "cadastrar" && isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
@@ -487,7 +546,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ERROS E LOADINGS DE AÇÃO */}
+        {/* ERROS E LOADINGS */}
         {error && (
           <div className="text-red-600 text-sm font-semibold bg-red-50 p-4 rounded-lg border border-red-100 mb-6">
             {error}
@@ -495,7 +554,7 @@ export default function AdminPage() {
         )}
         {actionLoading && (
           <div className="text-brand-blue text-sm font-semibold bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 animate-pulse">
-            Processando gravação no Google Sheets... Aguarde.
+            Processando gravação e upload de imagem no Google Drive... Aguarde.
           </div>
         )}
 
@@ -525,7 +584,12 @@ export default function AdminPage() {
                       <tr key={car.id} className="hover:bg-gray-50/50">
                         <td className="p-4 text-sm font-bold text-gray-600">{car.id}</td>
                         <td className="p-4">
-                          <div className="font-bold text-brand-blue text-sm">{car.title}</div>
+                          <div className="font-bold text-brand-blue text-sm flex items-center gap-3">
+                            {car.imageUrl && (
+                              <img src={car.imageUrl} alt="" className="w-10 h-8 rounded object-cover bg-gray-100" />
+                            )}
+                            {car.title}
+                          </div>
                           <div className="text-gray-400 text-xs">{car.subtitle}</div>
                         </td>
                         <td className="p-4 text-sm text-gray-600">{car.year}</td>
@@ -541,7 +605,6 @@ export default function AdminPage() {
                               Marcar Vendido
                             </button>
                             
-                            {/* Apenas Admin e Gerente podem editar e remover */}
                             {!isVendedor && (
                               <button 
                                 onClick={() => startEditCar(car)}
@@ -569,7 +632,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 2: HISTÓRICO DE VENDAS (CRM) */}
+        {/* TAB 2: HISTÓRICO DE VENDAS */}
         {activeTab === "vendas" && !isVendedor && (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
@@ -594,7 +657,12 @@ export default function AdminPage() {
                       <tr key={car.id} className="hover:bg-gray-50/50">
                         <td className="p-4 text-sm font-bold text-gray-600">{car.id}</td>
                         <td className="p-4">
-                          <div className="font-bold text-brand-blue text-sm">{car.title}</div>
+                          <div className="font-bold text-brand-blue text-sm flex items-center gap-3">
+                            {car.imageUrl && (
+                              <img src={car.imageUrl} alt="" className="w-10 h-8 rounded object-cover bg-gray-100" />
+                            )}
+                            {car.title}
+                          </div>
                           <div className="text-gray-400 text-xs">{car.subtitle}</div>
                         </td>
                         <td className="p-4 text-sm font-semibold text-gray-700">{car.buyerName || "Não informado"}</td>
@@ -723,18 +791,64 @@ export default function AdminPage() {
                     <option value="Automático">Automático</option>
                   </select>
                 </div>
+                
+                {/* DUAL IMAGE UPLOAD SYSTEM */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Link da Imagem</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: /images/hatch.png ou URL"
-                    value={formCar.imageUrl}
-                    onChange={(e) => setFormCar(prev => ({ ...prev, imageUrl: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
-                    required
-                  />
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Imagem do Veículo</label>
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full border border-dashed border-gray-300 hover:border-brand-blue text-gray-600 hover:text-brand-blue rounded-lg py-2.5 text-xs font-bold transition-all bg-gray-50 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                      </svg>
+                      {uploadedImageName ? "Foto Selecionada" : "Tirar / Escolher Foto do Celular"}
+                    </button>
+                    
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+
+                    {/* Fallback de link manual */}
+                    <input 
+                      type="text" 
+                      placeholder="Ou cole o link da foto (URL)..."
+                      value={formCar.imageUrl}
+                      disabled={!!uploadedImage}
+                      onChange={(e) => setFormCar(prev => ({ ...prev, imageUrl: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-blue bg-white text-gray-800 disabled:opacity-50"
+                    />
+                  </div>
                 </div>
               </div>
+
+              {/* Pré-visualização da Imagem selecionada */}
+              {(uploadedImage || formCar.imageUrl) && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase mb-2">Pré-visualização da Foto</span>
+                  <img 
+                    src={uploadedImage || formCar.imageUrl} 
+                    alt="Preview" 
+                    className="h-44 w-auto rounded-lg object-contain bg-white shadow-sm border border-gray-100" 
+                  />
+                  {uploadedImage && (
+                    <button 
+                      type="button" 
+                      onClick={clearUploadStates}
+                      className="text-xs text-red-500 hover:text-red-700 font-bold underline mt-2 cursor-pointer"
+                    >
+                      Remover foto do dispositivo
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Acessórios (Separados por vírgula)</label>
@@ -749,7 +863,7 @@ export default function AdminPage() {
               <div className="flex gap-4 justify-end mt-4">
                 <button 
                   type="button"
-                  onClick={() => { setActiveTab("estoque"); setEditingCar(null); }}
+                  onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
                   className="border border-gray-300 hover:bg-gray-100 text-gray-700 px-6 py-3 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
                 >
                   Cancelar
