@@ -6,7 +6,9 @@ import Footer from "@/components/Footer";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [user, setUser] = useState(null); // Armazena dados do funcionário logado
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -36,6 +38,11 @@ export default function AdminPage() {
     saleDate: new Date().toISOString().split("T")[0],
   });
 
+  // Identificação rápida dos cargos
+  const isAdmin = user?.cargo?.toLowerCase() === "admin";
+  const isGerente = user?.cargo?.toLowerCase() === "gerente";
+  const isVendedor = user?.cargo?.toLowerCase() === "vendedor";
+
   // Verifica autenticação inicial
   useEffect(() => {
     async function checkAuth() {
@@ -43,8 +50,9 @@ export default function AdminPage() {
         const res = await fetch("/api/admin/auth");
         if (res.ok) {
           const data = await res.json();
-          if (data.isAuthenticated) {
+          if (data.isAuthenticated && data.user) {
             setIsAuthenticated(true);
+            setUser(data.user);
             fetchCars();
           }
         }
@@ -75,7 +83,7 @@ export default function AdminPage() {
     }
   }
 
-  // Login do Administrador
+  // Login do Administrador/Funcionário
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -84,14 +92,22 @@ export default function AdminPage() {
       const res = await fetch("/api/admin/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ login, password }),
       });
       if (res.ok) {
+        const data = await res.json();
         setIsAuthenticated(true);
+        setUser(data.user);
+        
+        // Ajusta aba padrão se for vendedor (vendedores só veem estoque)
+        if (data.user.cargo.toLowerCase() === "vendedor") {
+          setActiveTab("estoque");
+        }
+        
         fetchCars();
       } else {
         const data = await res.json();
-        setError(data.error || "Senha incorreta.");
+        setError(data.error || "Login ou senha incorretos.");
       }
     } catch (err) {
       setError("Erro ao autenticar.");
@@ -106,7 +122,9 @@ export default function AdminPage() {
       const res = await fetch("/api/admin/auth", { method: "DELETE" });
       if (res.ok) {
         setIsAuthenticated(false);
+        setUser(null);
         setCars([]);
+        setLogin("");
         setPassword("");
       }
     } catch (err) {
@@ -139,6 +157,8 @@ export default function AdminPage() {
   // Submeter Criação / Edição de Carro
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    if (isVendedor) return; // Bloqueio preventivo no cliente
+    
     setActionLoading(true);
     setError("");
 
@@ -147,7 +167,6 @@ export default function AdminPage() {
       action,
       car: {
         ...formCar,
-        // Garante que os acessórios virem string normal ao enviar
         accessories: typeof formCar.accessories === "string" 
           ? formCar.accessories 
           : formCar.accessories.join(", "),
@@ -193,6 +212,8 @@ export default function AdminPage() {
 
   // Excluir Veículo
   const handleDeleteCar = async (id) => {
+    if (!isAdmin) return; // Apenas admin pode excluir permanentemente
+    
     if (!confirm("Tem certeza que deseja excluir permanentemente este veículo da planilha?")) return;
     setActionLoading(true);
     try {
@@ -219,7 +240,7 @@ export default function AdminPage() {
     setCrmData({
       id: car.id,
       buyerName: "",
-      salePrice: car.price, // Preço sugerido como padrão
+      salePrice: car.price,
       saleDate: new Date().toISOString().split("T")[0],
     });
     setShowCrmModal(true);
@@ -256,8 +277,10 @@ export default function AdminPage() {
     }
   };
 
-  // Reativar Carro Sold (Mudar de Vendido para Ativo)
+  // Reativar Carro Sold
   const handleReactivateCar = async (id) => {
+    if (isVendedor) return; // Vendedor não pode reativar
+    
     setActionLoading(true);
     try {
       const res = await fetch("/api/admin/cars", {
@@ -284,6 +307,8 @@ export default function AdminPage() {
 
   // Iniciar Edição de Carro
   const startEditCar = (car) => {
+    if (isVendedor) return;
+    
     setEditingCar(car);
     setFormCar({
       title: car.title || "",
@@ -305,7 +330,7 @@ export default function AdminPage() {
   const activeCars = cars.filter(c => !c.status || c.status.toLowerCase() === "ativo");
   const soldCars = cars.filter(c => c.status && c.status.toLowerCase() === "vendido");
 
-  // Estatísticas CRM
+  // Estatísticas CRM (Exibidas apenas para Administradores)
   const totalSalesRevenue = soldCars.reduce((acc, curr) => {
     const val = Number(curr.salePrice ? curr.salePrice.replace(/\D/g, "") : curr.price.replace(/\D/g, ""));
     return acc + (isNaN(val) ? 0 : val);
@@ -332,18 +357,30 @@ export default function AdminPage() {
         <Header />
         <main className="flex-grow flex items-center justify-center p-6">
           <div className="bg-white border border-gray-200 rounded-[20px] p-8 w-full max-w-[450px] shadow-lg">
-            <h2 className="text-[28px] font-extrabold text-brand-blue uppercase mb-2 text-center">Acesso Restrito</h2>
-            <p className="text-gray-500 text-sm text-center mb-6">Digite a senha da Dri-Car para gerenciar o estoque e ver dados de vendas.</p>
+            <h2 className="text-[28px] font-extrabold text-brand-blue uppercase mb-2 text-center">Painel Dri-Car</h2>
+            <p className="text-gray-500 text-sm text-center mb-6">Autenticação de Funcionários</p>
             
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Senha do Administrador</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Usuário (Login)</label>
+                <input 
+                  type="text"
+                  placeholder="Ex: gabriel, carlos.gerente"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue bg-white text-gray-800"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Senha</label>
                 <input 
                   type="password"
                   placeholder="Digite sua senha..."
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue bg-white"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue bg-white text-gray-800"
                   required
                 />
               </div>
@@ -354,8 +391,8 @@ export default function AdminPage() {
                 </div>
               )}
 
-              <button type="submit" className="w-full bg-brand-blue text-white rounded-lg py-3 font-semibold text-sm hover:opacity-90 transition-opacity">
-                Entrar no Painel
+              <button type="submit" className="w-full bg-brand-blue text-white rounded-lg py-3 font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer">
+                Acessar Sistema
               </button>
             </form>
           </div>
@@ -365,7 +402,7 @@ export default function AdminPage() {
     );
   }
 
-  // PAINEL DE CONTROLE (Autenticado)
+  // PAINEL DE CONTROLE (Autenticado com RBAC)
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
       <Header />
@@ -374,55 +411,66 @@ export default function AdminPage() {
         {/* Top Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none">Painel Administrativo</h1>
-            <p className="text-gray-500 text-sm mt-2">Dri-Car Veículos & CRM Integrado</p>
+            <h1 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none">Painel de Controle</h1>
+            <p className="text-gray-500 text-sm mt-2">
+              Funcionário: <strong className="text-brand-blue">{user?.nome}</strong> 
+              <span className="ml-2 bg-brand-blue/10 text-brand-blue px-2.5 py-0.5 rounded-full text-xs font-bold uppercase">{user?.cargo}</span>
+            </p>
           </div>
           <button 
             onClick={handleLogout}
-            className="border border-red-200 text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="border border-red-200 text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
           >
             Sair do Painel
           </button>
         </div>
 
-        {/* Tabs Menu */}
+        {/* Tabs Menu (Renderizado condicionalmente por cargo) */}
         <div className="flex border-b border-gray-200 mb-8 gap-6 overflow-x-auto">
           <button 
             onClick={() => { setActiveTab("estoque"); setEditingCar(null); }}
-            className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === "estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
           >
             📦 Estoque Ativo ({activeCars.length})
           </button>
-          <button 
-            onClick={() => { setActiveTab("vendas"); setEditingCar(null); }}
-            className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === "vendas" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
-          >
-            💰 Histórico de Vendas ({soldCars.length})
-          </button>
-          <button 
-            onClick={() => {
-              setEditingCar(null);
-              setFormCar({
-                title: "",
-                subtitle: "",
-                year: "",
-                mileage: "",
-                transmission: "Manual",
-                price: "",
-                imageUrl: "",
-                category: "Hatch",
-                accessories: "",
-              });
-              setActiveTab("cadastrar");
-            }}
-            className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === "cadastrar" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
-          >
-            {editingCar ? "✏️ Editando Veículo" : "➕ Cadastrar Veículo"}
-          </button>
+
+          {/* Apenas Admins e Gerentes podem ver histórico de vendas/CRM */}
+          {!isVendedor && (
+            <button 
+              onClick={() => { setActiveTab("vendas"); setEditingCar(null); }}
+              className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "vendas" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            >
+              💰 Histórico de Vendas ({soldCars.length})
+            </button>
+          )}
+
+          {/* Apenas Admins e Gerentes podem cadastrar novos veículos */}
+          {!isVendedor && (
+            <button 
+              onClick={() => {
+                setEditingCar(null);
+                setFormCar({
+                  title: "",
+                  subtitle: "",
+                  year: "",
+                  mileage: "",
+                  transmission: "Manual",
+                  price: "",
+                  imageUrl: "",
+                  category: "Hatch",
+                  accessories: "",
+                });
+                setActiveTab("cadastrar");
+              }}
+              className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "cadastrar" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            >
+              {editingCar ? "✏️ Editando Veículo" : "➕ Cadastrar Veículo"}
+            </button>
+          )}
         </div>
 
-        {/* Indicadores CRM nas abas principais */}
-        {activeTab !== "cadastrar" && (
+        {/* Indicadores CRM (Visíveis apenas para Administrador) */}
+        {activeTab !== "cadastrar" && isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
               <span className="text-xs text-gray-400 font-bold uppercase">Faturamento (CRM)</span>
@@ -467,7 +515,7 @@ export default function AdminPage() {
                     <th className="p-4 text-xs font-bold text-gray-500 uppercase text-center">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 text-gray-800">
                   {activeCars.length === 0 ? (
                     <tr>
                       <td colSpan="7" className="p-8 text-center text-gray-400 text-sm">Nenhum veículo ativo em estoque.</td>
@@ -488,22 +536,28 @@ export default function AdminPage() {
                           <div className="flex justify-center items-center gap-3">
                             <button 
                               onClick={() => openCrmModal(car)}
-                              className="bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                              className="bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
                             >
                               Marcar Vendido
                             </button>
-                            <button 
-                              onClick={() => startEditCar(car)}
-                              className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            >
-                              Editar
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteCar(car.id)}
-                              className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            >
-                              Excluir
-                            </button>
+                            
+                            {/* Apenas Admin e Gerente podem editar e remover */}
+                            {!isVendedor && (
+                              <button 
+                                onClick={() => startEditCar(car)}
+                                className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                              >
+                                Editar
+                              </button>
+                            )}
+                            {isAdmin && (
+                              <button 
+                                onClick={() => handleDeleteCar(car.id)}
+                                className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                              >
+                                Excluir
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -516,7 +570,7 @@ export default function AdminPage() {
         )}
 
         {/* TAB 2: HISTÓRICO DE VENDAS (CRM) */}
-        {activeTab === "vendas" && (
+        {activeTab === "vendas" && !isVendedor && (
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -530,7 +584,7 @@ export default function AdminPage() {
                     <th className="p-4 text-xs font-bold text-gray-500 uppercase text-center">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 text-gray-800">
                   {soldCars.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="p-8 text-center text-gray-400 text-sm">Nenhuma venda registrada no histórico.</td>
@@ -552,16 +606,18 @@ export default function AdminPage() {
                           <div className="flex justify-center items-center gap-3">
                             <button 
                               onClick={() => handleReactivateCar(car.id)}
-                              className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                              className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
                             >
                               Reativar para Estoque
                             </button>
-                            <button 
-                              onClick={() => handleDeleteCar(car.id)}
-                              className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            >
-                              Excluir Registro
-                            </button>
+                            {isAdmin && (
+                              <button 
+                                onClick={() => handleDeleteCar(car.id)}
+                                className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                              >
+                                Excluir Registro
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -574,7 +630,7 @@ export default function AdminPage() {
         )}
 
         {/* TAB 3: CADASTRO E EDIÇÃO DE CARROS */}
-        {activeTab === "cadastrar" && (
+        {activeTab === "cadastrar" && !isVendedor && (
           <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm max-w-[800px] mx-auto">
             <h3 className="text-xl font-extrabold text-brand-blue uppercase mb-6">
               {editingCar ? `Editar Veículo (ID: ${editingCar.id})` : "Cadastrar Novo Veículo"}
@@ -589,7 +645,7 @@ export default function AdminPage() {
                     placeholder="Ex: Ford Ka"
                     value={formCar.title}
                     onChange={(e) => setFormCar(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                     required
                   />
                 </div>
@@ -600,7 +656,7 @@ export default function AdminPage() {
                     placeholder="Ex: SE 1.0 MT FLEX"
                     value={formCar.subtitle}
                     onChange={(e) => setFormCar(prev => ({ ...prev, subtitle: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                     required
                   />
                 </div>
@@ -614,7 +670,7 @@ export default function AdminPage() {
                     placeholder="Ex: 2016/2017"
                     value={formCar.year}
                     onChange={(e) => setFormCar(prev => ({ ...prev, year: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                     required
                   />
                 </div>
@@ -625,7 +681,7 @@ export default function AdminPage() {
                     placeholder="Ex: 51.000 km"
                     value={formCar.mileage}
                     onChange={(e) => handleMileageChange(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                     required
                   />
                 </div>
@@ -636,7 +692,7 @@ export default function AdminPage() {
                     placeholder="Ex: R$ 44.599"
                     value={formCar.price}
                     onChange={(e) => handlePriceChange(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                     required
                   />
                 </div>
@@ -648,7 +704,7 @@ export default function AdminPage() {
                   <select 
                     value={formCar.category}
                     onChange={(e) => setFormCar(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                   >
                     <option value="Hatch">Hatch</option>
                     <option value="Sedan">Sedan</option>
@@ -661,7 +717,7 @@ export default function AdminPage() {
                   <select 
                     value={formCar.transmission}
                     onChange={(e) => setFormCar(prev => ({ ...prev, transmission: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                   >
                     <option value="Manual">Manual</option>
                     <option value="Automático">Automático</option>
@@ -674,7 +730,7 @@ export default function AdminPage() {
                     placeholder="Ex: /images/hatch.png ou URL"
                     value={formCar.imageUrl}
                     onChange={(e) => setFormCar(prev => ({ ...prev, imageUrl: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                     required
                   />
                 </div>
@@ -686,7 +742,7 @@ export default function AdminPage() {
                   placeholder="Ex: Ar Condicionado, Vidros Elétricos, Freio ABS"
                   value={formCar.accessories}
                   onChange={(e) => setFormCar(prev => ({ ...prev, accessories: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white h-24"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white h-24 text-gray-800"
                 />
               </div>
 
@@ -694,14 +750,14 @@ export default function AdminPage() {
                 <button 
                   type="button"
                   onClick={() => { setActiveTab("estoque"); setEditingCar(null); }}
-                  className="border border-gray-300 hover:bg-gray-100 text-gray-700 px-6 py-3 rounded-lg text-sm font-semibold transition-colors"
+                  className="border border-gray-300 hover:bg-gray-100 text-gray-700 px-6 py-3 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
                   disabled={actionLoading}
-                  className="bg-brand-blue hover:opacity-90 text-white px-8 py-3 rounded-lg text-sm font-semibold transition-opacity"
+                  className="bg-brand-blue hover:opacity-90 text-white px-8 py-3 rounded-lg text-sm font-semibold transition-opacity cursor-pointer"
                 >
                   {editingCar ? "Salvar Alterações" : "Cadastrar Veículo"}
                 </button>
@@ -711,14 +767,14 @@ export default function AdminPage() {
         )}
       </main>
 
-      {/* MODAL: MARCAR COMO VENDIDO (CRM CRM CRM) */}
+      {/* MODAL: MARCAR COMO VENDIDO (CRM) */}
       {showCrmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
           <div className="bg-white border border-gray-200 rounded-[20px] p-8 w-full max-w-[450px] shadow-2xl relative">
             <h3 className="text-lg font-bold text-brand-blue uppercase mb-2">Registrar Venda (CRM)</h3>
             <p className="text-gray-500 text-xs mb-6">Preencha os dados do comprador para salvar no histórico de faturamento.</p>
             
-            <form onSubmit={handleConfirmSale} className="flex flex-col gap-4">
+            <form onSubmit={handleConfirmSale} className="flex flex-col gap-4 text-gray-800">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Nome do Comprador</label>
                 <input 
@@ -759,13 +815,13 @@ export default function AdminPage() {
                 <button 
                   type="button"
                   onClick={() => setShowCrmModal(false)}
-                  className="border border-gray-300 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                  className="border border-gray-300 hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit"
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
                 >
                   Confirmar Venda
                 </button>

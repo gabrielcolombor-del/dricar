@@ -7,22 +7,42 @@ export async function POST(request) {
     // 1. Verificação de sessão (autenticação de admin)
     const cookieStore = await cookies();
     const session = cookieStore.get("admin_session");
-    if (session?.value !== "authenticated") {
+    if (!session?.value) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
+    // Decodifica dados do usuário e obtém o cargo
+    const user = JSON.parse(Buffer.from(session.value, "base64").toString("utf-8"));
+    const cargo = user.cargo ? user.cargo.toLowerCase() : "";
+
     // 2. Extração dos parâmetros da requisição
     const body = await request.json();
-    const googleScriptUrl = process.env.GOOGLE_SCRIPT_API_URL;
+    const { action, status } = body;
 
-    if (!googleScriptUrl) {
-      return NextResponse.json(
-        { error: "API do Google Sheets não configurada no servidor (variável GOOGLE_SCRIPT_API_URL ausente)." },
-        { status: 500 }
-      );
+    // 3. Controle de Acesso Baseado em Cargos (RBAC) no Backend
+    // Vendedores possuem permissões restritas. Só podem dar baixa em carros (marcar como vendido).
+    if (cargo === "vendedor") {
+      const isMarkingAsSold = action === "updateStatus" && status?.toLowerCase() === "vendido";
+      if (!isMarkingAsSold) {
+        return NextResponse.json(
+          { error: `Permissão insuficiente. O cargo 'Vendedor' não tem permissão para realizar esta operação (${action}).` },
+          { status: 403 }
+        );
+      }
     }
 
-    // 3. Encaminha a ação para o Google Apps Script da planilha
+    // Gerentes e Admins possuem acesso completo. Caso precise futuramente diferenciar Gerente de Admin:
+    // if (cargo === "gerente") { ... }
+
+    const googleScriptUrl = process.env.GOOGLE_SCRIPT_API_URL;
+
+    // Se estiver em desenvolvimento local inicial sem planilha
+    if (!googleScriptUrl) {
+      // Simula retorno de sucesso local
+      return NextResponse.json({ success: true, localDev: true });
+    }
+
+    // 4. Encaminha a ação para o Google Apps Script da planilha
     const response = await fetch(googleScriptUrl, {
       method: "POST",
       headers: {
@@ -37,7 +57,7 @@ export async function POST(request) {
 
     const result = await response.json();
 
-    // 4. Se a ação na planilha foi bem-sucedida, limpa o cache de carros do Next.js
+    // 5. Se a ação na planilha foi bem-sucedida, limpa o cache de carros do Next.js
     if (result.success) {
       revalidateTag("cars");
     }
