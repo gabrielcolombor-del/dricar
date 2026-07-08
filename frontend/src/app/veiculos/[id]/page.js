@@ -96,8 +96,8 @@ export default function ProductPage() {
 
           {/* Info */}
           <div className="w-full lg:w-[400px] flex flex-col justify-center">
-            <h1 className="text-[32px] font-bold text-gray-800 leading-tight">{car.title}</h1>
-            <h2 className="text-[32px] font-extrabold text-brand-blue uppercase mb-6">{car.subtitle}</h2>
+            <h1 className="text-[24px] md:text-[32px] font-bold text-gray-800 leading-tight">{car.title}</h1>
+            <h2 className="text-[24px] md:text-[32px] font-extrabold text-brand-blue uppercase mb-6">{car.subtitle}</h2>
             
             <div className="flex flex-col gap-3.5 mb-8 text-md text-gray-700">
               <div className="flex items-center gap-3">
@@ -114,7 +114,7 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <div className="text-[40px] font-extrabold text-brand-blue mb-8">
+            <div className="text-[32px] md:text-[40px] font-extrabold text-brand-blue mb-8">
               {car.price}
             </div>
 

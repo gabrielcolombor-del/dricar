@@ -12,7 +12,7 @@ export default function QuemSomosPage() {
         {/* Banner Title */}
         <section className="bg-[#F8F8F8] py-16 border-b border-gray-200">
           <div className="max-w-[1200px] mx-auto px-6">
-            <h1 className="text-[40px] font-extrabold text-brand-blue uppercase leading-none mb-2">Quem Somos</h1>
+            <h1 className="text-[28px] md:text-[40px] font-extrabold text-brand-blue uppercase leading-none mb-2">Quem Somos</h1>
             <p className="text-gray-600 text-lg">Conheça a história e os valores que movem a Dri-Car Veículos.</p>
           </div>
         </section>
@@ -23,7 +23,7 @@ export default function QuemSomosPage() {
             
             {/* Story Text */}
             <div className="flex-1 space-y-6 text-gray-700">
-              <h2 className="text-[32px] font-bold text-gray-800 leading-tight">Nossa História</h2>
+              <h2 className="text-[24px] md:text-[32px] font-bold text-gray-800 leading-tight">Nossa História</h2>
               
               <p className="text-[16px] leading-relaxed font-light">
                 A <strong>Dri-Car Veículos</strong> nasceu em 2012 com um propósito claro: transformar a experiência de compra e venda de automóveis na nossa região. O que começou como um sonho familiar, operando com apenas cinco carros no estoque, rapidamente se tornou referência de credibilidade, transparência e qualidade no mercado automotivo.

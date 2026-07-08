@@ -51,7 +51,7 @@ export default function Home() {
       <main className="flex-1 w-full bg-white">
         
         {/* Hero Section */}
-        <section className="relative w-full h-[600px] flex items-center justify-center">
+        <section className="relative w-full h-[450px] md:h-[600px] flex items-center justify-center">
           <Image 
             src="/images/imagem fundo.png" 
             alt="Hero Background" 
@@ -80,31 +80,31 @@ export default function Home() {
         </section>
 
         {/* Highlights Section */}
-        <section className="max-w-[1100px] mx-auto py-20 px-6 flex flex-col md:flex-row gap-8 justify-center items-center">
+        <section className="max-w-[1100px] mx-auto py-12 md:py-20 px-6 flex flex-col md:flex-row gap-8 justify-center items-center">
           
-          <div className="bg-brand-blue text-white rounded-[25px] p-10 w-full md:w-[525px] h-[340px] flex flex-col relative shadow-xl hover:-translate-y-1 transition-transform">
-            <h3 className="text-[26px] font-extrabold uppercase mb-6 leading-tight w-[60%] mt-8">
+          <div className="bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-xl hover:-translate-y-1 transition-transform">
+            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8">
               Troque seu carro
             </h3>
-            <p className="text-[15px] text-gray-200 leading-relaxed font-light mb-8 max-w-[85%]">
+            <p className="text-[14px] md:text-[15px] text-gray-200 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
               Quer trocar de carro? Avaliamos seu usado na hora e facilitamos a troca pelo modelo ideal para você!
             </p>
-            <a href="#" className="underline mt-auto inline-block text-[15px] font-medium">Saiba mais</a>
-            <div className="absolute top-6 right-8">
-              <Image src="/images/troca.png" alt="Troque seu carro" width={150} height={150} className="object-contain" />
+            <a href="/veiculos" className="underline mt-auto inline-block text-[15px] font-medium">Saiba mais</a>
+            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[100px] h-[100px] md:w-[150px] md:h-[150px] flex items-center justify-center">
+              <Image src="/images/troca.png" alt="Troque seu carro" width={150} height={150} className="w-full h-full object-contain" />
             </div>
           </div>
 
-          <div className="bg-[#F8F8F8] text-brand-blue rounded-[25px] p-10 w-full md:w-[525px] h-[340px] flex flex-col relative shadow-md hover:-translate-y-1 transition-transform border border-gray-100">
-            <h3 className="text-[26px] font-extrabold uppercase mb-6 leading-tight mt-8">
+          <div className="bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-md hover:-translate-y-1 transition-transform border border-gray-100">
+            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8">
               Financiamento
             </h3>
-            <p className="text-[15px] text-gray-600 leading-relaxed font-light mb-8 max-w-[85%] pt-[32px]">
+            <p className="text-[14px] md:text-[15px] text-gray-600 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
               Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
             </p>
-            <a href="#" className="underline mt-auto inline-block text-[15px] font-medium">Saiba mais</a>
-            <div className="absolute top-6 right-8">
-              <Image src="/images/financia.png" alt="Financiamento" width={130} height={130} className="object-contain" />
+            <a href="/veiculos" className="underline mt-auto inline-block text-[15px] font-medium">Saiba mais</a>
+            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[90px] h-[90px] md:w-[130px] md:h-[130px] flex items-center justify-center">
+              <Image src="/images/financia.png" alt="Financiamento" width={130} height={130} className="w-full h-full object-contain" />
             </div>
           </div>
 
@@ -152,33 +152,24 @@ export default function Home() {
             </div>
 
             {/* Categoria Cards */}
-            <Link href="/veiculos?category=Hatch" className="relative h-[280px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
+            <Link href="/veiculos?category=Hatch" className="relative h-[180px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
               <Image src="/images/Hatch.png" alt="Hatch" fill className="object-cover absolute inset-0" />
               <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
               <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
-              <h3 className="absolute bottom-8 left-8 text-white text-[24px] font-bold z-20">Hatch</h3>
+              <h3 className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 text-white text-[20px] sm:text-[24px] font-bold z-20">Hatch</h3>
             </Link>
-            <Link href="/veiculos?category=Sedan" className="relative h-[280px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
+            <Link href="/veiculos?category=Sedan" className="relative h-[180px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
               <Image src="/images/seddan.png" alt="Sedan" fill className="object-cover absolute inset-0" />
               <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
               <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
-              <h3 className="absolute bottom-8 left-8 text-white text-[24px] font-bold z-20">Sedan</h3>
+              <h3 className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 text-white text-[20px] sm:text-[24px] font-bold z-20">Sedan</h3>
             </Link>
-            <Link href="/veiculos?category=SUVs" className="relative h-[280px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
+            <Link href="/veiculos?category=SUVs" className="relative h-[180px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
               <Image src="/images/suv.png" alt="SUVs" fill className="object-cover absolute inset-0" />
               <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
               <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
-              <h3 className="absolute bottom-8 left-8 text-white text-[24px] font-bold z-20">SUVs</h3>
+              <h3 className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 text-white text-[20px] sm:text-[24px] font-bold z-20">SUVs</h3>
             </Link>
-          </div>
-          
-          {/* Dots */}
-          <div className="flex justify-center gap-2 mt-8">
-            <span className="w-2.5 h-2.5 rounded-full bg-gray-700"></span>
-            <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
-            <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
-            <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
-            <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
           </div>
         </section>
 

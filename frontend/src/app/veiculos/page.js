@@ -13,9 +13,23 @@ function VeiculosContent() {
 
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [preco, setPreco] = useState(70000); // Default to max to show all initially
-  const [km, setKm] = useState(110000); // Default to max
-  const [ano, setAno] = useState(2013); // Default to min to show all
+  
+  // Dynamic filter state bounds
+  const [maxPriceLimit, setMaxPriceLimit] = useState(150000);
+  const [maxKmLimit, setMaxKmLimit] = useState(110000);
+
+  // Active filter state
+  const [preco, setPreco] = useState(150000);
+  const [km, setKm] = useState(110000);
+  const [ano, setAno] = useState(2013);
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedTransmission, setSelectedTransmission] = useState("");
+  const [localSearch, setLocalSearch] = useState("");
+
+  // Mobile drawer state
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   useEffect(() => {
     async function fetchCars() {
@@ -29,10 +43,12 @@ function VeiculosContent() {
           if (data.length > 0) {
             const prices = data.map(c => Number(c.price.replace(/\D/g, "")));
             const maxPrice = Math.max(...prices);
+            setMaxPriceLimit(maxPrice);
             setPreco(maxPrice);
 
             const kms = data.map(c => Number(c.mileage.replace(/\D/g, "")));
             const maxKm = Math.max(...kms);
+            setMaxKmLimit(maxKm);
             setKm(maxKm);
           }
         }
@@ -49,6 +65,22 @@ function VeiculosContent() {
     return () => clearInterval(interval);
   }, []);
 
+  // Synchronize URL search parameters with React state
+  useEffect(() => {
+    if (searchFilter) {
+      setLocalSearch(searchFilter);
+    }
+    if (categoryFilter) {
+      setSelectedCategory(categoryFilter);
+    }
+  }, [searchFilter, categoryFilter]);
+
+  // Derived options for filter selects
+  const brands = Array.from(new Set(cars.map(c => c.brand))).filter(Boolean).sort();
+  const models = Array.from(new Set(cars.filter(c => !selectedBrand || c.brand === selectedBrand).map(c => c.model))).filter(Boolean).sort();
+  const categories = Array.from(new Set(cars.map(c => c.category))).filter(Boolean).sort();
+  const transmissions = Array.from(new Set(cars.map(c => c.transmission))).filter(Boolean).sort();
+
   const getPercentage = (value, min, max) => {
     if (max === min) return 100;
     return ((value - min) / (max - min)) * 100;
@@ -64,57 +96,95 @@ function VeiculosContent() {
 
   // Filters calculation
   const filteredCars = cars.filter((car) => {
-    // 1. Text Search (title / subtitle)
-    if (searchFilter) {
-      const q = searchFilter.toLowerCase();
-      const matchTitle = car.title.toLowerCase().includes(q);
-      const matchSubtitle = car.subtitle.toLowerCase().includes(q);
-      if (!matchTitle && !matchSubtitle) return false;
+    // 1. Text Search (title / subtitle / brand / model)
+    if (localSearch) {
+      const q = localSearch.toLowerCase();
+      const matchTitle = car.title?.toLowerCase().includes(q);
+      const matchSubtitle = car.subtitle?.toLowerCase().includes(q);
+      const matchBrand = car.brand?.toLowerCase().includes(q);
+      const matchModel = car.model?.toLowerCase().includes(q);
+      if (!matchTitle && !matchSubtitle && !matchBrand && !matchModel) return false;
     }
 
-    // 2. Category Search
-    if (categoryFilter) {
-      if (car.category.toLowerCase() !== categoryFilter.toLowerCase()) return false;
-    }
+    // 2. Brand Filter
+    if (selectedBrand && car.brand !== selectedBrand) return false;
 
-    // 3. Price Filter (car price <= slider value)
+    // 3. Model Filter
+    if (selectedModel && car.model !== selectedModel) return false;
+
+    // 4. Category Filter
+    if (selectedCategory && car.category.toLowerCase() !== selectedCategory.toLowerCase()) return false;
+
+    // 5. Transmission Filter
+    if (selectedTransmission && car.transmission !== selectedTransmission) return false;
+
+    // 6. Price Filter (car price <= slider value)
     const priceVal = Number(car.price.replace(/\D/g, ""));
     if (priceVal > preco) return false;
 
-    // 4. KM Filter (car mileage <= slider value)
+    // 7. KM Filter (car mileage <= slider value)
     const kmVal = Number(car.mileage.replace(/\D/g, ""));
     if (kmVal > km) return false;
 
-    // 5. Year Filter (car year >= slider value)
+    // 8. Year Filter (car year >= slider value)
     const yearVal = Number(car.year.split("/")[0]);
     if (yearVal < ano) return false;
 
     return true;
   });
 
-  const precoPercent = getPercentage(preco, 34000, 150000); // Expanded range for jeep compass
-  const kmPercent = getPercentage(km, 32000, 110000);
+  const handleClearFilters = () => {
+    setPreco(maxPriceLimit);
+    setKm(maxKmLimit);
+    setAno(2013);
+    setSelectedBrand("");
+    setSelectedModel("");
+    setSelectedCategory("");
+    setSelectedTransmission("");
+    setLocalSearch("");
+  };
+
+  const precoPercent = getPercentage(preco, 34000, maxPriceLimit);
+  const kmPercent = getPercentage(km, 32000, maxKmLimit);
   const anoPercent = getPercentage(ano, 2013, 2024);
 
   return (
-    <main className="flex-1 w-full max-w-[1200px] mx-auto py-12 px-6 flex flex-col md:flex-row gap-8">
+    <main className="flex-1 w-full max-w-[1200px] mx-auto py-8 md:py-12 px-6 flex flex-col md:flex-row gap-8">
+      {/* Mobile Filter Header Toggle */}
+      <div className="md:hidden flex justify-between items-center bg-brand-gray p-4 rounded-xl border border-gray-200">
+        <div className="flex flex-col">
+          <span className="font-bold text-brand-blue text-md">Filtros</span>
+          <span className="text-[12px] text-gray-500">{filteredCars.length} veículos encontrados</span>
+        </div>
+        <button 
+          onClick={() => setIsFiltersOpen(!isFiltersOpen)} 
+          className="bg-brand-blue text-white px-5 py-2.5 rounded-[25px] text-sm font-semibold flex items-center gap-2 transition-all hover:bg-opacity-95 shadow-sm active:scale-95 cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-4 h-4">
+            {isFiltersOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+            )}
+          </svg>
+          {isFiltersOpen ? "Fechar" : "Filtrar"}
+        </button>
+      </div>
+
       {/* Sidebar Filters */}
-      <aside className="w-full md:w-[300px] flex-shrink-0">
-        <div className="bg-brand-gray p-6 rounded-xl">
+      <aside className={`w-full md:w-[300px] flex-shrink-0 transition-all duration-300 ${isFiltersOpen ? "block" : "hidden md:block"}`}>
+        <div className="bg-brand-gray p-6 rounded-xl border border-gray-100 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-lg text-brand-blue">Filtre sua busca</h3>
             <button 
-              onClick={() => {
-                setPreco(150000);
-                setKm(110000);
-                setAno(2013);
-              }} 
-              className="text-sm underline text-gray-500 hover:text-brand-blue transition-colors"
+              onClick={handleClearFilters} 
+              className="text-sm underline text-gray-500 hover:text-brand-blue transition-colors cursor-pointer"
             >
               limpar filtros
             </button>
           </div>
           
+          {/* Text Search Input */}
           <div className="mb-6">
             <div className="relative">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -122,28 +192,49 @@ function VeiculosContent() {
               </svg>
               <input 
                 type="text" 
-                placeholder="Pesquise por marca, modelo." 
-                className="w-full border border-gray-300 rounded-md py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-brand-blue bg-white"
+                placeholder="Pesquise por marca, modelo..." 
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+                className="w-full border border-gray-300 rounded-md py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-6">
+            {/* Brand & Model */}
             <div>
               <h4 className="font-bold text-sm text-brand-blue mb-3">Marca e Modelo</h4>
               <div className="flex flex-col gap-3">
-                <select className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm bg-white">
-                  <option>Marca</option>
+                <select 
+                  value={selectedBrand} 
+                  onChange={(e) => {
+                    setSelectedBrand(e.target.value);
+                    setSelectedModel("");
+                  }}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm bg-white text-gray-700 focus:outline-none focus:border-brand-blue"
+                >
+                  <option value="">Marca (Todas)</option>
+                  {brands.map(brand => (
+                    <option key={brand} value={brand}>{brand}</option>
+                  ))}
                 </select>
-                <select className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm bg-white">
-                  <option>Modelo</option>
+                <select 
+                  value={selectedModel} 
+                  onChange={(e) => setSelectedModel(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm bg-white text-gray-700 focus:outline-none focus:border-brand-blue disabled:bg-gray-100 disabled:text-gray-400"
+                  disabled={!selectedBrand}
+                >
+                  <option value="">Modelo (Todos)</option>
+                  {models.map(model => (
+                    <option key={model} value={model}>{model}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
             {/* Preço Filter */}
             <div className="border-t border-gray-200 pt-6">
-              <h4 className="font-bold text-sm text-brand-blue mb-6">Preço</h4>
+              <h4 className="font-bold text-sm text-brand-blue mb-6">Preço Máximo</h4>
               <div className="px-2 relative pb-2 pt-6">
                 <div 
                   className="absolute bg-brand-blue text-white text-[11px] font-bold py-1 px-2.5 rounded shadow-sm -translate-x-1/2 top-0 whitespace-nowrap mb-2 transition-all duration-75"
@@ -156,22 +247,22 @@ function VeiculosContent() {
                 <input 
                   type="range" 
                   min={34000} 
-                  max={150000} 
+                  max={maxPriceLimit} 
                   step={1000}
                   value={preco} 
                   onChange={(e) => setPreco(Number(e.target.value))}
                   className="w-full accent-brand-blue cursor-pointer" 
                 />
-                <div className="flex justify-between text-xs mt-2 text-gray-500">
-                  <span>34mil</span>
-                  <span>150mil</span>
+                <div className="flex justify-between text-[11px] mt-2 text-gray-500">
+                  <span>R$ 34.000</span>
+                  <span>{formatPrice(maxPriceLimit)}</span>
                 </div>
               </div>
             </div>
 
             {/* KM Filter */}
             <div className="border-t border-gray-200 pt-6">
-              <h4 className="font-bold text-sm text-brand-blue mb-6">KM</h4>
+              <h4 className="font-bold text-sm text-brand-blue mb-6">KM Máxima</h4>
               <div className="px-2 relative pb-2 pt-6">
                 <div 
                   className="absolute bg-brand-blue text-white text-[11px] font-bold py-1 px-2.5 rounded shadow-sm -translate-x-1/2 top-0 whitespace-nowrap mb-2 transition-all duration-75"
@@ -184,22 +275,22 @@ function VeiculosContent() {
                 <input 
                   type="range" 
                   min={32000} 
-                  max={110000} 
+                  max={maxKmLimit} 
                   step={1000}
                   value={km}
                   onChange={(e) => setKm(Number(e.target.value))}
                   className="w-full accent-brand-blue cursor-pointer" 
                 />
-                <div className="flex justify-between text-xs mt-2 text-gray-500">
-                  <span>32mil</span>
-                  <span>110mil</span>
+                <div className="flex justify-between text-[11px] mt-2 text-gray-500">
+                  <span>32.000 km</span>
+                  <span>{formatKm(maxKmLimit)}</span>
                 </div>
               </div>
             </div>
 
             {/* Ano Filter */}
             <div className="border-t border-gray-200 pt-6">
-              <h4 className="font-bold text-sm text-brand-blue mb-6">Ano</h4>
+              <h4 className="font-bold text-sm text-brand-blue mb-6">Ano Mínimo</h4>
               <div className="px-2 relative pb-2 pt-6">
                 <div 
                   className="absolute bg-brand-blue text-white text-[11px] font-bold py-1 px-2.5 rounded shadow-sm -translate-x-1/2 top-0 whitespace-nowrap mb-2 transition-all duration-75"
@@ -218,32 +309,41 @@ function VeiculosContent() {
                   onChange={(e) => setAno(Number(e.target.value))}
                   className="w-full accent-brand-blue cursor-pointer" 
                 />
-                <div className="flex justify-between text-xs mt-2 text-gray-500">
+                <div className="flex justify-between text-[11px] mt-2 text-gray-500">
                   <span>2013</span>
                   <span>2024</span>
                 </div>
               </div>
             </div>
 
+            {/* Category & Transmission */}
             <div className="border-t border-gray-200 pt-6">
-              <h4 className="font-bold text-sm text-brand-blue mb-3">Categoria, Câmbio e Cor</h4>
+              <h4 className="font-bold text-sm text-brand-blue mb-3">Categoria e Câmbio</h4>
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">Categoria</span>
-                  <select className="border border-gray-300 rounded-md py-1 px-2 text-sm bg-white w-32">
-                    <option>Categoria</option>
+                  <span className="text-sm font-semibold text-gray-700">Categoria</span>
+                  <select 
+                    value={selectedCategory} 
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="border border-gray-300 rounded-md py-1 px-2 text-sm bg-white w-36 text-gray-700 focus:outline-none focus:border-brand-blue"
+                  >
+                    <option value="">Todas</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">Câmbio</span>
-                  <select className="border border-gray-300 rounded-md py-1 px-2 text-sm bg-white w-32">
-                    <option>Câmbio</option>
-                  </select>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">Cor</span>
-                  <select className="border border-gray-300 rounded-md py-1 px-2 text-sm bg-white w-32">
-                    <option>Cor</option>
+                  <span className="text-sm font-semibold text-gray-700">Câmbio</span>
+                  <select 
+                    value={selectedTransmission} 
+                    onChange={(e) => setSelectedTransmission(e.target.value)}
+                    className="border border-gray-300 rounded-md py-1 px-2 text-sm bg-white w-36 text-gray-700 focus:outline-none focus:border-brand-blue"
+                  >
+                    <option value="">Todos</option>
+                    {transmissions.map(trans => (
+                      <option key={trans} value={trans}>{trans}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -275,7 +375,7 @@ function VeiculosContent() {
             <span className="cursor-pointer hover:text-brand-blue transition-colors">{">"}</span>
           </div>
           <span className="text-sm text-gray-500">
-            {filteredCars.length} de {cars.length} veículos
+            Mostrando {filteredCars.length} de {cars.length} veículos
           </span>
         </div>
       </section>
