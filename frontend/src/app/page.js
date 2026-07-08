@@ -14,8 +14,21 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeHighlight, setActiveHighlight] = useState(0);
   const [isAutoSlideActive, setIsAutoSlideActive] = useState(true);
-  const [activeCategory, setActiveCategory] = useState(1); // 0: Hatch, 1: Sedan, 2: SUVs
+  const [activeCategory, setActiveCategory] = useState(1); // 0: Hatch, 1: Sedan, 2: SUVs, 3: Picape
   const router = useRouter();
+
+  const getCategoryClass = (index) => {
+    const diff = (index - activeCategory + 4) % 4;
+    if (diff === 0) {
+      return "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default";
+    } else if (diff === 1) {
+      return "left-[calc(50%+200px)] sm:left-[calc(50%+330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto";
+    } else if (diff === 3) {
+      return "left-[calc(50%-200px)] sm:left-[calc(50%-330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto";
+    } else {
+      return "left-1/2 -translate-x-1/2 scale-50 z-0 opacity-0 pointer-events-none";
+    }
+  };
 
   useEffect(() => {
     async function fetchCars() {
@@ -247,7 +260,7 @@ export default function Home() {
             
             {/* Left Navigation Arrow */}
             <button 
-              onClick={() => setActiveCategory(prev => (prev === 0 ? 2 : prev - 1))}
+              onClick={() => setActiveCategory(prev => (prev === 0 ? 3 : prev - 1))}
               className="absolute left-0 md:left-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
               aria-label="Categoria anterior"
             >
@@ -266,13 +279,7 @@ export default function Home() {
                     setActiveCategory(0);
                   }
                 }}
-                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${
-                  activeCategory === 0
-                    ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default"
-                    : activeCategory === 1
-                      ? "left-[calc(50%-200px)] sm:left-[calc(50%-330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
-                      : "left-[calc(50%+200px)] sm:left-[calc(50%+330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
-                }`}
+                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${getCategoryClass(0)}`}
               >
                 <Image src="/images/Hatch.png" alt="Hatch" fill className="object-cover absolute inset-0" />
                 <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
@@ -289,13 +296,7 @@ export default function Home() {
                     setActiveCategory(1);
                   }
                 }}
-                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${
-                  activeCategory === 1
-                    ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default"
-                    : activeCategory === 2
-                      ? "left-[calc(50%-200px)] sm:left-[calc(50%-330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
-                      : "left-[calc(50%+200px)] sm:left-[calc(50%+330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
-                }`}
+                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${getCategoryClass(1)}`}
               >
                 <Image src="/images/seddan.png" alt="Sedan" fill className="object-cover absolute inset-0" />
                 <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
@@ -312,25 +313,36 @@ export default function Home() {
                     setActiveCategory(2);
                   }
                 }}
-                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${
-                  activeCategory === 2
-                    ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default"
-                    : activeCategory === 0
-                      ? "left-[calc(50%-200px)] sm:left-[calc(50%-330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
-                      : "left-[calc(50%+200px)] sm:left-[calc(50%+330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
-                }`}
+                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${getCategoryClass(2)}`}
               >
                 <Image src="/images/suv.png" alt="SUVs" fill className="object-cover absolute inset-0" />
                 <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
                 <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
                 <h3 className="absolute bottom-6 left-6 text-white text-[20px] sm:text-[24px] font-bold z-20">SUVs</h3>
               </Link>
+
+              {/* Picape (Card 3) */}
+              <Link 
+                href="/veiculos?category=Picape" 
+                onClick={(e) => {
+                  if (activeCategory !== 3) {
+                    e.preventDefault();
+                    setActiveCategory(3);
+                  }
+                }}
+                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${getCategoryClass(3)}`}
+              >
+                <Image src="/images/picape.webp" alt="Picape" fill className="object-cover absolute inset-0" />
+                <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
+                <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
+                <h3 className="absolute bottom-6 left-6 text-white text-[20px] sm:text-[24px] font-bold z-20">Picape</h3>
+              </Link>
               
             </div>
 
             {/* Right Navigation Arrow */}
             <button 
-              onClick={() => setActiveCategory(prev => (prev === 2 ? 0 : prev + 1))}
+              onClick={() => setActiveCategory(prev => (prev === 3 ? 0 : prev + 1))}
               className="absolute right-0 md:right-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
               aria-label="Próxima categoria"
             >
