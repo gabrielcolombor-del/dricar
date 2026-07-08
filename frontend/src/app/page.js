@@ -12,6 +12,8 @@ export default function Home() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeHighlight, setActiveHighlight] = useState(0);
+  const [activeCategory, setActiveCategory] = useState(1); // 0: Hatch, 1: Sedan, 2: SUVs
   const router = useRouter();
 
   useEffect(() => {
@@ -33,6 +35,14 @@ export default function Home() {
     // Consult the database/spreadsheet periodically every 30 seconds
     const interval = setInterval(fetchCars, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Auto slide interval for highlights (every 5 seconds)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveHighlight((prev) => (prev === 0 ? 1 : 0));
+    }, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   const handleSearchSubmit = (e) => {
@@ -80,31 +90,47 @@ export default function Home() {
         </section>
 
         {/* Highlights Section */}
-        <section className="max-w-[1100px] mx-auto py-12 md:py-20 px-6 flex flex-col md:flex-row gap-8 justify-center items-center">
+        <section className="relative w-full h-[400px] overflow-hidden py-10 flex items-center justify-center bg-white border-b border-gray-100">
           
-          <div className="bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-xl hover:-translate-y-1 transition-transform">
-            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8">
+          {/* Card 0: Troque seu carro */}
+          <div 
+            onClick={() => setActiveHighlight(0)}
+            className={`absolute top-1/2 -translate-y-1/2 w-[85%] max-w-[500px] h-[320px] transition-all duration-700 ease-in-out bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 flex flex-col shadow-xl select-none ${
+              activeHighlight === 0 
+                ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default" 
+                : "left-[calc(50%-230px)] sm:left-[calc(50%-390px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
+            }`}
+          >
+            <h3 className="text-[20px] md:text-[24px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
               Troque seu carro
             </h3>
-            <p className="text-[14px] md:text-[15px] text-gray-200 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
+            <p className="text-[13px] md:text-[14px] text-gray-200 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
               Quer trocar de carro? Avaliamos seu usado na hora e facilitamos a troca pelo modelo ideal para você!
             </p>
-            <a href="/veiculos" className="underline mt-auto inline-block text-[15px] font-medium">Saiba mais</a>
-            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[100px] h-[100px] md:w-[150px] md:h-[150px] flex items-center justify-center">
-              <Image src="/images/troca.png" alt="Troque seu carro" width={150} height={150} className="w-full h-full object-contain" />
+            <Link href="/veiculos" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
+            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[90px] h-[90px] md:w-[140px] md:h-[140px] flex items-center justify-center">
+              <Image src="/images/troca.png" alt="Troque seu carro" width={140} height={140} className="w-full h-full object-contain" />
             </div>
           </div>
 
-          <div className="bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-md hover:-translate-y-1 transition-transform border border-gray-100">
-            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8">
+          {/* Card 1: Financiamento */}
+          <div 
+            onClick={() => setActiveHighlight(1)}
+            className={`absolute top-1/2 -translate-y-1/2 w-[85%] max-w-[500px] h-[320px] transition-all duration-700 ease-in-out bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 flex flex-col shadow-md border border-gray-100 select-none ${
+              activeHighlight === 1 
+                ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default" 
+                : "left-[calc(50%+230px)] sm:left-[calc(50%+390px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
+            }`}
+          >
+            <h3 className="text-[20px] md:text-[24px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
               Financiamento
             </h3>
-            <p className="text-[14px] md:text-[15px] text-gray-600 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
+            <p className="text-[13px] md:text-[14px] text-gray-600 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
               Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
             </p>
-            <a href="/veiculos" className="underline mt-auto inline-block text-[15px] font-medium">Saiba mais</a>
-            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[90px] h-[90px] md:w-[130px] md:h-[130px] flex items-center justify-center">
-              <Image src="/images/financia.png" alt="Financiamento" width={130} height={130} className="w-full h-full object-contain" />
+            <Link href="/veiculos" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
+            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[80px] h-[80px] md:w-[120px] md:h-[120px] flex items-center justify-center">
+              <Image src="/images/financia.png" alt="Financiamento" width={120} height={120} className="w-full h-full object-contain" />
             </div>
           </div>
 
@@ -138,38 +164,105 @@ export default function Home() {
         </section>
 
         {/* Categorias */}
-        <section className="max-w-[1200px] mx-auto py-20 px-6">
+        <section className="max-w-[1200px] mx-auto py-16 px-6">
           <h2 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none mb-1">Navegue</h2>
           <h4 className="text-[20px] font-bold text-gray-800 lowercase mb-10">pelas nossas categorias</h4>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative px-4">
-            {/* Arrows */}
-            <div className="hidden md:flex absolute -left-6 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center text-gray-400 cursor-pointer hover:text-brand-blue transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-            </div>
-            <div className="hidden md:flex absolute -right-6 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center text-gray-400 cursor-pointer hover:text-brand-blue transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          {/* Carousel Container */}
+          <div className="relative w-full h-[260px] sm:h-[320px] overflow-hidden flex items-center justify-center px-8">
+            
+            {/* Left Navigation Arrow */}
+            <button 
+              onClick={() => setActiveCategory(prev => (prev === 0 ? 2 : prev - 1))}
+              className="absolute left-0 md:left-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
+              aria-label="Categoria anterior"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+            </button>
+
+            {/* Slider Content */}
+            <div className="relative w-full h-full flex items-center justify-center">
+              
+              {/* Hatch (Card 0) */}
+              <Link 
+                href="/veiculos?category=Hatch" 
+                onClick={(e) => {
+                  if (activeCategory !== 0) {
+                    e.preventDefault();
+                    setActiveCategory(0);
+                  }
+                }}
+                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${
+                  activeCategory === 0
+                    ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default"
+                    : activeCategory === 1
+                      ? "left-[calc(50%-200px)] sm:left-[calc(50%-330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
+                      : "left-[calc(50%+200px)] sm:left-[calc(50%+330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
+                }`}
+              >
+                <Image src="/images/Hatch.png" alt="Hatch" fill className="object-cover absolute inset-0" />
+                <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
+                <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
+                <h3 className="absolute bottom-6 left-6 text-white text-[20px] sm:text-[24px] font-bold z-20">Hatch</h3>
+              </Link>
+
+              {/* Sedan (Card 1) */}
+              <Link 
+                href="/veiculos?category=Sedan" 
+                onClick={(e) => {
+                  if (activeCategory !== 1) {
+                    e.preventDefault();
+                    setActiveCategory(1);
+                  }
+                }}
+                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${
+                  activeCategory === 1
+                    ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default"
+                    : activeCategory === 2
+                      ? "left-[calc(50%-200px)] sm:left-[calc(50%-330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
+                      : "left-[calc(50%+200px)] sm:left-[calc(50%+330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
+                }`}
+              >
+                <Image src="/images/seddan.png" alt="Sedan" fill className="object-cover absolute inset-0" />
+                <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
+                <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
+                <h3 className="absolute bottom-6 left-6 text-white text-[20px] sm:text-[24px] font-bold z-20">Sedan</h3>
+              </Link>
+
+              {/* SUVs (Card 2) */}
+              <Link 
+                href="/veiculos?category=SUVs" 
+                onClick={(e) => {
+                  if (activeCategory !== 2) {
+                    e.preventDefault();
+                    setActiveCategory(2);
+                  }
+                }}
+                className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[350px] h-[200px] sm:h-[260px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-all duration-700 ease-in-out select-none ${
+                  activeCategory === 2
+                    ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default"
+                    : activeCategory === 0
+                      ? "left-[calc(50%-200px)] sm:left-[calc(50%-330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
+                      : "left-[calc(50%+200px)] sm:left-[calc(50%+330px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer pointer-events-auto"
+                }`}
+              >
+                <Image src="/images/suv.png" alt="SUVs" fill className="object-cover absolute inset-0" />
+                <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
+                <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
+                <h3 className="absolute bottom-6 left-6 text-white text-[20px] sm:text-[24px] font-bold z-20">SUVs</h3>
+              </Link>
+              
             </div>
 
-            {/* Categoria Cards */}
-            <Link href="/veiculos?category=Hatch" className="relative h-[180px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
-              <Image src="/images/Hatch.png" alt="Hatch" fill className="object-cover absolute inset-0" />
-              <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
-              <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
-              <h3 className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 text-white text-[20px] sm:text-[24px] font-bold z-20">Hatch</h3>
-            </Link>
-            <Link href="/veiculos?category=Sedan" className="relative h-[180px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
-              <Image src="/images/seddan.png" alt="Sedan" fill className="object-cover absolute inset-0" />
-              <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
-              <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
-              <h3 className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 text-white text-[20px] sm:text-[24px] font-bold z-20">Sedan</h3>
-            </Link>
-            <Link href="/veiculos?category=SUVs" className="relative h-[180px] sm:h-[280px] rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
-              <Image src="/images/suv.png" alt="SUVs" fill className="object-cover absolute inset-0" />
-              <div className="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full h-full absolute inset-0 z-10" />
-              <div className="bg-blue-900 w-full h-full absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-10 transition-opacity z-10" />
-              <h3 className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 text-white text-[20px] sm:text-[24px] font-bold z-20">SUVs</h3>
-            </Link>
+            {/* Right Navigation Arrow */}
+            <button 
+              onClick={() => setActiveCategory(prev => (prev === 2 ? 0 : prev + 1))}
+              className="absolute right-0 md:right-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
+              aria-label="Próxima categoria"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+            </button>
+
           </div>
         </section>
 
