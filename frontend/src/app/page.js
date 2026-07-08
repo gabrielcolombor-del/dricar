@@ -13,6 +13,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeHighlight, setActiveHighlight] = useState(0);
+  const [isAutoSlideActive, setIsAutoSlideActive] = useState(true);
   const [activeCategory, setActiveCategory] = useState(1); // 0: Hatch, 1: Sedan, 2: SUVs
   const router = useRouter();
 
@@ -37,13 +38,20 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto slide interval for highlights (every 5 seconds)
+  // Auto slide interval for highlights (every 5 seconds) - cleared when user interacts
   useEffect(() => {
+    if (!isAutoSlideActive) return;
     const timer = setInterval(() => {
       setActiveHighlight((prev) => (prev === 0 ? 1 : 0));
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isAutoSlideActive]);
+
+  const handleHighlightInteract = () => {
+    if (isAutoSlideActive) {
+      setIsAutoSlideActive(false);
+    }
+  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -90,15 +98,35 @@ export default function Home() {
         </section>
 
         {/* Highlights Section */}
-        <section className="relative w-full h-[400px] overflow-hidden py-10 flex items-center justify-center bg-white border-b border-gray-100">
+        <section 
+          onMouseEnter={handleHighlightInteract}
+          onTouchStart={handleHighlightInteract}
+          className="relative w-full h-[400px] overflow-hidden py-10 flex items-center justify-center bg-white border-b border-gray-100 px-8"
+        >
           
+          {/* Left Navigation Arrow */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleHighlightInteract();
+              setActiveHighlight(prev => (prev === 0 ? 1 : 0));
+            }}
+            className="absolute left-1 sm:left-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
+            aria-label="Destaque anterior"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+          </button>
+
           {/* Card 0: Troque seu carro */}
           <div 
-            onClick={() => setActiveHighlight(0)}
-            className={`absolute top-1/2 -translate-y-1/2 w-[85%] max-w-[500px] h-[320px] transition-all duration-700 ease-in-out bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 flex flex-col shadow-xl select-none ${
+            onClick={() => {
+              handleHighlightInteract();
+              setActiveHighlight(0);
+            }}
+            className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[480px] h-[320px] transition-all duration-700 ease-in-out bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 flex flex-col shadow-xl select-none ${
               activeHighlight === 0 
                 ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default" 
-                : "left-[calc(50%-230px)] sm:left-[calc(50%-390px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
+                : "left-[calc(50%-220px)] sm:left-[calc(50%-380px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
             }`}
           >
             <h3 className="text-[20px] md:text-[24px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
@@ -115,11 +143,14 @@ export default function Home() {
 
           {/* Card 1: Financiamento */}
           <div 
-            onClick={() => setActiveHighlight(1)}
-            className={`absolute top-1/2 -translate-y-1/2 w-[85%] max-w-[500px] h-[320px] transition-all duration-700 ease-in-out bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 flex flex-col shadow-md border border-gray-100 select-none ${
+            onClick={() => {
+              handleHighlightInteract();
+              setActiveHighlight(1);
+            }}
+            className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[480px] h-[320px] transition-all duration-700 ease-in-out bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 flex flex-col shadow-md border border-gray-100 select-none ${
               activeHighlight === 1 
                 ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default" 
-                : "left-[calc(50%+230px)] sm:left-[calc(50%+390px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
+                : "left-[calc(50%+220px)] sm:left-[calc(50%+380px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
             }`}
           >
             <h3 className="text-[20px] md:text-[24px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
@@ -133,6 +164,19 @@ export default function Home() {
               <Image src="/images/financia.png" alt="Financiamento" width={120} height={120} className="w-full h-full object-contain" />
             </div>
           </div>
+
+          {/* Right Navigation Arrow */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleHighlightInteract();
+              setActiveHighlight(prev => (prev === 0 ? 1 : 0));
+            }}
+            className="absolute right-1 sm:right-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
+            aria-label="Próximo destaque"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          </button>
 
         </section>
 
