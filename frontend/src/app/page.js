@@ -183,7 +183,7 @@ export default function Home() {
         <section className="hidden md:flex max-w-[1100px] mx-auto py-12 md:py-20 px-6 flex-row gap-8 justify-center items-center">
           {/* Card 0: Troque seu carro */}
           <div className="bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-xl hover:-translate-y-1 transition-transform">
-            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8">
+            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8 h-[72px]">
               Troque seu carro
             </h3>
             <p className="text-[14px] md:text-[15px] text-gray-200 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
@@ -197,7 +197,7 @@ export default function Home() {
 
           {/* Card 1: Financiamento */}
           <div className="bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-md hover:-translate-y-1 transition-transform border border-gray-100">
-            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8">
+            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8 h-[72px]">
               Financiamento
             </h3>
             <p className="text-[14px] md:text-[15px] text-gray-600 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
