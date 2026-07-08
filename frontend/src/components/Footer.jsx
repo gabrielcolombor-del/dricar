@@ -18,7 +18,7 @@ export default function Footer() {
               <Image src="/images/maps.png" alt="Como Chegar - Maps" fill className="object-cover" />
             </div>
             {/* Click Indicator Overlay */}
-            <div className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 w-[20px] h-[20px] sm:w-[28px] sm:h-[28px] bg-white/95 rounded-full p-1 shadow-md animate-bounce flex items-center justify-center border border-black/5 z-10">
+            <div className="absolute -right-3 bottom-0.5 sm:-right-5 sm:bottom-1.5 w-[32px] h-[32px] sm:w-[44px] sm:h-[44px] rotate-90 animate-bounce flex items-center justify-center z-10 pointer-events-none">
               <img src="/images/icon_click.png" alt="Clique para ver o mapa" className="w-full h-full object-contain" />
             </div>
           </a>
