@@ -98,12 +98,12 @@ export default function Home() {
         </section>
 
         {/* Highlights Section */}
+        {/* Mobile View: Slider */}
         <section 
           onMouseEnter={handleHighlightInteract}
           onTouchStart={handleHighlightInteract}
-          className="relative w-full h-[400px] overflow-hidden py-10 flex items-center justify-center bg-white border-b border-gray-100 px-8"
+          className="md:hidden relative w-full h-[400px] overflow-hidden py-10 flex items-center justify-center bg-white border-b border-gray-100 px-8"
         >
-          
           {/* Left Navigation Arrow */}
           <button 
             onClick={(e) => {
@@ -129,14 +129,14 @@ export default function Home() {
                 : "left-[calc(50%-220px)] sm:left-[calc(50%-380px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
             }`}
           >
-            <h3 className="text-[20px] md:text-[24px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
+            <h3 className="text-[20px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
               Troque seu carro
             </h3>
-            <p className="text-[13px] md:text-[14px] text-gray-200 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
+            <p className="text-[13px] text-gray-200 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
               Quer trocar de carro? Avaliamos seu usado na hora e facilitamos a troca pelo modelo ideal para você!
             </p>
             <Link href="/veiculos" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
-            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[90px] h-[90px] md:w-[140px] md:h-[140px] flex items-center justify-center">
+            <div className="absolute bottom-4 right-4 w-[90px] h-[90px] flex items-center justify-center">
               <Image src="/images/troca.png" alt="Troque seu carro" width={140} height={140} className="w-full h-full object-contain" />
             </div>
           </div>
@@ -153,14 +153,14 @@ export default function Home() {
                 : "left-[calc(50%+220px)] sm:left-[calc(50%+380px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
             }`}
           >
-            <h3 className="text-[20px] md:text-[24px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
+            <h3 className="text-[20px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
               Financiamento
             </h3>
-            <p className="text-[13px] md:text-[14px] text-gray-600 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
+            <p className="text-[13px] text-gray-600 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
               Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
             </p>
             <Link href="/veiculos" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
-            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[80px] h-[80px] md:w-[120px] md:h-[120px] flex items-center justify-center">
+            <div className="absolute bottom-4 right-4 w-[80px] h-[80px] flex items-center justify-center">
               <Image src="/images/financia.png" alt="Financiamento" width={120} height={120} className="w-full h-full object-contain" />
             </div>
           </div>
@@ -177,7 +177,37 @@ export default function Home() {
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
           </button>
+        </section>
 
+        {/* Desktop View: Side-by-side Cards */}
+        <section className="hidden md:flex max-w-[1100px] mx-auto py-12 md:py-20 px-6 flex-row gap-8 justify-center items-center">
+          {/* Card 0: Troque seu carro */}
+          <div className="bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-xl hover:-translate-y-1 transition-transform">
+            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8">
+              Troque seu carro
+            </h3>
+            <p className="text-[14px] md:text-[15px] text-gray-200 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
+              Quer trocar de carro? Avaliamos seu usado na hora e facilitamos a troca pelo modelo ideal para você!
+            </p>
+            <Link href="/veiculos" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
+            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[100px] h-[100px] md:w-[150px] md:h-[150px] flex items-center justify-center">
+              <Image src="/images/troca.png" alt="Troque seu carro" width={150} height={150} className="w-full h-full object-contain" />
+            </div>
+          </div>
+
+          {/* Card 1: Financiamento */}
+          <div className="bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-md hover:-translate-y-1 transition-transform border border-gray-100">
+            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8">
+              Financiamento
+            </h3>
+            <p className="text-[14px] md:text-[15px] text-gray-600 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
+              Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
+            </p>
+            <Link href="/veiculos" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
+            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[90px] h-[90px] md:w-[130px] md:h-[130px] flex items-center justify-center">
+              <Image src="/images/financia.png" alt="Financiamento" width={130} height={130} className="w-full h-full object-contain" />
+            </div>
+          </div>
         </section>
 
         {/* Mais Buscados */}
