@@ -4,7 +4,8 @@
   --color-brand-blue: #0B1D56;
   --color-brand-gray: #F8F8F8;
   --color-brand-white: #FFFFFF;
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-louis-george);
+  --font-caps: var(--font-kantumruy);
 }
 
 @layer base {
@@ -75,6 +76,9 @@
 }
 
 @layer utilities {
+  .uppercase {
+    font-family: var(--font-caps), sans-serif;
+  }
   .text-h7 {
     font-size: 18px;
     font-weight: 600;
