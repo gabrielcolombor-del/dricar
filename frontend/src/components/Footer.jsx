@@ -4,16 +4,25 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="bg-[#333333] text-white py-8 px-4 sm:px-6 border-t border-white/5">
-      <div className="max-w-[900px] mx-auto flex flex-row items-start justify-between gap-3 sm:gap-6 w-full">
+      <div className="max-w-[900px] mx-auto flex flex-row items-center justify-between gap-3 sm:gap-6 w-full">
         
         {/* Left Column: Maps Section */}
         <div className="flex flex-col items-center flex-1 min-w-0">
-          <a href="https://maps.app.goo.gl/RJcYwW9h5RPSKYvq9" target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
+          <a 
+            href="https://maps.app.goo.gl/RJcYwW9h5RPSKYvq9" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="block hover:opacity-80 transition-opacity relative"
+          >
             <div className="relative w-[70px] h-[70px] sm:w-[100px] sm:h-[100px] rounded-lg overflow-hidden border border-white/10">
               <Image src="/images/maps.png" alt="Como Chegar - Maps" fill className="object-cover" />
             </div>
+            {/* Click Indicator Overlay */}
+            <div className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 w-[20px] h-[20px] sm:w-[28px] sm:h-[28px] bg-white/95 rounded-full p-1 shadow-md animate-bounce flex items-center justify-center border border-black/5 z-10">
+              <img src="/images/icon_click.png" alt="Clique para ver o mapa" className="w-full h-full object-contain" />
+            </div>
           </a>
-          <span className="font-bold text-[9px] sm:text-xs mt-2 uppercase tracking-wider text-gray-300 text-center">Como Chegar</span>
+          <span className="font-bold text-[9px] sm:text-xs mt-2.5 uppercase tracking-wider text-gray-300 text-center">Como Chegar</span>
         </div>
 
         {/* Center Column: Links: Institucional */}
@@ -29,7 +38,7 @@ export default function Footer() {
 
         {/* Right Column: Logo & WhatsApp Button */}
         <div className="flex flex-col items-center sm:items-end flex-1 min-w-0">
-          <div className="relative w-[110px] h-[35px] sm:w-[140px] sm:h-[44px] mb-2 sm:mb-3">
+          <div className="relative w-[110px] h-[35px] sm:w-[140px] sm:h-[44px] mb-2.5 sm:mb-3">
             <Image 
               src="/images/logo branca sem fundo.png" 
               alt="Dri-Car Veículos" 
