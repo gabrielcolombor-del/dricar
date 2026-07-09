@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function CarCard({ id, title, subtitle, year, mileage, transmission, price, imageUrl }) {
+export default function CarCard({ id, title, subtitle, year, mileage, transmission, price, imageUrl, isOffer, promoPrice }) {
   return (
     <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 group">
       
@@ -16,6 +16,12 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
             </svg>
             <span className="text-sm">Sem Foto</span>
           </div>
+        )}
+
+        {isOffer && (
+          <span className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-extrabold uppercase px-2 py-1 rounded shadow-md z-10 tracking-wider">
+            Oferta
+          </span>
         )}
       </div>
       
@@ -37,8 +43,15 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
         </div>
         
         {/* Preço */}
-        <div className="text-center font-extrabold text-[20px] text-gray-900 mb-4">
-          {price}
+        <div className="text-center mb-4 flex flex-col items-center justify-center min-h-[44px]">
+          {isOffer && promoPrice ? (
+            <>
+              <span className="text-[12px] text-gray-400 line-through leading-none mb-1 font-normal">{price}</span>
+              <span className="font-extrabold text-[20px] text-green-600 leading-none">{promoPrice}</span>
+            </>
+          ) : (
+            <span className="font-extrabold text-[20px] text-gray-900 leading-normal">{price}</span>
+          )}
         </div>
         
         {/* Botão */}

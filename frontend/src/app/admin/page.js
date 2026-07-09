@@ -58,6 +58,8 @@ export default function AdminPage() {
     images: [], // Lista de URLs de fotos
     category: "Hatch",
     accessories: [],
+    isOffer: false,
+    promoPrice: "",
   });
 
   // Upload de Fotos Locais
@@ -341,6 +343,13 @@ export default function AdminPage() {
     setFormCar(prev => ({ ...prev, price: formatted }));
   };
 
+  const handlePromoPriceChange = (val) => {
+    const clean = val.replace(/\D/g, "");
+    if (!clean) return setFormCar(prev => ({ ...prev, promoPrice: "" }));
+    const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
+    setFormCar(prev => ({ ...prev, promoPrice: formatted }));
+  };
+
   const handleMileageChange = (val) => {
     const clean = val.replace(/\D/g, "");
     if (!clean) return setFormCar(prev => ({ ...prev, mileage: "" }));
@@ -439,6 +448,8 @@ export default function AdminPage() {
           images: [],
           category: "Hatch",
           accessories: [],
+          isOffer: false,
+          promoPrice: "",
         });
         clearUploadStates();
         setEditingCar(null);
@@ -574,6 +585,8 @@ export default function AdminPage() {
       images: car.images || (car.imageUrl ? [car.imageUrl] : []),
       category: car.category || "Hatch",
       accessories: accessoriesArray,
+      isOffer: car.isOffer || false,
+      promoPrice: car.promoPrice || "",
     });
     setActiveTab("cadastrar");
   };
@@ -710,7 +723,9 @@ export default function AdminPage() {
                   imageUrl: "",
                   images: [],
                   category: "Hatch",
-                  accessories: "",
+                  accessories: [],
+                  isOffer: false,
+                  promoPrice: "",
                 });
                 setActiveTab("cadastrar");
               }}
@@ -797,7 +812,16 @@ export default function AdminPage() {
                         <td className="p-4 text-sm text-gray-600">{car.year}</td>
                         <td className="p-4 text-sm text-gray-600">{car.mileage}</td>
                         <td className="p-4 text-sm"><span className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md font-medium">{car.category}</span></td>
-                        <td className="p-4 text-sm font-bold text-brand-blue">{car.price}</td>
+                        <td className="p-4 text-sm font-bold text-brand-blue">
+                          {car.isOffer && car.promoPrice ? (
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 line-through font-normal">{car.price}</span>
+                              <span className="text-green-600">{car.promoPrice}</span>
+                            </div>
+                          ) : (
+                            car.price
+                          )}
+                        </td>
                         <td className="p-4">
                           <div className="flex justify-center items-center gap-3">
                             <button 
@@ -966,6 +990,36 @@ export default function AdminPage() {
                     required
                   />
                 </div>
+              </div>
+
+              {/* Bloco de Oferta Promocional */}
+              <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100/70 flex flex-col gap-4">
+                <label className="flex items-start sm:items-center gap-3.5 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    checked={formCar.isOffer}
+                    onChange={(e) => setFormCar(prev => ({ ...prev, isOffer: e.target.checked }))}
+                    className="w-4 h-4 mt-0.5 sm:mt-0 rounded border-gray-300 text-brand-blue focus:ring-brand-blue cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-extrabold text-brand-blue uppercase block">Marcar como Veículo de Oferta</span>
+                    <span className="text-[11px] text-gray-500 font-light mt-0.5 block">Ative esta opção para destacar este carro na seção "Confira Nossas Ofertas" da Home Page.</span>
+                  </div>
+                </label>
+
+                {formCar.isOffer && (
+                  <div className="w-full max-w-[280px] animate-fade-in">
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Preço Promocional (R$)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: R$ 39.900"
+                      value={formCar.promoPrice}
+                      onChange={(e) => handlePromoPriceChange(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
+                      required={formCar.isOffer}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

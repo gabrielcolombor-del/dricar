@@ -59,6 +59,8 @@ export async function POST(request) {
           accessories: car.accessories || "",
           images: car.images || (car.imageUrl ? [car.imageUrl] : []),
           status: "active",
+          isOffer: car.isOffer || false,
+          promoPrice: car.promoPrice || null,
         },
       });
 
@@ -85,6 +87,8 @@ export async function POST(request) {
         category: car.category,
         description: car.subtitle || "",
         accessories: car.accessories || "",
+        isOffer: car.isOffer || false,
+        promoPrice: car.promoPrice || null,
       };
 
       // Se enviou fotos novas/atualizadas ou se enviou uma nova imagem pelo fluxo antigo

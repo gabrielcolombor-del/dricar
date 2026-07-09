@@ -189,13 +189,20 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              <div className="text-[32px] md:text-[40px] font-extrabold text-brand-blue mb-6 lg:mb-0">
-                {car.price}
+              <div className="flex flex-col mb-6 lg:mb-0">
+                {car.isOffer && car.promoPrice ? (
+                  <>
+                    <span className="text-sm md:text-md text-gray-400 line-through font-normal mb-1">{car.price}</span>
+                    <span className="text-[32px] md:text-[40px] font-extrabold text-green-600 leading-none">{car.promoPrice}</span>
+                  </>
+                ) : (
+                  <span className="text-[32px] md:text-[40px] font-extrabold text-brand-blue leading-none">{car.price}</span>
+                )}
               </div>
 
               <div className="flex flex-col gap-3">
                 <a 
-                  href={`https://wa.me/5527999361212?text=Olá! Gostaria de saber mais informações sobre o ${car.title} ${car.subtitle} (${car.year}) anunciado por ${car.price}`}
+                  href={`https://wa.me/5527999361212?text=Olá! Gostaria de saber mais informações sobre o ${car.title} ${car.subtitle} (${car.year}) anunciado por ${car.isOffer && car.promoPrice ? car.promoPrice : car.price}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-brand-blue text-white rounded-[25px] w-full py-3 text-center font-bold text-lg hover:bg-blue-900 transition-colors shadow-md flex items-center justify-center"

@@ -47,6 +47,8 @@ export async function GET(request) {
           images: car.images,
           accessories: accessoriesList,
           status: statusPt,
+          isOffer: car.isOffer,
+          promoPrice: car.promoPrice || "",
           // Logs CRM
           buyerName: car.buyerName || "",
           salePrice: car.salePrice || "",

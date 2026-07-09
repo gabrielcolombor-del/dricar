@@ -45,5 +45,9 @@ model Car {
   salePrice    String?  @map("sale_price")
   saleDate     String?  @map("sale_date")
 
+  // Ofertas
+  isOffer      Boolean  @default(false) @map("is_offer")
+  promoPrice   String?  @map("promo_price")
+
   @@map("cars")
 }

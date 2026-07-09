@@ -367,12 +367,11 @@ export default function Home() {
 
             {loading ? (
               <div className="flex justify-center py-12 text-gray-500 font-semibold">Carregando ofertas...</div>
-            ) : cars.length === 0 ? (
+            ) : cars.filter(car => car.isOffer).length === 0 ? (
               <div className="flex justify-center py-12 text-gray-500 font-semibold">Nenhuma oferta disponível no momento.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-                {/* Showcase different cars or same from list */}
-                {cars.slice(0, 10).reverse().map((car, index) => (
+                {cars.filter(car => car.isOffer).slice(0, 10).map((car, index) => (
                   <CarCard key={index} {...car} />
                 ))}
               </div>
