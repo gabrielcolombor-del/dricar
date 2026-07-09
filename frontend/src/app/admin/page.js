@@ -743,6 +743,13 @@ export default function AdminPage() {
               👥 Gerenciar Contas
             </button>
           )}
+
+          <button 
+            onClick={handleLogout}
+            className="md:ml-auto pb-3 text-sm font-bold border-b-2 border-transparent text-red-600 hover:text-red-800 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+          >
+            🚪 Sair (Logout)
+          </button>
         </div>
 
         {/* Indicadores CRM (Apenas Admin) */}
@@ -1009,7 +1016,7 @@ export default function AdminPage() {
 
                 {formCar.isOffer && (
                   <div className="w-full max-w-[280px] animate-fade-in">
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Preço Promocional (R$)</label>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Novo Preço (R$)</label>
                     <input 
                       type="text" 
                       placeholder="Ex: R$ 39.900"

@@ -43,11 +43,11 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
         </div>
         
         {/* Preço */}
-        <div className="text-center mb-4 flex flex-col items-center justify-center min-h-[44px]">
+        <div className="text-center mb-4 flex flex-col items-center justify-center min-h-[48px]">
           {isOffer && promoPrice ? (
             <>
-              <span className="text-[12px] text-gray-400 line-through leading-none mb-1 font-normal">{price}</span>
-              <span className="font-extrabold text-[20px] text-green-600 leading-none">{promoPrice}</span>
+              <span className="text-[12px] text-gray-400 line-through leading-none mb-1 font-normal">de {price}</span>
+              <span className="font-extrabold text-[20px] text-green-600 leading-none">por {promoPrice}</span>
             </>
           ) : (
             <span className="font-extrabold text-[20px] text-gray-900 leading-normal">{price}</span>
