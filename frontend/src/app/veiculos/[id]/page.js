@@ -113,7 +113,7 @@ export default function ProductPage() {
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
-                className="relative bg-gray-100 w-full aspect-[4/3] lg:aspect-video rounded-xl flex items-center justify-center text-gray-400 overflow-hidden shadow-md group"
+                className="relative bg-gray-100 w-full aspect-[4/3] rounded-xl flex items-center justify-center text-gray-400 overflow-hidden shadow-md group"
               >
                 {carImages.length > 0 ? (
                   <img 

@@ -6,7 +6,7 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
     <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 group">
       
       {/* Imagem */}
-      <div className="relative h-[160px] w-full bg-[#E5E5E5]">
+      <div className="relative w-full aspect-[4/3] bg-[#E5E5E5]">
         {imageUrl ? (
           <img src={imageUrl} alt={title} className="w-full h-full object-cover animate-fade-in" />
         ) : (
@@ -26,11 +26,11 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
         
         {/* Ícones de Específicações */}
         <div className="w-full flex flex-col gap-2 mb-4 px-2">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center gap-3">
             <Image src="/images/calendar icon.png" alt="Ano" width={18} height={18} className="opacity-80" unoptimized />
             <span className="text-[12px] font-medium text-gray-700">{year}</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center gap-3">
             <Image src="/images/sticks.png" alt="Câmbio" width={18} height={18} className="opacity-80" unoptimized />
             <span className="text-[12px] font-medium text-gray-700">{transmission}</span>
           </div>
