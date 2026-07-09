@@ -5,6 +5,25 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { signIn, signOut } from "next-auth/react";
 
+const PREDEFINED_ACCESSORIES = [
+  "Ar-condicionado",
+  "Direção hidráulica ou elétrica",
+  "Vidros elétricos",
+  "Travas elétricas",
+  "Retrovisores elétricos",
+  "Bancos em couro",
+  "Freios ABS",
+  "Airbag",
+  "Alarme",
+  "Sensor de estacionamento",
+  "Câmera de ré",
+  "Central multimídia / Bluetooth",
+  "Volante multifuncional",
+  "Rodas de liga leve",
+  "Faróis de neblina",
+  "Teto solar"
+];
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [login, setLogin] = useState("");
@@ -38,7 +57,7 @@ export default function AdminPage() {
     imageUrl: "",
     images: [], // Lista de URLs de fotos
     category: "Hatch",
-    accessories: "",
+    accessories: [],
   });
 
   // Upload de Fotos Locais
@@ -303,6 +322,17 @@ export default function AdminPage() {
     }
   };
 
+  // Alternar seleção de acessório
+  const handleAccessoryChange = (accessory) => {
+    setFormCar(prev => {
+      const current = prev.accessories || [];
+      const updated = current.includes(accessory)
+        ? current.filter(item => item !== accessory)
+        : [...current, accessory];
+      return { ...prev, accessories: updated };
+    });
+  };
+
   // Mascaras de preenchimento
   const handlePriceChange = (val) => {
     const clean = val.replace(/\D/g, "");
@@ -408,7 +438,7 @@ export default function AdminPage() {
           imageUrl: "",
           images: [],
           category: "Hatch",
-          accessories: "",
+          accessories: [],
         });
         clearUploadStates();
         setEditingCar(null);
@@ -525,6 +555,14 @@ export default function AdminPage() {
     
     clearUploadStates();
     setEditingCar(car);
+
+    let accessoriesArray = [];
+    if (Array.isArray(car.accessories)) {
+      accessoriesArray = car.accessories;
+    } else if (car.accessories) {
+      accessoriesArray = car.accessories.split(",").map(item => item.trim()).filter(Boolean);
+    }
+
     setFormCar({
       title: car.title || "",
       subtitle: car.subtitle || "",
@@ -535,9 +573,7 @@ export default function AdminPage() {
       imageUrl: car.imageUrl || "",
       images: car.images || (car.imageUrl ? [car.imageUrl] : []),
       category: car.category || "Hatch",
-      accessories: Array.isArray(car.accessories) 
-        ? car.accessories.join(", ") 
-        : car.accessories || "",
+      accessories: accessoriesArray,
     });
     setActiveTab("cadastrar");
   };
@@ -1064,13 +1100,23 @@ export default function AdminPage() {
               )}
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Acessórios (Separados por vírgula)</label>
-                <textarea 
-                  placeholder="Ex: Ar Condicionado, Vidros Elétricos, Freio ABS"
-                  value={formCar.accessories}
-                  onChange={(e) => setFormCar(prev => ({ ...prev, accessories: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue bg-white h-24 text-gray-800"
-                />
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-3">Acessórios do Veículo</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 bg-gray-50 p-5 rounded-xl border border-gray-200">
+                  {PREDEFINED_ACCESSORIES.map((accessory) => {
+                    const isChecked = Array.isArray(formCar.accessories) && formCar.accessories.includes(accessory);
+                    return (
+                      <label key={accessory} className="flex items-center gap-3 cursor-pointer select-none text-gray-700 text-sm hover:text-brand-blue transition-colors">
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked}
+                          onChange={() => handleAccessoryChange(accessory)}
+                          className="w-4 h-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue cursor-pointer"
+                        />
+                        <span>{accessory}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex gap-4 justify-end mt-4">
