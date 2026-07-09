@@ -36,13 +36,14 @@ export default function AdminPage() {
     transmission: "Manual",
     price: "",
     imageUrl: "",
+    images: [], // Lista de URLs de fotos
     category: "Hatch",
     accessories: "",
   });
 
-  // Upload de Foto Local
-  const [uploadedImage, setUploadedImage] = useState(null); // Base64 comprimida
-  const [uploadedImageName, setUploadedImageName] = useState("");
+  // Upload de Fotos Locais
+  const [uploadedImages, setUploadedImages] = useState([]); // Array de objetos { base64, name }
+  const [imageUrlInput, setImageUrlInput] = useState(""); // Input local para adicionar imagem via URL
   const fileInputRef = useRef(null);
 
   // Estado para modal de CRM (Venda)
@@ -242,48 +243,63 @@ export default function AdminPage() {
 
   // Limpa estados de imagem
   const clearUploadStates = () => {
-    setUploadedImage(null);
-    setUploadedImageName("");
+    setUploadedImages([]);
+    setImageUrlInput("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-  // Selecionar arquivo do dispositivo e comprimir no Canvas
+  // Selecionar múltiplos arquivos do dispositivo e comprimir no Canvas
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const img = new Image();
-        img.src = reader.result;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 1200; // Resolução otimizada para web
-          let width = img.width;
-          let height = img.height;
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      files.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const img = new window.Image();
+          img.src = reader.result;
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const MAX_WIDTH = 1200; // Resolução otimizada para web
+            let width = img.width;
+            let height = img.height;
 
-          if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
-          }
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
 
-          canvas.width = width;
-          canvas.height = height;
-          
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
 
-          // Comprime como JPEG com 80% de qualidade (gera arquivos leves ~150KB)
-          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
-          setUploadedImage(compressedDataUrl);
-          setUploadedImageName(file.name.replace(/\.[^/.]+$/, "") + ".jpg");
-          
-          // Esvazia o input de texto do link para evitar ambiguidade
-          setFormCar(prev => ({ ...prev, imageUrl: "" }));
+            // Comprime como JPEG com 80% de qualidade (gera arquivos leves ~150KB)
+            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+            const name = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+            
+            setUploadedImages(prev => [...prev, { base64: compressedDataUrl, name }]);
+          };
         };
-      };
-      reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+      });
+      // Limpa valor do input para permitir selecionar os mesmos arquivos novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // Adicionar imagem via link manual (URL)
+  const handleAddImageUrl = () => {
+    if (imageUrlInput.trim()) {
+      setFormCar(prev => ({
+        ...prev,
+        images: [...(prev.images || []), imageUrlInput.trim()]
+      }));
+      setImageUrlInput("");
     }
   };
 
@@ -317,42 +333,52 @@ export default function AdminPage() {
     setActionLoading(true);
     setError("");
 
-    let finalImageUrl = formCar.imageUrl;
+    const uploadedUrls = [];
 
-    // 1. Se houver imagem local selecionada do celular, faz upload no Supabase Storage primeiro
-    if (uploadedImage) {
+    // 1. Se houver imagens locais selecionadas, faz upload de cada uma no Supabase Storage
+    if (uploadedImages.length > 0) {
       try {
-        const uploadRes = await fetch("/api/admin/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: uploadedImage, imageName: uploadedImageName }),
+        const uploadPromises = uploadedImages.map(async (imgObj) => {
+          const uploadRes = await fetch("/api/admin/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: imgObj.base64, imageName: imgObj.name }),
+          });
+
+          if (!uploadRes.ok) {
+            throw new Error(`Erro de comunicação com o servidor de upload para a imagem ${imgObj.name}.`);
+          }
+
+          const uploadResult = await uploadRes.ok ? await uploadRes.json() : {};
+
+          if (uploadResult.error) {
+            throw new Error(uploadResult.error);
+          }
+
+          return uploadResult.imageUrl;
         });
 
-        if (!uploadRes.ok) {
-          throw new Error("Erro de comunicação com o servidor de upload.");
-        }
-
-        const uploadResult = await uploadRes.json();
-
-        if (uploadResult.error) {
-          throw new Error(uploadResult.error);
-        }
-
-        finalImageUrl = uploadResult.imageUrl;
+        const urls = await Promise.all(uploadPromises);
+        uploadedUrls.push(...urls);
       } catch (err) {
-        setError(`Falha ao fazer upload da imagem: ${err.message}`);
+        setError(`Falha ao fazer upload das imagens: ${err.message}`);
         setActionLoading(false);
         return;
       }
     }
 
-    // 2. Envia os dados do carro e a URL pública para o banco de dados (Prisma/PostgreSQL)
+    // 2. Combina as imagens já salvas (ou URLs manuais) com as novas carregadas do dispositivo
+    const finalImagesList = [...(formCar.images || []), ...uploadedUrls];
+    const firstImageUrl = finalImagesList.length > 0 ? finalImagesList[0] : "";
+
+    // 3. Envia os dados do carro e a lista de URLs pública para o banco de dados (Prisma/PostgreSQL)
     const action = editingCar ? "update" : "create";
     const requestBody = {
       action,
       car: {
         ...formCar,
-        imageUrl: finalImageUrl, // URL final salva no banco
+        imageUrl: firstImageUrl, // Mantém compatibilidade com listagem antiga que usa imageUrl diretamente
+        images: finalImagesList,  // Array de todas as fotos salvas
         accessories: typeof formCar.accessories === "string" 
           ? formCar.accessories 
           : formCar.accessories.join(", "),
@@ -380,6 +406,7 @@ export default function AdminPage() {
           transmission: "Manual",
           price: "",
           imageUrl: "",
+          images: [],
           category: "Hatch",
           accessories: "",
         });
@@ -506,6 +533,7 @@ export default function AdminPage() {
       transmission: car.transmission || "Manual",
       price: car.price || "",
       imageUrl: car.imageUrl || "",
+      images: car.images || (car.imageUrl ? [car.imageUrl] : []),
       category: car.category || "Hatch",
       accessories: Array.isArray(car.accessories) 
         ? car.accessories.join(", ") 
@@ -644,6 +672,7 @@ export default function AdminPage() {
                   transmission: "Manual",
                   price: "",
                   imageUrl: "",
+                  images: [],
                   category: "Hatch",
                   accessories: "",
                 });
@@ -903,7 +932,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Categoria</label>
                   <select 
@@ -928,61 +957,109 @@ export default function AdminPage() {
                     <option value="Automático">Automático</option>
                   </select>
                 </div>
-                
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Imagem do Veículo</label>
-                  <div className="flex flex-col gap-2">
-                    <button 
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full border border-dashed border-gray-300 hover:border-brand-blue text-gray-600 hover:text-brand-blue rounded-lg py-2.5 text-xs font-bold transition-all bg-gray-50 flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-                      </svg>
-                      {uploadedImageName ? "Foto Selecionada" : "Tirar / Escolher Foto do Celular"}
-                    </button>
-                    
-                    <input 
-                      type="file" 
-                      ref={fileInputRef}
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
+              </div>
 
-                    {/* Fallback de link manual */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Imagens do Veículo (Adicione quantas desejar)</label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-grow sm:flex-grow-0 border border-dashed border-gray-300 hover:border-brand-blue text-gray-600 hover:text-brand-blue rounded-lg py-3 px-4 text-xs font-bold transition-all bg-gray-50 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                    </svg>
+                    {uploadedImages.length > 0 ? `Adicionar mais Fotos (${uploadedImages.length} selecionadas)` : "Escolher Fotos do Celular / Computador"}
+                  </button>
+                  
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  <div className="flex-1 flex gap-2">
                     <input 
                       type="text" 
                       placeholder="Ou cole o link da foto (URL)..."
-                      value={formCar.imageUrl}
-                      disabled={!!uploadedImage}
-                      onChange={(e) => setFormCar(prev => ({ ...prev, imageUrl: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 text-xs focus:outline-none focus:border-brand-blue bg-white text-gray-800 disabled:opacity-50"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                      className="flex-grow border border-gray-300 rounded-lg p-3 text-xs focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                     />
+                    <button 
+                      type="button"
+                      onClick={handleAddImageUrl}
+                      className="bg-brand-blue hover:opacity-90 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-opacity cursor-pointer whitespace-nowrap"
+                    >
+                      Adicionar Link
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Pré-visualização da Imagem */}
-              {(uploadedImage || formCar.imageUrl) && (
-                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase mb-2">Pré-visualização da Foto</span>
-                  <img 
-                    src={uploadedImage || formCar.imageUrl} 
-                    alt="Preview" 
-                    className="h-44 w-auto rounded-lg object-contain bg-white shadow-sm border border-gray-100" 
-                  />
-                  {uploadedImage && (
-                    <button 
-                      type="button" 
-                      onClick={clearUploadStates}
-                      className="text-xs text-red-500 hover:text-red-700 font-bold underline mt-2 cursor-pointer"
-                    >
-                      Remover foto do dispositivo
-                    </button>
-                  )}
+              {/* Pré-visualização de Todas as Fotos */}
+              {(((formCar.images && formCar.images.length > 0) || uploadedImages.length > 0)) && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 flex flex-col gap-3">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase text-center block">
+                    Fotos Selecionadas ({ (formCar.images?.length || 0) + uploadedImages.length })
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {/* Imagens já salvas ou inseridas via link */}
+                    {formCar.images && formCar.images.map((url, index) => (
+                      <div key={`saved-${index}`} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white aspect-video shadow-sm">
+                        <img 
+                          src={url} 
+                          alt={`Foto ${index + 1}`} 
+                          className="w-full h-full object-cover" 
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setFormCar(prev => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== index)
+                            }));
+                          }}
+                          className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md transition-colors cursor-pointer flex items-center justify-center"
+                          title="Remover foto"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                        <span className="absolute bottom-1 left-1 bg-brand-blue/80 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">Salva/URL</span>
+                      </div>
+                    ))}
+
+                    {/* Imagens do dispositivo prontas para upload */}
+                    {uploadedImages.map((imgObj, index) => (
+                      <div key={`local-${index}`} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white aspect-video shadow-sm">
+                        <img 
+                          src={imgObj.base64} 
+                          alt={`Local ${index + 1}`} 
+                          className="w-full h-full object-cover" 
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setUploadedImages(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md transition-colors cursor-pointer flex items-center justify-center"
+                          title="Remover foto"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                        <span className="absolute bottom-1 left-1 bg-yellow-600/80 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">Upload Pendente</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

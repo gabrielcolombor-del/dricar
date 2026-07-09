@@ -12,6 +12,7 @@ export default function ProductPage() {
   const [cars, setCars] = useState([]);
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     async function fetchCars() {
@@ -68,6 +69,10 @@ export default function ProductPage() {
   // Recommendations: exclude current car, take up to 5 cars
   const recommendations = cars.filter(c => String(c.id) !== String(id)).slice(0, 5);
 
+  const carImages = car.images && car.images.length > 0 
+    ? car.images 
+    : (car.imageUrl ? [car.imageUrl] : ["/images/ford ka.png"]);
+
   return (
     <>
       <Header />
@@ -76,22 +81,63 @@ export default function ProductPage() {
         {/* Product Details Section */}
         <section className="flex flex-col lg:flex-row gap-12 mb-16">
           {/* Gallery */}
-          <div className="flex-1">
-            <div className="relative bg-gray-200 w-full aspect-[4/3] lg:aspect-video rounded-xl flex items-center justify-center text-gray-400 mb-4 overflow-hidden shadow-md">
-              {car.imageUrl ? (
-                <img src={car.imageUrl} alt={`${car.title} ${car.subtitle}`} className="w-full h-full object-cover" />
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="relative bg-gray-100 w-full aspect-[4/3] lg:aspect-video rounded-xl flex items-center justify-center text-gray-400 overflow-hidden shadow-md group">
+              {carImages.length > 0 ? (
+                <img 
+                  src={carImages[activeImageIndex]} 
+                  alt={`${car.title} ${car.subtitle} - Foto ${activeImageIndex + 1}`} 
+                  className="w-full h-full object-cover transition-all duration-300" 
+                />
               ) : (
                 <span className="text-sm">Sem Foto</span>
               )}
+
+              {/* Setas de navegação lateral (só aparecem se houver mais de 1 imagem) */}
+              {carImages.length > 1 && (
+                <>
+                  <button 
+                    onClick={() => setActiveImageIndex(prev => (prev === 0 ? carImages.length - 1 : prev - 1))}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2.5 shadow-md transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center"
+                    title="Anterior"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                  </button>
+                  <button 
+                    onClick={() => setActiveImageIndex(prev => (prev === carImages.length - 1 ? 0 : prev + 1))}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2.5 shadow-md transition-colors cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center"
+                    title="Próxima"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </button>
+                </>
+              )}
             </div>
-            {/* Gallery pagination dots */}
-            <div className="flex justify-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-gray-700"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
-            </div>
+
+            {/* Lista de Miniaturas (Thumbnails) abaixo da foto principal */}
+            {carImages.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto py-1 scrollbar-thin scrollbar-thumb-gray-300">
+                {carImages.map((imgUrl, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setActiveImageIndex(index)}
+                    className={`relative w-20 sm:w-24 aspect-video rounded-lg overflow-hidden border-2 bg-white flex-shrink-0 transition-all cursor-pointer shadow-sm ${
+                      activeImageIndex === index ? "border-brand-blue scale-95" : "border-transparent hover:border-gray-300"
+                    }`}
+                  >
+                    <img 
+                      src={imgUrl} 
+                      alt={`Miniatura ${index + 1}`} 
+                      className="w-full h-full object-cover" 
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Info */}

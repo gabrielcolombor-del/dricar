@@ -57,7 +57,7 @@ export async function POST(request) {
           category: car.category,
           description: car.subtitle || "",
           accessories: car.accessories || "",
-          images: car.imageUrl ? [car.imageUrl] : [],
+          images: car.images || (car.imageUrl ? [car.imageUrl] : []),
           status: "active",
         },
       });
@@ -87,8 +87,10 @@ export async function POST(request) {
         accessories: car.accessories || "",
       };
 
-      // Se enviou uma nova imagem, substitui a atual
-      if (car.imageUrl) {
+      // Se enviou fotos novas/atualizadas ou se enviou uma nova imagem pelo fluxo antigo
+      if (car.images) {
+        updateData.images = car.images;
+      } else if (car.imageUrl) {
         updateData.images = [car.imageUrl];
       }
 

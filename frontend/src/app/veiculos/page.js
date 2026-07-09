@@ -15,8 +15,13 @@ function VeiculosContent() {
   const [loading, setLoading] = useState(true);
   
   // Dynamic filter state bounds
+  const [minPriceLimit, setMinPriceLimit] = useState(0);
   const [maxPriceLimit, setMaxPriceLimit] = useState(150000);
+  const [minKmLimit, setMinKmLimit] = useState(0);
   const [maxKmLimit, setMaxKmLimit] = useState(110000);
+  const [minYearLimit, setMinYearLimit] = useState(2013);
+  const [maxYearLimit, setMaxYearLimit] = useState(2024);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
 
   // Active filter state
   const [preco, setPreco] = useState(150000);
@@ -39,17 +44,32 @@ function VeiculosContent() {
           const data = await res.json();
           setCars(data);
           
-          // Dynamically adjust slider maximums if data exists
+          // Dynamically adjust slider bounds if data exists
           if (data.length > 0) {
-            const prices = data.map(c => Number(c.price.replace(/\D/g, "")));
-            const maxPrice = Math.max(...prices);
+            const prices = data.map(c => Number(c.price.replace(/\D/g, ""))).filter(p => !isNaN(p));
+            const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+            const maxPrice = prices.length > 0 ? Math.max(...prices) : 150000;
+            setMinPriceLimit(minPrice);
             setMaxPriceLimit(maxPrice);
-            setPreco(maxPrice);
 
-            const kms = data.map(c => Number(c.mileage.replace(/\D/g, "")));
-            const maxKm = Math.max(...kms);
+            const kms = data.map(c => Number(c.mileage.replace(/\D/g, ""))).filter(k => !isNaN(k));
+            const minKm = kms.length > 0 ? Math.min(...kms) : 0;
+            const maxKm = kms.length > 0 ? Math.max(...kms) : 110000;
+            setMinKmLimit(minKm);
             setMaxKmLimit(maxKm);
-            setKm(maxKm);
+
+            const years = data.map(c => Number(c.year.split("/")[0])).filter(y => !isNaN(y));
+            const minYear = years.length > 0 ? Math.min(...years) : 2013;
+            const maxYear = years.length > 0 ? Math.max(...years) : 2024;
+            setMinYearLimit(minYear);
+            setMaxYearLimit(maxYear);
+
+            if (isFirstLoad) {
+              setPreco(maxPrice);
+              setKm(maxKm);
+              setAno(minYear);
+              setIsFirstLoad(false);
+            }
           }
         }
       } catch (err) {
@@ -136,7 +156,7 @@ function VeiculosContent() {
   const handleClearFilters = () => {
     setPreco(maxPriceLimit);
     setKm(maxKmLimit);
-    setAno(2013);
+    setAno(minYearLimit);
     setSelectedBrand("");
     setSelectedModel("");
     setSelectedCategory("");
@@ -144,9 +164,9 @@ function VeiculosContent() {
     setLocalSearch("");
   };
 
-  const precoPercent = getPercentage(preco, 34000, maxPriceLimit);
-  const kmPercent = getPercentage(km, 32000, maxKmLimit);
-  const anoPercent = getPercentage(ano, 2013, 2024);
+  const precoPercent = getPercentage(preco, minPriceLimit, maxPriceLimit);
+  const kmPercent = getPercentage(km, minKmLimit, maxKmLimit);
+  const anoPercent = getPercentage(ano, minYearLimit, maxYearLimit);
 
   return (
     <main className="flex-1 w-full max-w-[1200px] mx-auto py-8 md:py-12 px-6 flex flex-col md:flex-row gap-8">
@@ -246,7 +266,7 @@ function VeiculosContent() {
                 
                 <input 
                   type="range" 
-                  min={34000} 
+                  min={minPriceLimit} 
                   max={maxPriceLimit} 
                   step={1000}
                   value={preco} 
@@ -254,7 +274,7 @@ function VeiculosContent() {
                   className="w-full accent-brand-blue cursor-pointer" 
                 />
                 <div className="flex justify-between text-[11px] mt-2 text-gray-500">
-                  <span>R$ 34.000</span>
+                  <span>{formatPrice(minPriceLimit)}</span>
                   <span>{formatPrice(maxPriceLimit)}</span>
                 </div>
               </div>
@@ -274,7 +294,7 @@ function VeiculosContent() {
 
                 <input 
                   type="range" 
-                  min={32000} 
+                  min={minKmLimit} 
                   max={maxKmLimit} 
                   step={1000}
                   value={km}
@@ -282,7 +302,7 @@ function VeiculosContent() {
                   className="w-full accent-brand-blue cursor-pointer" 
                 />
                 <div className="flex justify-between text-[11px] mt-2 text-gray-500">
-                  <span>32.000 km</span>
+                  <span>{formatKm(minKmLimit)}</span>
                   <span>{formatKm(maxKmLimit)}</span>
                 </div>
               </div>
@@ -302,16 +322,16 @@ function VeiculosContent() {
 
                 <input 
                   type="range" 
-                  min={2013} 
-                  max={2024} 
+                  min={minYearLimit} 
+                  max={maxYearLimit} 
                   step={1}
                   value={ano}
                   onChange={(e) => setAno(Number(e.target.value))}
                   className="w-full accent-brand-blue cursor-pointer" 
                 />
                 <div className="flex justify-between text-[11px] mt-2 text-gray-500">
-                  <span>2013</span>
-                  <span>2024</span>
+                  <span>{minYearLimit}</span>
+                  <span>{maxYearLimit}</span>
                 </div>
               </div>
             </div>
