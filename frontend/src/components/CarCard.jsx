@@ -6,7 +6,7 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
     <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 group">
       
       {/* Imagem */}
-      <div className="relative h-[180px] w-full bg-[#E5E5E5]">
+      <div className="relative h-[160px] w-full bg-[#E5E5E5]">
         {imageUrl ? (
           <img src={imageUrl} alt={title} className="w-full h-full object-cover animate-fade-in" />
         ) : (
@@ -19,35 +19,31 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
         )}
       </div>
       
-      <div className="px-5 pt-5 pb-6 flex flex-col flex-grow items-center">
+      <div className="px-4 pt-4 pb-4 flex flex-col flex-grow items-center">
         {/* Título e Subtítulo */}
-        <h3 className="text-[18px] font-medium text-gray-800 leading-tight">{title}</h3>
-        <p className="text-[13px] font-medium text-gray-500 uppercase tracking-wide mb-5 mt-1">{subtitle}</p>
+        <h3 className="text-[17px] font-medium text-gray-800 leading-tight text-center">{title}</h3>
+        <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wide mb-3 mt-1 text-center">{subtitle}</p>
         
         {/* Ícones de Específicações */}
-        <div className="w-full flex flex-col gap-2.5 mb-5 px-2">
+        <div className="w-full flex flex-col gap-2 mb-4 px-2">
           <div className="flex items-center gap-3">
             <Image src="/images/calendar icon.png" alt="Ano" width={18} height={18} className="opacity-80" unoptimized />
-            <span className="text-[13px] font-medium text-gray-700">{year}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Image src="/images/velocimeter.png" alt="Quilometragem" width={18} height={18} className="opacity-80" unoptimized />
-            <span className="text-[13px] font-medium text-gray-700">{mileage}</span>
+            <span className="text-[12px] font-medium text-gray-700">{year}</span>
           </div>
           <div className="flex items-center gap-3">
             <Image src="/images/sticks.png" alt="Câmbio" width={18} height={18} className="opacity-80" unoptimized />
-            <span className="text-[13px] font-medium text-gray-700">{transmission}</span>
+            <span className="text-[12px] font-medium text-gray-700">{transmission}</span>
           </div>
         </div>
         
         {/* Preço */}
-        <div className="text-center font-extrabold text-[22px] text-gray-900 mb-6">
+        <div className="text-center font-extrabold text-[20px] text-gray-900 mb-4">
           {price}
         </div>
         
         {/* Botão */}
         <div className="w-full mt-auto">
-          <Link href={`/veiculos/${id}`} className="bg-brand-blue text-white rounded-[25px] w-full py-2.5 text-center block font-semibold text-[14px] hover:bg-blue-900 transition-colors">
+          <Link href={`/veiculos/${id}`} className="bg-brand-blue text-white rounded-[25px] w-full py-2 text-center block font-semibold text-[13px] hover:bg-blue-900 transition-colors">
             Saiba mais
           </Link>
         </div>
