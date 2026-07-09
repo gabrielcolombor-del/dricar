@@ -48,7 +48,7 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
         {/* Botão */}
         <div className="w-full mt-auto">
           <Link href={`/veiculos/${id}`} className="bg-brand-blue text-white rounded-[25px] w-full py-2.5 text-center block font-semibold text-[14px] hover:bg-blue-900 transition-colors">
-            Fale conosco
+            Saiba mais
           </Link>
         </div>
       </div>
