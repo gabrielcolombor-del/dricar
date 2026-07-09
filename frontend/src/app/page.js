@@ -110,6 +110,33 @@ export default function Home() {
           </form>
         </section>
 
+        {/* Mais Buscados */}
+        <section className="bg-[#F8F8F8] py-20 border-t border-b border-gray-200">
+          <div className="max-w-[1200px] mx-auto px-6">
+            <div className="flex justify-between items-end mb-10">
+              <div>
+                <h2 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none mb-1">Carros</h2>
+                <h4 className="text-[20px] font-bold text-gray-800 lowercase">mais buscados</h4>
+              </div>
+              <Link href="/veiculos" className="font-bold text-[15px] text-gray-800 hover:text-brand-blue transition-colors">
+                ver todos
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center py-12 text-gray-500 font-semibold">Carregando estoque...</div>
+            ) : cars.length === 0 ? (
+              <div className="flex justify-center py-12 text-gray-500 font-semibold">Nenhum veículo disponível no momento.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                {cars.slice(0, 10).map((car, index) => (
+                  <CarCard key={index} {...car} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* Highlights Section */}
         {/* Mobile View: Slider */}
         <section 
@@ -220,33 +247,6 @@ export default function Home() {
             <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[90px] h-[90px] md:w-[130px] md:h-[130px] flex items-center justify-center">
               <Image src="/images/financia.png" alt="Financiamento" width={130} height={130} className="w-full h-full object-contain" />
             </div>
-          </div>
-        </section>
-
-        {/* Mais Buscados */}
-        <section className="bg-[#F8F8F8] py-20 border-t border-b border-gray-200">
-          <div className="max-w-[1200px] mx-auto px-6">
-            <div className="flex justify-between items-end mb-10">
-              <div>
-                <h2 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none mb-1">Carros</h2>
-                <h4 className="text-[20px] font-bold text-gray-800 lowercase">mais buscados</h4>
-              </div>
-              <Link href="/veiculos" className="font-bold text-[15px] text-gray-800 hover:text-brand-blue transition-colors">
-                ver todos
-              </Link>
-            </div>
-
-            {loading ? (
-              <div className="flex justify-center py-12 text-gray-500 font-semibold">Carregando estoque...</div>
-            ) : cars.length === 0 ? (
-              <div className="flex justify-center py-12 text-gray-500 font-semibold">Nenhum veículo disponível no momento.</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-                {cars.slice(0, 10).map((car, index) => (
-                  <CarCard key={index} {...car} />
-                ))}
-              </div>
-            )}
           </div>
         </section>
 
