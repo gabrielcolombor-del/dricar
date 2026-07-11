@@ -45,7 +45,7 @@ export async function GET(request) {
   }
 }
 
-async function syncVeiculoToCar(veiculo) {
+async function syncVeiculoToCar(veiculo, catalogData = {}) {
   try {
     const carStatus = veiculo.status === "Disponível" ? "active" : "sold";
     const yearString = `${veiculo.anoFab}/${veiculo.anoMod}`;
@@ -55,28 +55,36 @@ async function syncVeiculoToCar(veiculo) {
       where: { veiculoId: veiculo.id },
     });
 
+    const accessoriesString = Array.isArray(catalogData.accessories) 
+      ? catalogData.accessories.join(", ") 
+      : (catalogData.accessories || "");
+
+    const carData = {
+      brand: veiculo.marca,
+      model: veiculo.modelo,
+      year: yearString,
+      status: carStatus,
+      description: catalogData.description || "",
+      mileage: catalogData.mileage || "0 km",
+      transmission: catalogData.transmission || "Manual",
+      price: catalogData.price || ("R$ " + Number(parseFloat(veiculo.valorCompra.toString()) * 1.15).toLocaleString("pt-BR", { maximumFractionDigits: 0 })),
+      category: catalogData.category || "Hatch",
+      accessories: accessoriesString,
+      images: catalogData.images || [],
+      isOffer: !!catalogData.isOffer,
+      promoPrice: catalogData.promoPrice || null,
+    };
+
     if (existingCar) {
       await prisma.car.update({
         where: { id: existingCar.id },
-        data: {
-          brand: veiculo.marca,
-          model: veiculo.modelo,
-          year: yearString,
-          status: carStatus,
-        },
+        data: carData,
       });
     } else {
       // Cria novo registro no catálogo ativo
       await prisma.car.create({
         data: {
-          brand: veiculo.marca,
-          model: veiculo.modelo,
-          year: yearString,
-          mileage: "0 km",
-          transmission: "Manual",
-          price: "R$ " + Number(parseFloat(veiculo.valorCompra.toString()) * 1.15).toLocaleString("pt-BR", { maximumFractionDigits: 0 }),
-          category: "Hatch",
-          status: carStatus,
+          ...carData,
           veiculoId: veiculo.id,
         },
       });
@@ -94,7 +102,13 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { action, id, placa, marca, modelo, anoFab, anoMod, valorCompra, dataEntrada, status, documentoPendente } = body;
+    const { 
+      action, id, placa, marca, modelo, anoFab, anoMod, valorCompra, dataEntrada, status, documentoPendente, renavam, chassi,
+      // catalog fields
+      description, mileage, transmission, price, category, accessories, images, isOffer, promoPrice
+    } = body;
+
+    const catalogData = { description, mileage, transmission, price, category, accessories, images, isOffer, promoPrice };
 
     const role = session.user.role?.toLowerCase();
     if (role === "seller" && action !== "updateStatus") {
@@ -120,7 +134,7 @@ export async function POST(request) {
         where: { id },
         data: { status },
       });
-      await syncVeiculoToCar(updated);
+      await syncVeiculoToCar(updated, { status });
       return NextResponse.json({ success: true, veiculo: updated });
     }
 
@@ -138,9 +152,11 @@ export async function POST(request) {
           dataEntrada: new Date(dataEntrada),
           status: status || "Disponível",
           documentoPendente: !!documentoPendente,
+          renavam: renavam || null,
+          chassi: chassi || null,
         },
       });
-      await syncVeiculoToCar(updated);
+      await syncVeiculoToCar(updated, catalogData);
       return NextResponse.json({ success: true, veiculo: updated });
     } else {
       // Criar
@@ -164,9 +180,11 @@ export async function POST(request) {
           dataEntrada: new Date(dataEntrada),
           status: status || "Disponível",
           documentoPendente: !!documentoPendente,
+          renavam: renavam || null,
+          chassi: chassi || null,
         },
       });
-      await syncVeiculoToCar(newVeiculo);
+      await syncVeiculoToCar(newVeiculo, catalogData);
       return NextResponse.json({ success: true, veiculo: newVeiculo });
     }
   } catch (error) {

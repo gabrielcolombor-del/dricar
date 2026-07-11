@@ -66,6 +66,8 @@ model Veiculo {
   dataEntrada DateTime         @map("data_entrada") @db.Date
   status             String           @default("Disponível")
   documentoPendente  Boolean          @default(false) @map("documento_pendente")
+  renavam            String?
+  chassi             String?
   despesas           DespesaVeiculo[]
   clientes           ClienteCrm[]
   vendas             Venda[]

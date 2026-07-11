@@ -741,39 +741,11 @@ export default function AdminPage() {
             📦 Catálogo Ativo ({activeCars.length})
           </button>
 
-          {!isVendedor && (
+          {activeTab === "cadastrar" && (
             <button 
-              onClick={() => { setActiveTab("vendas"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "vendas" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              className="pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors border-brand-blue text-brand-blue cursor-default"
             >
-              💰 Vendas ({soldCars.length})
-            </button>
-          )}
-
-          {!isVendedor && (
-            <button 
-              onClick={() => {
-                setEditingCar(null);
-                clearUploadStates();
-                setFormCar({
-                  title: "",
-                  subtitle: "",
-                  year: "",
-                  mileage: "",
-                  transmission: "Manual",
-                  price: "",
-                  imageUrl: "",
-                  images: [],
-                  category: "Hatch",
-                  accessories: [],
-                  isOffer: false,
-                  promoPrice: "",
-                });
-                setActiveTab("cadastrar");
-              }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "cadastrar" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
-            >
-              {editingCar ? "✏️ Editando Carro" : "➕ Novo Carro"}
+              ✏️ Editando Anúncio do Site
             </button>
           )}
 
@@ -916,70 +888,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 2: HISTÓRICO DE VENDAS */}
-        {activeTab === "vendas" && !isVendedor && (
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">ID</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">Veículo</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">Comprador (CRM)</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">Data Venda</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">Preço Venda</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 text-gray-800">
-                  {soldCars.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="p-8 text-center text-gray-400 text-sm">Nenhuma venda registrada no histórico.</td>
-                    </tr>
-                  ) : (
-                    soldCars.map((car) => (
-                      <tr key={car.id} className="hover:bg-gray-50/50">
-                        <td className="p-4 text-sm font-bold text-gray-600">{car.id.substring(0, 8)}...</td>
-                        <td className="p-4">
-                          <div className="font-bold text-brand-blue text-sm flex items-center gap-3">
-                            {car.imageUrl && (
-                              <img src={car.imageUrl} alt="" className="w-10 h-8 rounded object-cover bg-gray-100" />
-                            )}
-                            {car.title}
-                          </div>
-                          <div className="text-gray-400 text-xs">{car.subtitle}</div>
-                        </td>
-                        <td className="p-4 text-sm font-semibold text-gray-700">{car.buyerName || "Não informado"}</td>
-                        <td className="p-4 text-sm text-gray-600">
-                          {car.saleDate ? new Date(car.saleDate).toLocaleDateString("pt-BR", {timeZone: 'UTC'}) : "Não informado"}
-                        </td>
-                        <td className="p-4 text-sm font-bold text-green-600">{car.salePrice || car.price}</td>
-                        <td className="p-4">
-                          <div className="flex justify-center items-center gap-3">
-                            <button 
-                              onClick={() => handleReactivateCar(car.id)}
-                              className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                            >
-                              Reativar para Estoque
-                            </button>
-                            {isAdmin && (
-                              <button 
-                                onClick={() => handleDeleteCar(car.id)}
-                                className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                              >
-                                Excluir Registro
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+
 
         {/* TAB 3: CADASTRO E EDIÇÃO DE CARROS */}
         {activeTab === "cadastrar" && !isVendedor && (
