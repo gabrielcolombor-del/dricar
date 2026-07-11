@@ -55,8 +55,11 @@ export async function GET(request) {
           saleDate: car.saleDate || "",
         };
       })
-      // Se showAll for falso, filtra apenas carros Ativos (esconde os vendidos do catálogo público)
-      .filter((car) => showAll || car.status.toLowerCase() === "ativo");
+      // Se showAll for falso, filtra apenas carros Ativos que possuam pelo menos 1 imagem cadastrada (esconde os vendidos e os sem fotos do catálogo público)
+      .filter((car) => {
+        if (showAll) return true;
+        return car.status.toLowerCase() === "ativo" && car.images && car.images.length > 0;
+      });
 
     return NextResponse.json(formattedCars);
   } catch (error) {

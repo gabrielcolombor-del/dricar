@@ -838,6 +838,11 @@ export default function AdminPage() {
                             {car.title}
                           </div>
                           <div className="text-gray-400 text-xs">{car.subtitle}</div>
+                          {(!car.images || car.images.length === 0) && (
+                            <span className="inline-flex mt-1 items-center gap-1 bg-amber-50 text-amber-700 border border-amber-250 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">
+                              ⚠️ Pendente de Fotos (Fora do site)
+                            </span>
+                          )}
                         </td>
                         <td className="p-4 text-sm text-gray-600">{car.year}</td>
                         <td className="p-4 text-sm text-gray-600">{car.mileage}</td>
@@ -853,30 +858,38 @@ export default function AdminPage() {
                           )}
                         </td>
                         <td className="p-4">
-                          <div className="flex justify-center items-center gap-3">
-                            <button 
-                              onClick={() => openCrmModal(car)}
-                              className="bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                            >
-                              Marcar Vendido
-                            </button>
-                            
-                            {!isVendedor && (
-                              <button 
-                                onClick={() => startEditCar(car)}
-                                className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                              >
-                                Editar
-                              </button>
+                          <div className="flex flex-col items-center gap-1.5">
+                            {(!car.images || car.images.length === 0) && (
+                              <span className="text-[9px] text-amber-650 font-extrabold text-center uppercase tracking-wider max-w-[150px] bg-amber-50/50 px-2 py-1 rounded border border-amber-200 animate-pulse">
+                                📸 Tirar fotos e inserir dados do anúncio
+                              </span>
                             )}
-                            {isAdmin && (
+                            <div className="flex justify-center items-center gap-3">
                               <button 
-                                onClick={() => handleDeleteCar(car.id)}
-                                className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                onClick={() => openCrmModal(car)}
+                                className="bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
                               >
-                                Excluir
+                                Marcar Vendido
                               </button>
-                            )}
+                              
+                              {!isVendedor && (
+                                <button 
+                                  onClick={() => startEditCar(car)}
+                                  className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                >
+                                  Editar
+                                </button>
+                              )}
+                              
+                              {isAdmin && (
+                                <button 
+                                  onClick={() => handleDeleteCar(car.id)}
+                                  className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                >
+                                  Excluir
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>

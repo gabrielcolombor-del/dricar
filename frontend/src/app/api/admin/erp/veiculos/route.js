@@ -45,7 +45,7 @@ export async function GET(request) {
   }
 }
 
-async function syncVeiculoToCar(veiculo, catalogData = {}) {
+async function syncVeiculoToCar(veiculo, catalogData = null) {
   try {
     const carStatus = veiculo.status === "Disponível" ? "active" : "sold";
     const yearString = `${veiculo.anoFab}/${veiculo.anoMod}`;
@@ -55,36 +55,59 @@ async function syncVeiculoToCar(veiculo, catalogData = {}) {
       where: { veiculoId: veiculo.id },
     });
 
-    const accessoriesString = Array.isArray(catalogData.accessories) 
-      ? catalogData.accessories.join(", ") 
-      : (catalogData.accessories || "");
-
-    const carData = {
-      brand: veiculo.marca,
-      model: veiculo.modelo,
-      year: yearString,
-      status: carStatus,
-      description: catalogData.description || "",
-      mileage: catalogData.mileage || "0 km",
-      transmission: catalogData.transmission || "Manual",
-      price: catalogData.price || ("R$ " + Number(parseFloat(veiculo.valorCompra.toString()) * 1.15).toLocaleString("pt-BR", { maximumFractionDigits: 0 })),
-      category: catalogData.category || "Hatch",
-      accessories: accessoriesString,
-      images: catalogData.images || [],
-      isOffer: !!catalogData.isOffer,
-      promoPrice: catalogData.promoPrice || null,
-    };
-
     if (existingCar) {
+      // Se já existe e catalogData não foi enviado (veio do fluxo do ERP), preservamos os campos de catálogo antigos!
+      const updateData = {
+        brand: veiculo.marca,
+        model: veiculo.modelo,
+        year: yearString,
+        status: carStatus,
+      };
+
+      // Se catalogData foi passado (ex: edições que enviam tudo), nós mesclamos os dados
+      if (catalogData && Object.keys(catalogData).length > 0) {
+        const accessoriesString = Array.isArray(catalogData.accessories) 
+          ? catalogData.accessories.join(", ") 
+          : (catalogData.accessories || "");
+
+        Object.assign(updateData, {
+          description: catalogData.description !== undefined ? catalogData.description : existingCar.description,
+          mileage: catalogData.mileage !== undefined ? catalogData.mileage : existingCar.mileage,
+          transmission: catalogData.transmission !== undefined ? catalogData.transmission : existingCar.transmission,
+          price: catalogData.price !== undefined ? catalogData.price : existingCar.price,
+          category: catalogData.category !== undefined ? catalogData.category : existingCar.category,
+          accessories: accessoriesString !== "" ? accessoriesString : existingCar.accessories,
+          images: catalogData.images !== undefined ? catalogData.images : existingCar.images,
+          isOffer: catalogData.isOffer !== undefined ? !!catalogData.isOffer : existingCar.isOffer,
+          promoPrice: catalogData.promoPrice !== undefined ? catalogData.promoPrice : existingCar.promoPrice,
+        });
+      }
+
       await prisma.car.update({
         where: { id: existingCar.id },
-        data: carData,
+        data: updateData,
       });
     } else {
-      // Cria novo registro no catálogo ativo
+      // Se não existe, cria com valores padrão
+      const accessoriesString = (catalogData && Array.isArray(catalogData.accessories))
+        ? catalogData.accessories.join(", ")
+        : (catalogData?.accessories || "");
+
       await prisma.car.create({
         data: {
-          ...carData,
+          brand: veiculo.marca,
+          model: veiculo.modelo,
+          year: yearString,
+          status: carStatus,
+          description: catalogData?.description || "",
+          mileage: catalogData?.mileage || "0 km",
+          transmission: catalogData?.transmission || "Manual",
+          price: catalogData?.price || ("R$ " + Number(parseFloat(veiculo.valorCompra.toString()) * 1.15).toLocaleString("pt-BR", { maximumFractionDigits: 0 })),
+          category: catalogData?.category || "Hatch",
+          accessories: accessoriesString,
+          images: catalogData?.images || [],
+          isOffer: !!catalogData?.isOffer,
+          promoPrice: catalogData?.promoPrice || null,
           veiculoId: veiculo.id,
         },
       });
