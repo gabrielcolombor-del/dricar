@@ -274,6 +274,9 @@ export default function EstoqueTab() {
               <option value="Disponível">Disponível</option>
               <option value="Vendido">Vendido</option>
               <option value="Em Preparação">Em Preparação</option>
+              <option value="Em processo de Transf.">Em processo de Transf.</option>
+              <option value="Transferido">Transferido</option>
+              <option value="Transferência em aberto">Transferência em aberto</option>
             </select>
           </div>
 
@@ -379,7 +382,13 @@ export default function EstoqueTab() {
                             ? "bg-green-100 text-green-800" 
                             : v.status === "Vendido" 
                               ? "bg-blue-100 text-blue-800" 
-                              : "bg-amber-100 text-amber-800"
+                              : v.status === "Em processo de Transf."
+                                ? "bg-purple-100 text-purple-800"
+                                : v.status === "Transferido"
+                                  ? "bg-teal-100 text-teal-800"
+                                  : v.status === "Transferência em aberto"
+                                    ? "bg-rose-100 text-rose-800"
+                                    : "bg-amber-100 text-amber-800"
                         }`}>
                           {v.status}
                         </span>
@@ -674,6 +683,9 @@ export default function EstoqueTab() {
                     <option value="Disponível">Disponível</option>
                     <option value="Em Preparação">Em Preparação</option>
                     <option value="Vendido">Vendido</option>
+                    <option value="Em processo de Transf.">Em processo de Transf.</option>
+                    <option value="Transferido">Transferido</option>
+                    <option value="Transferência em aberto">Transferência em aberto</option>
                   </select>
                 </div>
 

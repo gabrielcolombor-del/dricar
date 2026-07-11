@@ -45,6 +45,47 @@ export async function GET(request) {
   }
 }
 
+async function syncVeiculoToCar(veiculo) {
+  try {
+    const carStatus = veiculo.status === "Disponível" ? "active" : "sold";
+    const yearString = `${veiculo.anoFab}/${veiculo.anoMod}`;
+    
+    // Procura por carro já existente atrelado a este veículo do ERP
+    const existingCar = await prisma.car.findFirst({
+      where: { veiculoId: veiculo.id },
+    });
+
+    if (existingCar) {
+      await prisma.car.update({
+        where: { id: existingCar.id },
+        data: {
+          brand: veiculo.marca,
+          model: veiculo.modelo,
+          year: yearString,
+          status: carStatus,
+        },
+      });
+    } else {
+      // Cria novo registro no catálogo ativo
+      await prisma.car.create({
+        data: {
+          brand: veiculo.marca,
+          model: veiculo.modelo,
+          year: yearString,
+          mileage: "0 km",
+          transmission: "Manual",
+          price: "R$ " + Number(parseFloat(veiculo.valorCompra.toString()) * 1.15).toLocaleString("pt-BR", { maximumFractionDigits: 0 }),
+          category: "Hatch",
+          status: carStatus,
+          veiculoId: veiculo.id,
+        },
+      });
+    }
+  } catch (err) {
+    console.error("Erro na sincronização Veículo -> Car:", err);
+  }
+}
+
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -64,6 +105,10 @@ export async function POST(request) {
       if (role !== "admin" && role !== "manager") {
         return NextResponse.json({ error: "Não autorizado a excluir veículos." }, { status: 403 });
       }
+      // Deleta primeiro do catálogo para não quebrar FK
+      await prisma.car.deleteMany({
+        where: { veiculoId: id },
+      });
       await prisma.veiculo.delete({
         where: { id },
       });
@@ -75,6 +120,7 @@ export async function POST(request) {
         where: { id },
         data: { status },
       });
+      await syncVeiculoToCar(updated);
       return NextResponse.json({ success: true, veiculo: updated });
     }
 
@@ -94,6 +140,7 @@ export async function POST(request) {
           documentoPendente: !!documentoPendente,
         },
       });
+      await syncVeiculoToCar(updated);
       return NextResponse.json({ success: true, veiculo: updated });
     } else {
       // Criar
@@ -119,6 +166,7 @@ export async function POST(request) {
           documentoPendente: !!documentoPendente,
         },
       });
+      await syncVeiculoToCar(newVeiculo);
       return NextResponse.json({ success: true, veiculo: newVeiculo });
     }
   } catch (error) {

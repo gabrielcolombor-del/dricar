@@ -44,6 +44,12 @@ export async function POST(request) {
       data: { statusFunil: "Fechado" },
     });
 
+    // Atualizar o status do carro no catálogo para vendido
+    await prisma.car.updateMany({
+      where: { veiculoId },
+      data: { status: "sold" },
+    });
+
     return NextResponse.json({ success: true, venda: newVenda });
   } catch (error) {
     console.error("Erro ao registrar venda no ERP:", error);

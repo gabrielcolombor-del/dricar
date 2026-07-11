@@ -48,12 +48,15 @@ model Car {
   // Ofertas
   isOffer      Boolean  @default(false) @map("is_offer")
   promoPrice   String?  @map("promo_price")
+  veiculoId    String?  @unique @map("veiculo_id") @db.Uuid
+  veiculo      Veiculo? @relation(fields: [veiculoId], references: [id], onDelete: SetNull)
 
   @@map("cars")
 }
 
 model Veiculo {
   id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  car         Car?
   placa       String           @unique
   marca       String
   modelo      String

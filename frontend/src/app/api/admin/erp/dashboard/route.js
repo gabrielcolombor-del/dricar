@@ -74,9 +74,12 @@ export async function GET(request) {
       SELECT * FROM view_lucro_por_veiculo;
     `;
 
+    const soldStatuses = ["Vendido", "Em processo de Transf.", "Transferido", "Transferência em aberto"];
+    const stockStatuses = ["Disponível", "Em Preparação"];
+
     // Filtramos apenas veículos vendidos para o lucro real operacional
     const lucroVeiculosVendidos = lucroPorVeiculoData
-      .filter(v => v.status === "Vendido")
+      .filter(v => soldStatuses.includes(v.status))
       .reduce((acc, curr) => acc + parseFloat(curr.lucro_liquido.toString()), 0);
 
     // Buscamos todas as despesas gerais da empresa
@@ -86,9 +89,7 @@ export async function GET(request) {
     const lucroLiquidoRealFinal = lucroVeiculosVendidos - totalCustosGerais;
 
     // 4. Giro de Estoque (Média de dias que os carros ficam parados)
-    // Para carros vendidos: diferença entre data_entrada e data_venda
-    // Para carros disponíveis: diferença entre data_entrada e hoje (usado como fallback)
-    const veiculosVendidosView = lucroPorVeiculoData.filter(v => v.status === "Vendido");
+    const veiculosVendidosView = lucroPorVeiculoData.filter(v => soldStatuses.includes(v.status));
     let totalDiasGiro = 0;
     let countGiro = 0;
 
@@ -106,7 +107,7 @@ export async function GET(request) {
       giroEstoque = Math.round(totalDiasGiro / countGiro);
     } else {
       // Se não há vendidos, calcula média de dias em estoque dos disponíveis
-      const disponiveis = lucroPorVeiculoData.filter(v => v.status !== "Vendido");
+      const disponiveis = lucroPorVeiculoData.filter(v => stockStatuses.includes(v.status));
       let totalDiasDisp = 0;
       disponiveis.forEach(v => {
         if (v.data_entrada) {
@@ -134,16 +135,19 @@ export async function GET(request) {
 
     const veiculosDisponiveis = await prisma.veiculo.findMany({
       where: {
-        status: { not: "Vendido" },
+        status: { in: stockStatuses },
       },
     });
 
     const maisDeTrintaDias = veiculosDisponiveis.filter(v => new Date(v.dataEntrada) < trintaDiasAtras);
 
-    // Veículos com pendência de transferência de documentação
+    // Veículos com pendência de transferência de documentação (marcado como pendente ou nos status de transferência)
     const pendenciaDocumentacao = await prisma.veiculo.findMany({
       where: {
-        documentoPendente: true,
+        OR: [
+          { documentoPendente: true },
+          { status: { in: ["Em processo de Transf.", "Transferência em aberto"] } }
+        ]
       },
     });
 
