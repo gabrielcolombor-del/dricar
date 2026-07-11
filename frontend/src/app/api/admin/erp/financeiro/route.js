@@ -41,6 +41,10 @@ export async function POST(request) {
     }
 
     if (action === "delete") {
+      // Deleta primeiro a despesa do veículo correspondente se existir para evitar órfãos
+      await prisma.despesaVeiculo.deleteMany({
+        where: { custoFixoId: id },
+      });
       await prisma.custoFixo.delete({
         where: { id },
       });

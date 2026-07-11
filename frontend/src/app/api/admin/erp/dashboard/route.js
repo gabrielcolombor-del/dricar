@@ -82,8 +82,12 @@ export async function GET(request) {
       .filter(v => soldStatuses.includes(v.status))
       .reduce((acc, curr) => acc + parseFloat(curr.lucro_liquido.toString()), 0);
 
-    // Buscamos todas as despesas gerais da empresa
-    const custosGerais = await prisma.custoFixo.findMany();
+    // Buscamos todas as despesas gerais da empresa (excluindo aquelas vinculadas diretamente a preparação de veículos para evitar dupla contagem)
+    const custosGerais = await prisma.custoFixo.findMany({
+      where: {
+        despesaVeiculo: null,
+      },
+    });
     const totalCustosGerais = custosGerais.reduce((acc, curr) => acc + parseFloat(curr.valor.toString()), 0);
 
     const lucroLiquidoRealFinal = lucroVeiculosVendidos - totalCustosGerais;

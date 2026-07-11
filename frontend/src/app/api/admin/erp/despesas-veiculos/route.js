@@ -19,11 +19,37 @@ export async function POST(request) {
     }
 
     if (action === "delete") {
+      const dep = await prisma.despesaVeiculo.findUnique({
+        where: { id },
+      });
+      if (dep && dep.custoFixoId) {
+        await prisma.custoFixo.deleteMany({
+          where: { id: dep.custoFixoId },
+        });
+      }
       await prisma.despesaVeiculo.delete({
         where: { id },
       });
       return NextResponse.json({ success: true });
     }
+
+    const veiculo = await prisma.veiculo.findUnique({
+      where: { id: veiculoId }
+    });
+    if (!veiculo) {
+      return NextResponse.json({ error: "Veículo não encontrado." }, { status: 404 });
+    }
+
+    // Criar registro correspondente no Financeiro Geral (custos_fixos)
+    const newCusto = await prisma.custoFixo.create({
+      data: {
+        descricao: `Despesa Placa: ${veiculo.placa} (${veiculo.marca} ${veiculo.modelo}) - ${categoria.trim()}`,
+        valor: parseFloat(valor),
+        dataVencimento: new Date(dataDespesa),
+        statusPagamento: "Pago",
+        tipo: "Variável",
+      }
+    });
 
     const newDespesa = await prisma.despesaVeiculo.create({
       data: {
@@ -31,6 +57,7 @@ export async function POST(request) {
         categoria: categoria.trim(),
         valor: parseFloat(valor),
         dataDespesa: new Date(dataDespesa),
+        custoFixoId: newCusto.id,
       },
     });
 

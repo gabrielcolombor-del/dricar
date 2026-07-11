@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 export default function FinanceiroTab() {
   const [custos, setCustos] = useState([]);
+  const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -11,6 +12,7 @@ export default function FinanceiroTab() {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState("geral"); // geral ou veiculo
   const [formCusto, setFormCusto] = useState({
     id: "",
     descricao: "",
@@ -18,15 +20,24 @@ export default function FinanceiroTab() {
     dataVencimento: new Date().toISOString().split("T")[0],
     statusPagamento: "Pendente",
     tipo: "Fixo",
+    // vehicle fields
+    veiculoId: "",
+    categoriaVeiculo: "Mecânica",
   });
 
-  async function fetchCustos() {
+  async function fetchData() {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/erp/financeiro");
-      if (res.ok) {
-        const data = await res.json();
-        setCustos(data);
+      const [custosRes, veiculosRes] = await Promise.all([
+        fetch("/api/admin/erp/financeiro"),
+        fetch("/api/admin/erp/veiculos")
+      ]);
+
+      if (custosRes.ok && veiculosRes.ok) {
+        const custosData = await custosRes.json();
+        const veiculosData = await veiculosRes.json();
+        setCustos(custosData);
+        setVeiculos(veiculosData);
       } else {
         setError("Erro ao carregar lançamentos financeiros.");
       }
@@ -38,14 +49,14 @@ export default function FinanceiroTab() {
   }
 
   useEffect(() => {
-    fetchCustos();
+    fetchData();
   }, []);
 
-  const handlePriceChange = (val) => {
+  const handlePriceChange = (val, field = "valor") => {
     const clean = val.replace(/\D/g, "");
-    if (!clean) return setFormCusto(prev => ({ ...prev, valor: "" }));
+    if (!clean) return setFormCusto(prev => ({ ...prev, [field]: "" }));
     const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
-    setFormCusto(prev => ({ ...prev, valor: formatted }));
+    setFormCusto(prev => ({ ...prev, [field]: formatted }));
   };
 
   const handleSubmit = async (e) => {
@@ -61,14 +72,35 @@ export default function FinanceiroTab() {
     }
 
     try {
-      const res = await fetch("/api/admin/erp/financeiro", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formCusto,
-          valor: valorNum,
-        }),
-      });
+      let res;
+      if (formMode === "veiculo") {
+        if (!formCusto.veiculoId) {
+          setFormError("Selecione um veículo.");
+          setFormLoading(false);
+          return;
+        }
+
+        res = await fetch("/api/admin/erp/despesas-veiculos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            veiculoId: formCusto.veiculoId,
+            categoria: formCusto.categoriaVeiculo,
+            valor: valorNum,
+            dataDespesa: formCusto.dataVencimento,
+          }),
+        });
+      } else {
+        // Geral (Custo Fixo/Variável)
+        res = await fetch("/api/admin/erp/financeiro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...formCusto,
+            valor: valorNum,
+          }),
+        });
+      }
 
       const data = await res.json();
       if (res.ok && data.success) {
@@ -80,8 +112,11 @@ export default function FinanceiroTab() {
           dataVencimento: new Date().toISOString().split("T")[0],
           statusPagamento: "Pendente",
           tipo: "Fixo",
+          veiculoId: "",
+          categoriaVeiculo: "Mecânica",
         });
-        fetchCustos();
+        setFormMode("geral");
+        fetchData();
       } else {
         setFormError(data.error || "Erro ao salvar lançamento.");
       }
@@ -93,6 +128,7 @@ export default function FinanceiroTab() {
   };
 
   const startEditCusto = (c) => {
+    setFormMode("geral");
     setFormCusto({
       id: c.id,
       descricao: c.descricao,
@@ -100,13 +136,15 @@ export default function FinanceiroTab() {
       dataVencimento: c.dataVencimento.split("T")[0],
       statusPagamento: c.statusPagamento,
       tipo: c.tipo || "Fixo",
+      veiculoId: "",
+      categoriaVeiculo: "Mecânica",
     });
     setFormError("");
     setShowForm(true);
   };
 
   const handleDeleteCusto = async (id) => {
-    if (!confirm("Tem certeza que deseja excluir este lançamento?")) return;
+    if (!confirm("Tem certeza que deseja excluir este lançamento? (Caso seja uma despesa de veículo, ela será excluída do centro de custos dele também)")) return;
     try {
       const res = await fetch("/api/admin/erp/financeiro", {
         method: "POST",
@@ -114,7 +152,7 @@ export default function FinanceiroTab() {
         body: JSON.stringify({ action: "delete", id }),
       });
       if (res.ok) {
-        fetchCustos();
+        fetchData();
       } else {
         alert("Erro ao excluir.");
       }
@@ -137,7 +175,7 @@ export default function FinanceiroTab() {
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h4 className="font-extrabold text-brand-blue text-sm uppercase tracking-wider">Custos Gerais da Operação</h4>
-          <p className="text-xs text-gray-400">Lançamento e controle de despesas gerais como Aluguel, Folha, Marketing e Impostos.</p>
+          <p className="text-xs text-gray-400">Lançamento e controle de despesas gerais da empresa e custos particulares de preparação de veículos.</p>
         </div>
         <button
           onClick={() => {
@@ -146,9 +184,12 @@ export default function FinanceiroTab() {
               descricao: "",
               valor: "",
               dataVencimento: new Date().toISOString().split("T")[0],
-              statusPagamento: "Pendente",
+              statusPagamento: "Pago", // Despesas de preparação normalmente nascem pagas
               tipo: "Fixo",
+              veiculoId: "",
+              categoriaVeiculo: "Mecânica",
             });
+            setFormMode("geral");
             setFormError("");
             setShowForm(true);
           }}
@@ -190,7 +231,7 @@ export default function FinanceiroTab() {
                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Descrição</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Tipo</th>
-                  <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Vencimento</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Data / Venc.</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Valor</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Status</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-center">Ações</th>
@@ -208,7 +249,9 @@ export default function FinanceiroTab() {
                 ) : (
                   custos.map(c => (
                     <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 text-xs font-bold text-gray-900">{c.descricao}</td>
+                      <td className="p-4 text-xs font-bold text-gray-900">
+                        {c.descricao}
+                      </td>
                       <td className="p-4 text-xs">
                         <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
                           c.tipo === "Fixo" ? "bg-indigo-100 text-indigo-800" : "bg-amber-100 text-amber-800"
@@ -231,15 +274,20 @@ export default function FinanceiroTab() {
                       </td>
                       <td className="p-4">
                         <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() => startEditCusto(c)}
-                            className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white p-1.5 rounded-md text-[10px] font-bold transition-all cursor-pointer"
-                          >
-                            ✏️
-                          </button>
+                          {/* Apenas permite editar se não for despesa de veículo para evitar dessincronização complexa */}
+                          {!c.descricao.startsWith("Despesa Placa:") && (
+                            <button
+                              onClick={() => startEditCusto(c)}
+                              className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white p-1.5 rounded-md text-[10px] font-bold transition-all cursor-pointer"
+                              title="Editar"
+                            >
+                              ✏️
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDeleteCusto(c.id)}
                             className="border border-red-200 text-red-500 hover:bg-red-50 p-1.5 rounded-md text-[10px] font-bold transition-all cursor-pointer"
+                            title="Excluir"
                           >
                             🗑️
                           </button>
@@ -268,18 +316,78 @@ export default function FinanceiroTab() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-gray-700 uppercase mb-1">Descrição</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Aluguel do Showroom"
-                  value={formCusto.descricao}
-                  onChange={(e) => setFormCusto(prev => ({ ...prev, descricao: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
-                  required
-                />
+            {/* Form Mode Selector (Geral ou Veículo) */}
+            {!formCusto.id && (
+              <div className="flex bg-gray-100 rounded-lg p-1 text-[10px] font-bold border border-gray-200 select-none">
+                <button
+                  type="button"
+                  onClick={() => { setFormMode("geral"); setFormError(""); }}
+                  className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${
+                    formMode === "geral" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400"
+                  }`}
+                >
+                  🏢 Custo Geral
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setFormMode("veiculo"); setFormError(""); }}
+                  className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${
+                    formMode === "veiculo" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400"
+                  }`}
+                >
+                  🚗 Custo por Veículo
+                </button>
               </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+              {formMode === "geral" ? (
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Descrição</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Aluguel do Showroom"
+                    value={formCusto.descricao}
+                    onChange={(e) => setFormCusto(prev => ({ ...prev, descricao: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                    required
+                  />
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Veículo (Estoque)</label>
+                    <select
+                      value={formCusto.veiculoId}
+                      onChange={(e) => setFormCusto(prev => ({ ...prev, veiculoId: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                      required
+                    >
+                      <option value="">Selecione o veículo...</option>
+                      {veiculos.map(v => (
+                        <option key={v.id} value={v.id}>
+                          {v.placa} - {v.marca} {v.modelo} ({v.status})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Categoria de Custo</label>
+                    <select
+                      value={formCusto.categoriaVeiculo}
+                      onChange={(e) => setFormCusto(prev => ({ ...prev, categoriaVeiculo: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                    >
+                      <option value="Mecânica">Mecânica</option>
+                      <option value="Funilaria">Funilaria</option>
+                      <option value="Lavagem">Lavagem</option>
+                      <option value="IPVA">IPVA</option>
+                      <option value="Detalhamento">Detalhamento</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+                </>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -294,7 +402,9 @@ export default function FinanceiroTab() {
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Vencimento</label>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">
+                    {formMode === "veiculo" ? "Data Despesa" : "Vencimento"}
+                  </label>
                   <input
                     type="date"
                     value={formCusto.dataVencimento}
@@ -305,30 +415,32 @@ export default function FinanceiroTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Classificação</label>
-                  <select
-                    value={formCusto.tipo}
-                    onChange={(e) => setFormCusto(prev => ({ ...prev, tipo: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
-                  >
-                    <option value="Fixo">Custo Fixo</option>
-                    <option value="Variável">Custo Variável</option>
-                  </select>
+              {formMode === "geral" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Classificação</label>
+                    <select
+                      value={formCusto.tipo}
+                      onChange={(e) => setFormCusto(prev => ({ ...prev, tipo: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                    >
+                      <option value="Fixo">Custo Fixo</option>
+                      <option value="Variável">Custo Variável</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Status Pagamento</label>
+                    <select
+                      value={formCusto.statusPagamento}
+                      onChange={(e) => setFormCusto(prev => ({ ...prev, statusPagamento: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                    >
+                      <option value="Pendente">Pendente</option>
+                      <option value="Pago">Pago</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Status Pagamento</label>
-                  <select
-                    value={formCusto.statusPagamento}
-                    onChange={(e) => setFormCusto(prev => ({ ...prev, statusPagamento: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
-                  >
-                    <option value="Pendente">Pendente</option>
-                    <option value="Pago">Pago</option>
-                  </select>
-                </div>
-              </div>
+              )}
 
               {formError && (
                 <p className="text-red-600 font-semibold bg-red-50 p-2.5 rounded-lg">{formError}</p>
@@ -338,14 +450,14 @@ export default function FinanceiroTab() {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg font-bold"
+                  className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-150 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="bg-brand-blue text-white px-5 py-2 rounded-lg font-bold"
+                  className="bg-brand-blue text-white px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity"
                 >
                   {formLoading ? "Salvando..." : "Confirmar"}
                 </button>

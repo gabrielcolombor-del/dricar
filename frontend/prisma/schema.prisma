@@ -82,6 +82,8 @@ model DespesaVeiculo {
   categoria   String
   valor       Decimal  @db.Decimal(12, 2)
   dataDespesa DateTime @map("data_despesa") @db.Date
+  custoFixoId String?   @unique @map("custo_fixo_id") @db.Uuid
+  custoFixo   CustoFixo? @relation(fields: [custoFixoId], references: [id], onDelete: SetNull)
 
   @@map("despesas_veiculos")
 }
@@ -119,6 +121,7 @@ model CustoFixo {
   dataVencimento  DateTime @map("data_vencimento") @db.Date
   statusPagamento String   @map("status_pagamento")
   tipo            String   @default("Fixo") // Fixo ou Variavel
+  despesaVeiculo  DespesaVeiculo?
 
   @@map("custos_fixos")
 }
