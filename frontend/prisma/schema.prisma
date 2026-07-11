@@ -51,3 +51,70 @@ model Car {
 
   @@map("cars")
 }
+
+model Veiculo {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  placa       String           @unique
+  marca       String
+  modelo      String
+  anoFab      Int              @map("ano_fab")
+  anoMod      Int              @map("ano_mod")
+  valorCompra Decimal          @map("valor_compra") @db.Decimal(12, 2)
+  dataEntrada DateTime         @map("data_entrada") @db.Date
+  status             String           @default("Disponível")
+  documentoPendente  Boolean          @default(false) @map("documento_pendente")
+  despesas           DespesaVeiculo[]
+  clientes           ClienteCrm[]
+  vendas             Venda[]
+
+  @@map("veiculos")
+}
+
+model DespesaVeiculo {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  veiculoId   String   @map("veiculo_id") @db.Uuid
+  veiculo     Veiculo  @relation(fields: [veiculoId], references: [id], onDelete: Cascade)
+  categoria   String
+  valor       Decimal  @db.Decimal(12, 2)
+  dataDespesa DateTime @map("data_despesa") @db.Date
+
+  @@map("despesas_veiculos")
+}
+
+model ClienteCrm {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome               String
+  telefone           String
+  cpfCnpj            String   @map("cpf_cnpj")
+  statusFunil        String   @map("status_funil")
+  veiculoInteresseId String?  @map("veiculo_interesse_id") @db.Uuid
+  veiculoInteresse   Veiculo? @relation(fields: [veiculoInteresseId], references: [id], onDelete: SetNull)
+  vendas             Venda[]
+
+  @@map("clientes_crm")
+}
+
+model Venda {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  veiculoId            String     @map("veiculo_id") @db.Uuid
+  veiculo              Veiculo    @relation(fields: [veiculoId], references: [id], onDelete: Cascade)
+  clienteId            String     @map("cliente_id") @db.Uuid
+  cliente              ClienteCrm @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  valorVendaVeiculo    Decimal    @map("valor_venda_veiculo") @db.Decimal(12, 2)
+  valorRetornoBancario Decimal    @map("valor_retorno_bancario") @db.Decimal(12, 2)
+  dataVenda            DateTime   @map("data_venda") @db.Date
+
+  @@map("vendas")
+}
+
+model CustoFixo {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  descricao       String
+  valor           Decimal  @db.Decimal(12, 2)
+  dataVencimento  DateTime @map("data_vencimento") @db.Date
+  statusPagamento String   @map("status_pagamento")
+  tipo            String   @default("Fixo") // Fixo ou Variavel
+
+  @@map("custos_fixos")
+}
+

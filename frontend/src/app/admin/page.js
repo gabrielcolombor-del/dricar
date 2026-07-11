@@ -4,6 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { signIn, signOut } from "next-auth/react";
+import DashboardTab from "@/components/erp/DashboardTab";
+import EstoqueTab from "@/components/erp/EstoqueTab";
+import CrmTab from "@/components/erp/CrmTab";
+import FinanceiroTab from "@/components/erp/FinanceiroTab";
 
 const PREDEFINED_ACCESSORIES = [
   "Ar-condicionado",
@@ -33,7 +37,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("estoque"); // estoque, vendas, cadastrar
+  const [activeTab, setActiveTab] = useState("erp_dashboard"); // erp_dashboard, erp_estoque, erp_crm, erp_financeiro, estoque, vendas, cadastrar
 
   // Estado para gerenciamento de usuários (Apenas Administrador)
   const [usersList, setUsersList] = useState([]);
@@ -233,7 +237,7 @@ export default function AdminPage() {
         setUser(session.user);
         
         if (session.user.role.toLowerCase() === "seller") {
-          setActiveTab("estoque");
+          setActiveTab("erp_dashboard");
         }
         
         fetchCars();
@@ -691,20 +695,58 @@ export default function AdminPage() {
         </div>
 
         {/* Tabs Menu */}
-        <div className="flex border-b border-gray-200 mb-8 gap-6 overflow-x-auto">
+        <div className="flex border-b border-gray-200 mb-8 gap-4 overflow-x-auto pb-1.5 scrollbar-thin select-none items-center">
+          <span className="text-[10px] font-extrabold uppercase text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md shrink-0">
+            📊 ERP & CRM
+          </span>
+          
+          <button 
+            onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
+            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+          >
+            📈 Dashboard
+          </button>
+          
+          <button 
+            onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
+            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+          >
+            🚗 Estoque & Custos Placa
+          </button>
+          
+          <button 
+            onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
+            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_crm" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+          >
+            🤝 CRM e Funil Vendas
+          </button>
+          
+          <button 
+            onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
+            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+          >
+            💸 Financeiro Geral
+          </button>
+
+          <span className="h-4 w-[1px] bg-gray-300 mx-2 shrink-0"></span>
+
+          <span className="text-[10px] font-extrabold uppercase text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md shrink-0">
+            🌐 Catálogo Site
+          </span>
+          
           <button 
             onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
-            className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
           >
-            📦 Estoque Ativo ({activeCars.length})
+            📦 Catálogo Ativo ({activeCars.length})
           </button>
 
           {!isVendedor && (
             <button 
               onClick={() => { setActiveTab("vendas"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "vendas" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "vendas" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
             >
-              💰 Histórico de Vendas ({soldCars.length})
+              💰 Vendas ({soldCars.length})
             </button>
           )}
 
@@ -729,31 +771,34 @@ export default function AdminPage() {
                 });
                 setActiveTab("cadastrar");
               }}
-              className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "cadastrar" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "cadastrar" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
             >
-              {editingCar ? "✏️ Editando Veículo" : "➕ Cadastrar Veículo"}
+              {editingCar ? "✏️ Editando Carro" : "➕ Novo Carro"}
             </button>
           )}
 
           {isAdmin && (
-            <button 
-              onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-3 text-sm font-bold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
-            >
-              👥 Gerenciar Contas
-            </button>
+            <>
+              <span className="h-4 w-[1px] bg-gray-300 mx-2 shrink-0"></span>
+              <button 
+                onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
+                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              >
+                👥 Contas
+              </button>
+            </>
           )}
 
           <button 
             onClick={handleLogout}
-            className="md:ml-auto pb-3 text-sm font-bold border-b-2 border-transparent text-red-600 hover:text-red-800 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+            className="ml-auto pb-2 text-xs font-bold border-b-2 border-transparent text-red-600 hover:text-red-800 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
           >
-            🚪 Sair (Logout)
+            🚪 Sair
           </button>
         </div>
 
         {/* Indicadores CRM (Apenas Admin) */}
-        {activeTab !== "cadastrar" && activeTab !== "usuarios" && isAdmin && (
+        {(activeTab === "estoque" || activeTab === "vendas") && isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
               <span className="text-xs text-gray-400 font-bold uppercase">Faturamento (CRM)</span>
@@ -781,6 +826,12 @@ export default function AdminPage() {
             Processando gravação no banco de dados e upload de imagem no Supabase Storage... Aguarde.
           </div>
         )}
+
+        {/* ERP TABS RENDERING */}
+        {activeTab === "erp_dashboard" && <DashboardTab />}
+        {activeTab === "erp_estoque" && <EstoqueTab />}
+        {activeTab === "erp_crm" && <CrmTab />}
+        {activeTab === "erp_financeiro" && <FinanceiroTab />}
 
         {/* TAB 1: ESTOQUE ATIVO */}
         {activeTab === "estoque" && (
