@@ -6,7 +6,7 @@ const COLUNAS = [
   { id: "Novo Lead", title: "Novo Lead", color: "bg-blue-500/10 text-blue-700 border-blue-200" },
   { id: "Em Contato", title: "Em Contato", color: "bg-indigo-500/10 text-indigo-700 border-indigo-200" },
   { id: "Ficha em Análise", title: "Ficha em Análise", color: "bg-amber-500/10 text-amber-700 border-amber-200" },
-  { id: "Fechado", title: "Fechado (Vendido)", color: "bg-green-500/10 text-green-700 border-green-200" },
+  { id: "Fechado", title: "Vendidos (Últimos 30 dias)", color: "bg-green-500/10 text-green-700 border-green-200" },
   { id: "Perdido", title: "Perdido", color: "bg-red-500/10 text-red-700 border-red-200" }
 ];
 
@@ -409,7 +409,20 @@ export default function CrmTab() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 items-start overflow-x-auto pb-4">
             {COLUNAS.map(col => {
-              const leadsNaColuna = leads.filter(l => l.statusFunil === col.id);
+              const agora = new Date();
+              const limite30Dias = new Date(agora.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+              const leadsNaColuna = leads.filter(l => {
+                if (l.statusFunil !== col.id) return false;
+                if (col.id === "Fechado") {
+                  if (l.vendas && l.vendas.length > 0) {
+                    const dataVenda = new Date(l.vendas[0].dataVenda);
+                    return dataVenda >= limite30Dias;
+                  }
+                  return true;
+                }
+                return true;
+              });
               return (
                 <div
                   key={col.id}

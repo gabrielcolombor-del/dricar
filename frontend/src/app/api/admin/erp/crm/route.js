@@ -15,6 +15,10 @@ export async function GET(request) {
     const leads = await prisma.clienteCrm.findMany({
       include: {
         veiculoInteresse: true,
+        vendas: {
+          orderBy: { dataVenda: "desc" },
+          take: 1,
+        },
       },
       orderBy: {
         nome: "asc",

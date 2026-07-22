@@ -12,6 +12,7 @@ export default function EstoqueTab() {
   const [filtroStatus, setFiltroStatus] = useState("");
   const [filtroMarca, setFiltroMarca] = useState("");
   const [filtroAno, setFiltroAno] = useState("");
+  const [buscaGeral, setBuscaGeral] = useState("");
 
   // Modal Novo Veículo
   const [showModal, setShowModal] = useState(false);
@@ -71,12 +72,25 @@ export default function EstoqueTab() {
   const marcasUnicas = [...new Set(veiculos.map(v => v.marca))].sort();
   const anosUnicos = [...new Set(veiculos.map(v => v.anoMod))].sort((a,b) => b - a);
 
-  // Filtragem
+  // Filtragem com busca multi-parâmetros
   const veiculosFiltrados = veiculos.filter(v => {
     const matchStatus = filtroStatus ? v.status === filtroStatus : true;
     const matchMarca = filtroMarca ? v.marca === filtroMarca : true;
     const matchAno = filtroAno ? v.anoMod === parseInt(filtroAno) : true;
-    return matchStatus && matchMarca && matchAno;
+
+    const term = buscaGeral.toLowerCase().trim();
+    const matchBusca = !term ? true : (
+      (v.placa && v.placa.toLowerCase().includes(term)) ||
+      (v.marca && v.marca.toLowerCase().includes(term)) ||
+      (v.modelo && v.modelo.toLowerCase().includes(term)) ||
+      (v.renavam && v.renavam.toLowerCase().includes(term)) ||
+      (v.chassi && v.chassi.toLowerCase().includes(term)) ||
+      (v.status && v.status.toLowerCase().includes(term)) ||
+      (`${v.anoFab}/${v.anoMod}`.includes(term)) ||
+      (v.despesas && v.despesas.some(d => d.categoria && d.categoria.toLowerCase().includes(term)))
+    );
+
+    return matchStatus && matchMarca && matchAno && matchBusca;
   });
 
   // Formatador de placa
@@ -254,7 +268,30 @@ export default function EstoqueTab() {
       {/* Top Filter and Actions */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex flex-wrap gap-4 items-center flex-grow max-w-3xl">
+          {/* Campo de Busca Geral */}
+          <div className="flex-grow min-w-[220px]">
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">🔍 Pesquisar Veículo / Peças / Placa</label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar por placa, modelo, renavam, chassi, peças..."
+                value={buscaGeral}
+                onChange={(e) => setBuscaGeral(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg py-2 pl-8 pr-7 text-xs bg-white focus:outline-none focus:border-brand-blue"
+              />
+              <span className="absolute left-2.5 top-2 text-gray-400 text-xs">🔍</span>
+              {buscaGeral && (
+                <button
+                  onClick={() => setBuscaGeral("")}
+                  className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
           <div>
             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</label>
             <select
