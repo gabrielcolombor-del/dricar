@@ -50,7 +50,7 @@ export default function DashboardTab() {
     );
   }
 
-  const { meta, cards, comparativoMensal } = data;
+  const { meta, cards, comparativoMensal, vendasPorCategoria } = data;
 
   // Cálculo da altura máxima dinâmica para o gráfico
   const maxVal = Math.max(
@@ -65,12 +65,30 @@ export default function DashboardTab() {
     return `R$ ${val}`;
   };
 
-  // Pontos da linha amarela para o ano atual
-  const curvePoints = comparativoMensal.map((item, index) => ({
-    index,
-    val: item.valAnoAtual,
-    mes: item.mes
-  }));
+  // Pontos da linha amarela exclusivamente sobre o ÁPICE (topo) da coluna de 2026 (apenas meses com vendas > 0)
+  const curvePoints = comparativoMensal
+    .map((item, index) => {
+      if (item.valAnoAtual <= 0) return null; // Não desenha pontos para meses futuros sem vendas
+      return {
+        index,
+        val: item.valAnoAtual,
+        mes: item.mes
+      };
+    })
+    .filter(Boolean);
+
+  // Cores por categoria para o novo gráfico
+  const getCategoryColor = (cat) => {
+    switch (cat) {
+      case "Hatch": return "bg-blue-500 text-blue-600 border-blue-200";
+      case "Sedan": return "bg-emerald-500 text-emerald-600 border-emerald-200";
+      case "SUV": return "bg-purple-500 text-purple-600 border-purple-200";
+      case "Picape": return "bg-amber-500 text-amber-600 border-amber-200";
+      case "Moto": return "bg-rose-500 text-rose-600 border-rose-200";
+      case "Utilitário": return "bg-indigo-500 text-indigo-600 border-indigo-200";
+      default: return "bg-slate-500 text-slate-600 border-slate-200";
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fade-in text-gray-800 font-sans pb-8">
@@ -207,7 +225,7 @@ export default function DashboardTab() {
         </div>
       </div>
 
-      {/* SECTION 3: GRÁFICO DE FATURAMENTO MENSAL (2026 vs 2025) */}
+      {/* SECTION 3: GRÁFICO 1 - FATURAMENTO MENSAL (2026 vs 2025) */}
       <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm space-y-6">
         
         {/* Header do Gráfico */}
@@ -256,23 +274,24 @@ export default function DashboardTab() {
           {/* Container das Colunas dos Meses */}
           <div className="relative pl-14 pr-2 h-[220px] flex items-end justify-between z-10">
             
-            {/* SVG Curva Amarela Perfeitamente Alinhada com o Topo das Barras de 2026 */}
+            {/* SVG Curva Amarela Posicionada EXATAMENTE sobre o ÁPICE (topo) da Coluna Escura de 2026 */}
             <svg 
               className="absolute left-14 right-2 top-0 bottom-0 w-[calc(100%-4rem)] h-full overflow-visible pointer-events-none z-20"
               viewBox="0 0 1200 220"
               preserveAspectRatio="none"
             >
-              {/* Linha Amarela Contínua ligando os topos */}
+              {/* Linha Amarela Contínua ligando os ápices das barras de 2026 */}
               {curvePoints.length > 1 && (
                 <polyline
                   fill="none"
                   stroke="#EAB308"
-                  strokeWidth="3"
+                  strokeWidth="3.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   points={curvePoints
                     .map((p) => {
-                      const x = (p.index + 0.5) * (1200 / 12);
+                      // O centro da barra de 2026 fica deslocado +10px à direita do centro da coluna
+                      const x = (p.index + 0.5) * (1200 / 12) + 10;
                       const y = 220 - (p.val / maxVal) * 220;
                       return `${x},${y}`;
                     })
@@ -280,9 +299,9 @@ export default function DashboardTab() {
                 />
               )}
 
-              {/* Pontos Círculos Amarelos sobre cada barra */}
+              {/* Pontos Círculos Amarelos EXATAMENTE no topo da barra de 2026 */}
               {curvePoints.map((p) => {
-                const x = (p.index + 0.5) * (1200 / 12);
+                const x = (p.index + 0.5) * (1200 / 12) + 10;
                 const y = 220 - (p.val / maxVal) * 220;
                 return (
                   <circle
@@ -370,6 +389,63 @@ export default function DashboardTab() {
         })()}
 
       </div>
+
+      {/* SECTION 4: NOVO GRÁFICO - VENDAS POR CATEGORIA DE VEÍCULO */}
+      {vendasPorCategoria && vendasPorCategoria.length > 0 && (
+        <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm space-y-6">
+          <div>
+            <h3 className="text-sm font-extrabold text-gray-900">
+              Vendas por Categoria de Veículo (Hatch, Sedan, SUV, Picape...)
+            </h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Distribuição do faturamento e quantidade total de veículos vendidos por categoria
+            </p>
+          </div>
+
+          {/* Grid de Cards de Categorias com Barra de Progresso */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {vendasPorCategoria.map((catItem) => {
+              const colorClasses = getCategoryColor(catItem.categoria);
+              return (
+                <div key={catItem.categoria} className="bg-slate-50/70 border border-gray-200 rounded-xl p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className={`text-xs font-extrabold px-2.5 py-1 rounded-lg border uppercase ${colorClasses}`}>
+                      {catItem.categoria}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-gray-500">
+                      {catItem.quantidade} veículos
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-base font-extrabold text-gray-900 block">
+                      R$ {catItem.faturamento.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-semibold">
+                      {catItem.percentual.toFixed(1)}% do total geral de vendas
+                    </span>
+                  </div>
+
+                  {/* Barra Visual de Progresso Porcentual */}
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        catItem.categoria === "Hatch" ? "bg-blue-500" :
+                        catItem.categoria === "Sedan" ? "bg-emerald-500" :
+                        catItem.categoria === "SUV" ? "bg-purple-500" :
+                        catItem.categoria === "Picape" ? "bg-amber-500" :
+                        catItem.categoria === "Moto" ? "bg-rose-500" :
+                        catItem.categoria === "Utilitário" ? "bg-indigo-500" : "bg-slate-500"
+                      }`}
+                      style={{ width: `${Math.max(5, catItem.percentual)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
     </div>
   );

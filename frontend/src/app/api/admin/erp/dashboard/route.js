@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const MESES_FULL = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
 
-// Extrator UTC seguro para evitar distorções de fuso horário (ex: 01/04 GMT-3 virar 31/03)
+// Extrator UTC seguro para evitar distorções de fuso horário
 function getIsoYearMonth(dateInput) {
   if (!dateInput) return { year: 0, monthIndex: 0 };
   const d = new Date(dateInput);
@@ -16,6 +16,18 @@ function getIsoYearMonth(dateInput) {
   const year = parseInt(iso.slice(0, 4));
   const monthIndex = parseInt(iso.slice(5, 7)) - 1; // 0 a 11
   return { year, monthIndex };
+}
+
+// Classificador inteligente de categoria de veículos
+function getCategoriaVeiculo(marca, modelo) {
+  const m = `${marca || ''} ${modelo || ''}`.toUpperCase();
+  if (/\b(YAMAHA|HONDA|BROS|TITAN|FAN|XRE|TWISTER|BIZ|CG|PCX|FAZER|NMAX|MOTO)\b/.test(m)) return "Moto";
+  if (/\b(STRADA|SAVEIRO|MONTANA|S10|HILUX|RANGER|AMAROK|TORO|L200|FRONTIER|RAM)\b/.test(m)) return "Picape";
+  if (/\b(ECOSPORT|DUSTER|TUCSON|HR-V|HRV|CRETA|KICKS|TRACKER|COMPASS|RENEGADE|CAPTUR|T-CROSS|TCROSS|NIVUS|PULSE|FASTBACK)\b/.test(m)) return "SUV";
+  if (/\b(COROLLA|CIVIC|VOYAGE|SIENA|PRISMA|COBALT|CRONOS|VERSA|CITY|LOGAN|JETTA|SENTRA|FLUENCE|CERATO|SEDAN)\b/.test(m)) return "Sedan";
+  if (/\b(GOL|PALIO|UNO|ONIX|HB20|CELTA|FOX|FIESTA|KA|SANDERO|MARCH|FIT|ETIOS|MOBI|KWID|CLIO|POLO|UP|208|C3|HATCH)\b/.test(m)) return "Hatch";
+  if (/\b(KOMBI|FIORINO|MASTER|HR|DUCATO|BOXER|KANGOO|DOBLO|PARTNER)\b/.test(m)) return "Utilitário";
+  return "Outros";
 }
 
 export async function GET(request) {
@@ -29,8 +41,11 @@ export async function GET(request) {
     const { year: anoAtual, monthIndex: mesAtualIndex } = getIsoYearMonth(hoje);
     const anoAnterior = anoAtual - 1;
 
-    // Buscar TODAS as vendas do banco de dados
+    // Buscar TODAS as vendas do banco de dados com relação ao veículo
     const todasVendas = await prisma.venda.findMany({
+      include: {
+        veiculo: true,
+      },
       orderBy: { dataVenda: "asc" },
     });
 
@@ -70,7 +85,7 @@ export async function GET(request) {
       acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0
     );
 
-    // Vendas do ano anterior no mesmo período (Jan a Jul) para o comparativo YoY
+    // Vendas do ano anterior no mesmo período para comparativo YoY
     const vendasAnoAnteriorYoY = todasVendas.filter(v => {
       const { year, monthIndex } = getIsoYearMonth(v.dataVenda);
       return year === anoAnterior && monthIndex <= mesAtualIndex;
@@ -79,7 +94,6 @@ export async function GET(request) {
       acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0
     );
 
-    // Comparativo YoY (%)
     let comparativoYoY = 0;
     if (faturamentoAnoAnteriorYoY > 0) {
       comparativoYoY = ((faturamentoAnoAtual - faturamentoAnoAnteriorYoY) / faturamentoAnoAnteriorYoY) * 100;
@@ -93,14 +107,12 @@ export async function GET(request) {
     );
     const ticketMedioGeral = todasVendas.length > 0 ? totalFaturamentoGeral / todasVendas.length : 0;
 
-    // 5. Dados Mensais para o Gráfico (Jan a Dez para Ano Atual e Ano Anterior)
+    // 5. Dados Mensais para o Gráfico (Jan a Dez)
     const comparativoMensal = MESES_ABREV.map((mesNome, index) => {
-      // Vendas do ano atual neste mês
       const valAnoAtual = vendasAnoAtual
         .filter(v => getIsoYearMonth(v.dataVenda).monthIndex === index)
         .reduce((acc, v) => acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0);
 
-      // Vendas do ano anterior neste mês
       const valAnoAnterior = todasVendas
         .filter(v => {
           const { year, monthIndex } = getIsoYearMonth(v.dataVenda);
@@ -114,6 +126,37 @@ export async function GET(request) {
         valAnoAnterior,
       };
     });
+
+    // 6. NOVO GRÁFICO: Vendas por Categoria de Veículo (Hatch, Sedan, SUV, Picape, Moto, Utilitário, Outros)
+    const categoriasMap = {
+      Hatch: { count: 0, revenue: 0 },
+      Sedan: { count: 0, revenue: 0 },
+      SUV: { count: 0, revenue: 0 },
+      Picape: { count: 0, revenue: 0 },
+      Moto: { count: 0, revenue: 0 },
+      Utilitário: { count: 0, revenue: 0 },
+      Outros: { count: 0, revenue: 0 },
+    };
+
+    todasVendas.forEach(v => {
+      const cat = getCategoriaVeiculo(v.veiculo?.marca, v.veiculo?.modelo);
+      const valor = (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0);
+      if (categoriasMap[cat]) {
+        categoriasMap[cat].count += 1;
+        categoriasMap[cat].revenue += valor;
+      } else {
+        categoriasMap["Outros"].count += 1;
+        categoriasMap["Outros"].revenue += valor;
+      }
+    });
+
+    const totalVendasCat = todasVendas.length;
+    const vendasPorCategoria = Object.keys(categoriasMap).map(cat => ({
+      categoria: cat,
+      quantidade: categoriasMap[cat].count,
+      faturamento: categoriasMap[cat].revenue,
+      percentual: totalVendasCat > 0 ? (categoriasMap[cat].count / totalVendasCat) * 100 : 0,
+    })).sort((a, b) => b.quantidade - a.quantidade);
 
     return NextResponse.json({
       meta: {
@@ -129,12 +172,13 @@ export async function GET(request) {
         ticketMedioMes,
         faturamentoAnoAtual,
         comparativoYoY,
-        faturamentoAnoAnteriorMesmoPeriodo, // Agora contém o Faturamento do ANO INTEIRO (Jan-Dez)
+        faturamentoAnoAnteriorMesmoPeriodo,
         carrosVendidosAno,
         ticketMedioAno,
         ticketMedioGeral,
       },
       comparativoMensal,
+      vendasPorCategoria,
     });
   } catch (error) {
     console.error("Erro ao carregar dashboard:", error);
