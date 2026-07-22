@@ -37,9 +37,16 @@ export async function GET(request) {
       return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get("year");
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+
     const hoje = new Date();
-    const { year: anoAtual, monthIndex: mesAtualIndex } = getIsoYearMonth(hoje);
+    const currentYear = hoje.getFullYear();
+    const anoAtual = yearParam ? parseInt(yearParam, 10) : currentYear;
     const anoAnterior = anoAtual - 1;
+    const mesAtualIndex = anoAtual === currentYear ? hoje.getMonth() : 11;
 
     // Buscar TODAS as vendas do banco de dados com relação ao veículo
     const todasVendas = await prisma.venda.findMany({
@@ -48,6 +55,11 @@ export async function GET(request) {
       },
       orderBy: { dataVenda: "asc" },
     });
+
+    // Anos disponíveis no banco de dados para o seletor
+    const anosSet = new Set(todasVendas.map(v => getIsoYearMonth(v.dataVenda).year).filter(y => y > 2000));
+    anosSet.add(currentYear);
+    const anosDisponiveis = Array.from(anosSet).sort((a, b) => b - a);
 
     // 1. Mês Atual
     const vendasMesAtual = todasVendas.filter(v => {
@@ -61,7 +73,7 @@ export async function GET(request) {
     const carrosVendidosMes = vendasMesAtual.length;
     const ticketMedioMes = carrosVendidosMes > 0 ? faturamentoMesAtual / carrosVendidosMes : 0;
 
-    // 2. Ano Atual (Jan a Dez)
+    // 2. Ano Atual Selecionado (Jan a Dez)
     const vendasAnoAtual = todasVendas.filter(v => {
       const { year } = getIsoYearMonth(v.dataVenda);
       return year === anoAtual;
@@ -107,7 +119,7 @@ export async function GET(request) {
     );
     const ticketMedioGeral = todasVendas.length > 0 ? totalFaturamentoGeral / todasVendas.length : 0;
 
-    // 5. Dados Mensais para o Gráfico (Jan a Dez)
+    // 5. Dados Mensais para o Gráfico (Jan a Dez do Ano Selecionado vs Ano Anterior)
     const comparativoMensal = MESES_ABREV.map((mesNome, index) => {
       const valAnoAtual = vendasAnoAtual
         .filter(v => getIsoYearMonth(v.dataVenda).monthIndex === index)
@@ -127,7 +139,19 @@ export async function GET(request) {
       };
     });
 
-    // 6. NOVO GRÁFICO: Vendas por Categoria de Veículo (Hatch, Sedan, SUV, Picape, Moto, Utilitário, Outros)
+    // 6. FILTRO DE TEMPO DE DATAS PARA O GRÁFICO DE CATEGORIA
+    let vendasFiltradasCategoria = todasVendas;
+
+    if (startDateParam || endDateParam) {
+      const start = startDateParam ? new Date(`${startDateParam}T00:00:00Z`) : new Date("2000-01-01T00:00:00Z");
+      const end = endDateParam ? new Date(`${endDateParam}T23:59:59Z`) : new Date("2099-12-31T23:59:59Z");
+
+      vendasFiltradasCategoria = todasVendas.filter(v => {
+        const d = new Date(v.dataVenda);
+        return d >= start && d <= end;
+      });
+    }
+
     const categoriasMap = {
       Hatch: { count: 0, revenue: 0 },
       Sedan: { count: 0, revenue: 0 },
@@ -138,7 +162,7 @@ export async function GET(request) {
       Outros: { count: 0, revenue: 0 },
     };
 
-    todasVendas.forEach(v => {
+    vendasFiltradasCategoria.forEach(v => {
       const cat = getCategoriaVeiculo(v.veiculo?.marca, v.veiculo?.modelo);
       const valor = (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0);
       if (categoriasMap[cat]) {
@@ -150,7 +174,7 @@ export async function GET(request) {
       }
     });
 
-    const totalVendasCat = todasVendas.length;
+    const totalVendasCat = vendasFiltradasCategoria.length;
     const vendasPorCategoria = Object.keys(categoriasMap).map(cat => ({
       categoria: cat,
       quantidade: categoriasMap[cat].count,
@@ -164,6 +188,7 @@ export async function GET(request) {
         mesAtualAbrev: MESES_ABREV[mesAtualIndex],
         anoAtual,
         anoAnterior,
+        anosDisponiveis,
       },
       cards: {
         faturamentoMesAtual,
@@ -179,6 +204,7 @@ export async function GET(request) {
       },
       comparativoMensal,
       vendasPorCategoria,
+      totalVendasFiltradasCategoria: totalVendasCat,
     });
   } catch (error) {
     console.error("Erro ao carregar dashboard:", error);
