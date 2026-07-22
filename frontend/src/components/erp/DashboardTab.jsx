@@ -152,7 +152,7 @@ export default function DashboardTab() {
               </h3>
             </div>
             <p className="text-[11px] text-gray-400 font-medium mt-3">
-              {meta.anoAnterior} — mesmo período (Jan-{meta.mesAtualAbrev})
+              {meta.anoAnterior} — Total do Ano Inteiro (Jan-Dez)
             </p>
           </div>
 

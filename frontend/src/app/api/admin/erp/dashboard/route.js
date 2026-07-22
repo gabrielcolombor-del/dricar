@@ -60,20 +60,29 @@ export async function GET(request) {
 
     const percentualDoTotalAno = faturamentoAnoAtual > 0 ? (faturamentoMesAtual / faturamentoAnoAtual) * 100 : 0;
 
-    // 3. Ano Anterior (Mesmo Período: Jan a Mês Atual Index no Ano Passado)
-    const vendasAnoAnteriorMesmoPeriodo = todasVendas.filter(v => {
+    // 3. Ano Anterior (Faturamento do ANO INTEIRO: Jan a Dez)
+    const vendasAnoAnteriorInteiro = todasVendas.filter(v => {
+      const { year } = getIsoYearMonth(v.dataVenda);
+      return year === anoAnterior;
+    });
+
+    const faturamentoAnoAnteriorMesmoPeriodo = vendasAnoAnteriorInteiro.reduce((acc, v) => 
+      acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0
+    );
+
+    // Vendas do ano anterior no mesmo período (Jan a Jul) para o comparativo YoY
+    const vendasAnoAnteriorYoY = todasVendas.filter(v => {
       const { year, monthIndex } = getIsoYearMonth(v.dataVenda);
       return year === anoAnterior && monthIndex <= mesAtualIndex;
     });
-
-    const faturamentoAnoAnteriorMesmoPeriodo = vendasAnoAnteriorMesmoPeriodo.reduce((acc, v) => 
+    const faturamentoAnoAnteriorYoY = vendasAnoAnteriorYoY.reduce((acc, v) => 
       acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0
     );
 
     // Comparativo YoY (%)
     let comparativoYoY = 0;
-    if (faturamentoAnoAnteriorMesmoPeriodo > 0) {
-      comparativoYoY = ((faturamentoAnoAtual - faturamentoAnoAnteriorMesmoPeriodo) / faturamentoAnoAnteriorMesmoPeriodo) * 100;
+    if (faturamentoAnoAnteriorYoY > 0) {
+      comparativoYoY = ((faturamentoAnoAtual - faturamentoAnoAnteriorYoY) / faturamentoAnoAnteriorYoY) * 100;
     } else if (faturamentoAnoAtual > 0) {
       comparativoYoY = 100;
     }
@@ -120,7 +129,7 @@ export async function GET(request) {
         ticketMedioMes,
         faturamentoAnoAtual,
         comparativoYoY,
-        faturamentoAnoAnteriorMesmoPeriodo,
+        faturamentoAnoAnteriorMesmoPeriodo, // Agora contém o Faturamento do ANO INTEIRO (Jan-Dez)
         carrosVendidosAno,
         ticketMedioAno,
         ticketMedioGeral,
