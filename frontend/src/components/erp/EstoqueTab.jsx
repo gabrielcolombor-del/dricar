@@ -9,7 +9,7 @@ export default function EstoqueTab() {
   const [selectedVeiculo, setSelectedVeiculo] = useState(null);
 
   // Filtros
-  const [filtroStatus, setFiltroStatus] = useState("");
+  const [filtroStatus, setFiltroStatus] = useState("Disponível");
   const [filtroMarca, setFiltroMarca] = useState("");
   const [filtroAno, setFiltroAno] = useState("");
   const [buscaGeral, setBuscaGeral] = useState("");

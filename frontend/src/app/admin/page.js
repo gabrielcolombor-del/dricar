@@ -769,24 +769,6 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Indicadores CRM (Apenas Admin) */}
-        {(activeTab === "estoque" || activeTab === "vendas") && isAdmin && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-              <span className="text-xs text-gray-400 font-bold uppercase">Faturamento (CRM)</span>
-              <h3 className="text-2xl font-extrabold text-brand-blue mt-1">R$ {totalSalesRevenue.toLocaleString("pt-BR")}</h3>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-              <span className="text-xs text-gray-400 font-bold uppercase">Carros Vendidos</span>
-              <h3 className="text-2xl font-extrabold text-green-600 mt-1">{soldCars.length} veículos</h3>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-              <span className="text-xs text-gray-400 font-bold uppercase">Ticket Médio</span>
-              <h3 className="text-2xl font-extrabold text-brand-blue mt-1">R$ {Math.round(averageSalePrice).toLocaleString("pt-BR")}</h3>
-            </div>
-          </div>
-        )}
-
         {/* ERROS E LOADINGS */}
         {error && (
           <div className="text-red-600 text-sm font-semibold bg-red-50 p-4 rounded-lg border border-red-100 mb-6">

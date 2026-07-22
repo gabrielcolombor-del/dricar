@@ -423,6 +423,16 @@ export default function CrmTab() {
                 }
                 return true;
               });
+
+              // ORDENAÇÃO: Se for a coluna "Fechado", ordenar por dataVenda da MAIS RECENTE para a MAIS ANTIGA
+              if (col.id === "Fechado") {
+                leadsNaColuna.sort((a, b) => {
+                  const timeA = a.vendas && a.vendas.length > 0 ? new Date(a.vendas[0].dataVenda).getTime() : 0;
+                  const timeB = b.vendas && b.vendas.length > 0 ? new Date(b.vendas[0].dataVenda).getTime() : 0;
+                  return timeB - timeA; // Decrescente (mais nova no topo)
+                });
+              }
+
               return (
                 <div
                   key={col.id}
@@ -442,53 +452,66 @@ export default function CrmTab() {
                         Solte leads aqui
                       </div>
                     ) : (
-                      leadsNaColuna.map(lead => (
-                        <div
-                          key={lead.id}
-                          draggable={lead.statusFunil !== "Fechado"}
-                          onDragStart={e => handleDragStart(e, lead.id)}
-                          className={`bg-white border border-gray-155 p-3.5 rounded-xl shadow-sm hover:shadow transition-shadow flex flex-col gap-2 relative ${
-                            lead.statusFunil === "Fechado" 
-                              ? "border-green-300 opacity-90 cursor-default" 
-                              : "cursor-grab active:cursor-grabbing"
-                          }`}
-                        >
-                          {/* Title & Actions */}
-                          <div className="flex justify-between items-start gap-1">
-                            <span className="font-extrabold text-xs text-gray-800 break-words block pr-4">
-                              {lead.nome}
-                            </span>
-                            <div className="flex gap-1.5 absolute top-2.5 right-2">
-                              {lead.statusFunil !== "Fechado" && (
-                                <button
-                                  onClick={() => startEditLead(lead)}
-                                  className="text-[10px] text-gray-400 hover:text-brand-blue"
-                                  title="Editar Lead"
-                                >
-                                  ✏️
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleDeleteLead(lead.id)}
-                                className="text-[10px] text-gray-400 hover:text-red-500"
-                                title="Excluir Lead"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          </div>
+                      leadsNaColuna.map(lead => {
+                        const temTelefoneValido = lead.telefone && lead.telefone !== "(00) 00000-0000" && lead.telefone !== "Não informado";
+                        const temCpfValido = lead.cpfCnpj && lead.cpfCnpj !== "000.000.000-00" && lead.cpfCnpj !== "Não informado";
+                        const dataVendaObj = lead.vendas && lead.vendas.length > 0 ? new Date(lead.vendas[0].dataVenda) : null;
+                        const dataVendaFmt = dataVendaObj ? dataVendaObj.toLocaleDateString("pt-BR", { timeZone: "UTC" }) : null;
 
-                          {/* Contacts */}
-                          <div className="space-y-1 text-[10px] text-gray-500 font-medium">
-                            <p className="flex items-center gap-1">
-                              📞 {lead.telefone}
-                            </p>
-                            {lead.cpfCnpj && (
-                              <p className="flex items-center gap-1 font-mono text-[9px]">
-                                🪪 {lead.cpfCnpj}
-                              </p>
+                        return (
+                          <div
+                            key={lead.id}
+                            draggable={lead.statusFunil !== "Fechado"}
+                            onDragStart={e => handleDragStart(e, lead.id)}
+                            className={`bg-white border border-gray-155 p-3.5 rounded-xl shadow-sm hover:shadow transition-shadow flex flex-col gap-2 relative ${
+                              lead.statusFunil === "Fechado" 
+                                ? "border-green-300 opacity-90 cursor-default" 
+                                : "cursor-grab active:cursor-grabbing"
+                            }`}
+                          >
+                            {/* Title & Actions */}
+                            <div className="flex justify-between items-start gap-1">
+                              <span className="font-extrabold text-xs text-gray-800 break-words block pr-4">
+                                {lead.nome}
+                              </span>
+                              <div className="flex gap-1.5 absolute top-2.5 right-2">
+                                {lead.statusFunil !== "Fechado" && (
+                                  <button
+                                    onClick={() => startEditLead(lead)}
+                                    className="text-[10px] text-gray-400 hover:text-brand-blue"
+                                    title="Editar Lead"
+                                  >
+                                    ✏️
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleDeleteLead(lead.id)}
+                                  className="text-[10px] text-gray-400 hover:text-red-500"
+                                  title="Excluir Lead"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Data da Venda (se vendido) */}
+                            {dataVendaFmt && (
+                              <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md self-start">
+                                📅 Venda: {dataVendaFmt}
+                              </span>
                             )}
-                          </div>
+
+                            {/* Contacts */}
+                            <div className="space-y-1 text-[10px] text-gray-500 font-medium">
+                              <p className="flex items-center gap-1">
+                                📞 {temTelefoneValido ? lead.telefone : <span className="text-gray-400 italic">Sem telefone</span>}
+                              </p>
+                              {temCpfValido && (
+                                <p className="flex items-center gap-1 font-mono text-[9px]">
+                                  🪪 {lead.cpfCnpj}
+                                </p>
+                              )}
+                            </div>
 
                           {/* Vehicle of Interest */}
                           <div className="bg-gray-50/70 border border-gray-100 p-2 rounded-lg text-[10px] flex flex-col">
@@ -553,7 +576,8 @@ export default function CrmTab() {
                             )}
                           </div>
                         </div>
-                      ))
+                      );
+                    })
                     )}
                   </div>
                 </div>
