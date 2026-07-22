@@ -390,62 +390,121 @@ export default function DashboardTab() {
 
       </div>
 
-      {/* SECTION 4: NOVO GRÁFICO - VENDAS POR CATEGORIA DE VEÍCULO */}
-      {vendasPorCategoria && vendasPorCategoria.length > 0 && (
-        <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm space-y-6">
-          <div>
-            <h3 className="text-sm font-extrabold text-gray-900">
-              Vendas por Categoria de Veículo (Hatch, Sedan, SUV, Picape...)
-            </h3>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Distribuição do faturamento e quantidade total de veículos vendidos por categoria
-            </p>
+      {/* SECTION 4: GRÁFICO DE BARRAS LATERAIS (HORIZONTAIS) - VENDAS POR CATEGORIA DE VEÍCULO */}
+      {vendasPorCategoria && vendasPorCategoria.length > 0 && (() => {
+        const maxCatCount = Math.max(...vendasPorCategoria.map(c => c.quantidade), 1);
+
+        const getCategoryGradient = (cat) => {
+          switch (cat) {
+            case "Hatch": return "from-blue-600 to-indigo-500 text-blue-700 bg-blue-50 border-blue-200";
+            case "Sedan": return "from-emerald-600 to-teal-500 text-emerald-700 bg-emerald-50 border-emerald-200";
+            case "SUV": return "from-purple-600 to-violet-500 text-purple-700 bg-purple-50 border-purple-200";
+            case "Picape": return "from-amber-500 to-orange-500 text-amber-700 bg-amber-50 border-amber-200";
+            case "Moto": return "from-rose-500 to-red-500 text-rose-700 bg-rose-50 border-rose-200";
+            case "Utilitário": return "from-indigo-600 to-cyan-600 text-indigo-700 bg-indigo-50 border-indigo-200";
+            default: return "from-slate-600 to-gray-500 text-slate-700 bg-slate-50 border-slate-200";
+          }
+        };
+
+        const getCategoryIcon = (cat) => {
+          switch (cat) {
+            case "Hatch": return "🚗";
+            case "Sedan": return "🚘";
+            case "SUV": return "🚙";
+            case "Picape": return "🛻";
+            case "Moto": return "🏍️";
+            case "Utilitário": return "🚐";
+            default: return "🏎️";
+          }
+        };
+
+        return (
+          <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-extrabold text-gray-900">
+                  Ranking de Vendas por Categoria de Veículo (Gráfico de Barras Horizontais)
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Relação de qual tipo de carro vende mais durante o ano (Hatch, Sedan, SUV, Picape...)
+                </p>
+              </div>
+              <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full self-start sm:self-auto">
+                Total: {cards.carrosVendidosAno || vendasPorCategoria.reduce((a, b) => a + b.quantidade, 0)} veículos vendidos
+              </span>
+            </div>
+
+            {/* Linhas de Grade de Apoio para Eixo X */}
+            <div className="space-y-4 pt-2">
+              <div className="hidden sm:flex justify-between pl-36 pr-44 text-[10px] font-mono text-gray-400 border-b border-gray-100 pb-1">
+                <span>0</span>
+                <span>25%</span>
+                <span>50%</span>
+                <span>75%</span>
+                <span>100% (Líder)</span>
+              </div>
+
+              {/* Lista de Barras Horizontais por Categoria */}
+              <div className="space-y-3.5">
+                {vendasPorCategoria.map((catItem, idx) => {
+                  const barWidthPercent = (catItem.quantidade / maxCatCount) * 100;
+                  const styleClasses = getCategoryGradient(catItem.categoria);
+                  const icon = getCategoryIcon(catItem.categoria);
+
+                  return (
+                    <div key={catItem.categoria} className="flex flex-col sm:flex-row sm:items-center gap-2 group">
+                      
+                      {/* Rótulo da Categoria (Lado Esquerdo - Y Axis) */}
+                      <div className="w-full sm:w-36 flex items-center justify-between sm:justify-start gap-2 shrink-0">
+                        <span className={`text-xs font-extrabold px-2.5 py-1 rounded-lg border flex items-center gap-1.5 ${styleClasses}`}>
+                          <span>{icon}</span>
+                          <span>{catItem.categoria}</span>
+                        </span>
+                        <span className="sm:hidden font-mono text-xs font-bold text-gray-600">
+                          {catItem.quantidade} un. ({catItem.percentual.toFixed(1)}%)
+                        </span>
+                      </div>
+
+                      {/* Trilha e Barra Horizontal Proporcional */}
+                      <div className="flex-1 bg-slate-100 rounded-xl h-8 p-1 relative overflow-hidden flex items-center">
+                        <div
+                          className={`h-full rounded-lg bg-gradient-to-r ${styleClasses.split(' ')[0]} ${styleClasses.split(' ')[1]} transition-all duration-700 ease-out shadow-sm flex items-center justify-end pr-2`}
+                          style={{ width: `${Math.max(4, barWidthPercent)}%` }}
+                        >
+                          {barWidthPercent > 18 && (
+                            <span className="text-[10px] font-extrabold text-white font-mono tracking-tight drop-shadow-xs">
+                              {catItem.quantidade} un.
+                            </span>
+                          )}
+                        </div>
+
+                        {barWidthPercent <= 18 && (
+                          <span className="text-[10px] font-extrabold text-slate-700 font-mono pl-2">
+                            {catItem.quantidade} un.
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Coluna de Faturamento e Porcentagem (Lado Direito) */}
+                      <div className="w-full sm:w-44 flex items-center justify-between sm:justify-end gap-3 shrink-0 text-right">
+                        <div>
+                          <span className="text-xs font-extrabold text-gray-900 block">
+                            R$ {catItem.faturamento.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-semibold font-mono">
+                            {catItem.percentual.toFixed(1)}% das vendas
+                          </span>
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-
-          {/* Grid de Cards de Categorias com Barra de Progresso */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {vendasPorCategoria.map((catItem) => {
-              const colorClasses = getCategoryColor(catItem.categoria);
-              return (
-                <div key={catItem.categoria} className="bg-slate-50/70 border border-gray-200 rounded-xl p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className={`text-xs font-extrabold px-2.5 py-1 rounded-lg border uppercase ${colorClasses}`}>
-                      {catItem.categoria}
-                    </span>
-                    <span className="text-xs font-mono font-bold text-gray-500">
-                      {catItem.quantidade} veículos
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-base font-extrabold text-gray-900 block">
-                      R$ {catItem.faturamento.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                    <span className="text-[10px] text-gray-400 font-semibold">
-                      {catItem.percentual.toFixed(1)}% do total geral de vendas
-                    </span>
-                  </div>
-
-                  {/* Barra Visual de Progresso Porcentual */}
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-500 ${
-                        catItem.categoria === "Hatch" ? "bg-blue-500" :
-                        catItem.categoria === "Sedan" ? "bg-emerald-500" :
-                        catItem.categoria === "SUV" ? "bg-purple-500" :
-                        catItem.categoria === "Picape" ? "bg-amber-500" :
-                        catItem.categoria === "Moto" ? "bg-rose-500" :
-                        catItem.categoria === "Utilitário" ? "bg-indigo-500" : "bg-slate-500"
-                      }`}
-                      style={{ width: `${Math.max(5, catItem.percentual)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
     </div>
   );
