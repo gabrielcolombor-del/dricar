@@ -187,7 +187,7 @@ async function importComprasSheet(filePath) {
     const rawPlaca = getFieldValue(row, ['PLACA']);
     const rawRenavam = getFieldValue(row, ['RENAVAM']);
     const rawObs = getFieldValue(row, ['OBSERVAÇÕES', 'OBSERVACOES', 'OBS', 'SUBTITLE']);
-    const rawDataEntrada = getFieldValue(row, ['DATA', 'DATA ENTRADA', 'DATA COMPRA', 'DATA_COMPRA']);
+    const rawDataEntrada = getFieldValue(row, ['DATA DA COMPRA', 'DATA ENTRADA', 'DATA COMPRA', 'DATA_COMPRA', 'DATA']);
     const rawValorCompra = getFieldValue(row, ['VALOR DE COMPRA R$', 'VALOR DE COMPRA', 'VALOR COMPRA', 'COMPRA', 'VALOR', 'PRICE']);
 
     let placa = (rawPlaca || '').toUpperCase().trim();
@@ -200,7 +200,6 @@ async function importComprasSheet(filePath) {
     const dataEntrada = parseDate(rawDataEntrada);
     const renavam = rawRenavam ? String(rawRenavam).trim() : null;
 
-    // TODOS os veículos importados das planilhas de histórico são "Vendido"
     const status = 'Vendido';
 
     try {
@@ -242,7 +241,6 @@ async function importComprasSheet(filePath) {
       const observacoesGerais = [parsedVeiculo.detalhes, rawObs ? `Obs: ${rawObs}` : ''].filter(Boolean).join(' - ');
       await syncVeiculoToCar(veiculo, observacoesGerais);
 
-      console.log(`[COMPRA HISTÓRICA] Linha ${i + 2}: Placa ${placa} (${parsedVeiculo.marca} ${parsedVeiculo.modelo}) -> Histórico Vendido`);
     } catch (err) {
       console.error(`[ERRO COMPRA] Linha ${i + 2} (Placa ${placa}):`, err.message);
     }
@@ -272,9 +270,9 @@ async function importVendasSheet(filePath) {
 
     const rawPlaca = getFieldValue(row, ['PLACA']);
     const rawVeiculo = getFieldValue(row, ['VEICULOS', 'VEICULO', 'CARRO', 'MODELO']);
-    const rawValorVenda = getFieldValue(row, ['VALOR DE VENDA R$', 'VALOR DE VENDA', 'VALOR VENDA', 'VALOR', 'VENDA']);
-    const rawDataVenda = getFieldValue(row, ['DATA DE VENDA', 'DATA VENDA', 'DATA', 'DATA_VENDA']);
-    const rawCliente = getFieldValue(row, ['CLIENTE', 'DONO', 'COMPRADOR', 'NOME']);
+    const rawValorVenda = getFieldValue(row, ['VALOR DE VENDA', 'VALOR DE VENDA R$', 'VALOR VENDA', 'VALOR', 'VENDA']);
+    const rawDataVenda = getFieldValue(row, ['DATA DA VENDA', 'DATA DE VENDA', 'DATA VENDA', 'DATA', 'DATA_VENDA']);
+    const rawCliente = getFieldValue(row, ['COMPRADOR', 'CLIENTE', 'DONO', 'NOME']);
     const rawRetorno = getFieldValue(row, ['RETORNO', 'RETORNO BANCARIO', 'VALOR RETORNO']);
 
     let placa = (rawPlaca || '').toUpperCase().trim();
