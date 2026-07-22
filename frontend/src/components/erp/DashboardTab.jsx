@@ -52,38 +52,25 @@ export default function DashboardTab() {
 
   const { meta, cards, comparativoMensal } = data;
 
-  // Cálculo da altura máxima para o gráfico
+  // Cálculo da altura máxima dinâmica para o gráfico
   const maxVal = Math.max(
     ...comparativoMensal.map(m => Math.max(m.valAnoAtual, m.valAnoAnterior)),
-    2200000
+    1800000
   );
 
-  // Formatação de valores resumidos para o Eixo Y (ex: R$ 2.2M, R$ 1.6M, R$ 1.1M, R$ 550k, R$ 0)
+  // Formatação de valores resumidos para o Eixo Y
   const formatYAxis = (val) => {
     if (val >= 1000000) return `R$ ${(val / 1000000).toFixed(1)}M`;
     if (val >= 1000) return `R$ ${(val / 1000).toFixed(0)}k`;
     return `R$ ${val}`;
   };
 
-  // Gerar coordenadas (x, y) para a curva em linha amarela (Curva Ano Atual)
-  const generateCurvePoints = () => {
-    const totalMonths = comparativoMensal.length;
-    const chartHeight = 220; // altura interna em px
-    return comparativoMensal
-      .map((item, index) => {
-        // Se for mês futuro (sem vendas ainda), ponto fica no 0 ou encerra a curva
-        if (item.isFuturo && item.valAnoAtual === 0) return null;
-        
-        // Posição X proporcional
-        const xPercent = ((index + 0.5) / totalMonths) * 100;
-        // Posição Y (invertido, 0 no topo)
-        const yPx = chartHeight - (item.valAnoAtual / maxVal) * chartHeight;
-        return { index, xPercent, yPx, val: item.valAnoAtual, mes: item.mes };
-      })
-      .filter(Boolean);
-  };
-
-  const curvePoints = generateCurvePoints();
+  // Pontos da linha amarela para o ano atual
+  const curvePoints = comparativoMensal.map((item, index) => ({
+    index,
+    val: item.valAnoAtual,
+    mes: item.mes
+  }));
 
   return (
     <div className="space-y-8 animate-fade-in text-gray-800 font-sans pb-8">
@@ -252,11 +239,11 @@ export default function DashboardTab() {
         </div>
 
         {/* ÁREA DO GRÁFICO (Canvas / Bars & SVG Line) */}
-        <div className="relative pt-6 pb-2">
+        <div className="relative pt-6 pb-6">
           
           {/* Linhas de Grade Horizontais (Eixo Y) */}
-          <div className="absolute inset-x-12 top-6 bottom-8 flex flex-col justify-between pointer-events-none z-0">
-            {[2200000, 1650000, 1100000, 550000, 0].map((level) => (
+          <div className="absolute inset-x-12 top-6 bottom-12 flex flex-col justify-between pointer-events-none z-0">
+            {[maxVal, maxVal * 0.75, maxVal * 0.5, maxVal * 0.25, 0].map((level) => (
               <div key={level} className="flex items-center w-full">
                 <span className="w-12 text-[10px] text-gray-400 font-mono pr-2 text-right shrink-0">
                   {formatYAxis(level)}
@@ -269,9 +256,13 @@ export default function DashboardTab() {
           {/* Container das Colunas dos Meses */}
           <div className="relative pl-14 pr-2 h-[220px] flex items-end justify-between z-10">
             
-            {/* SVG Curva Amarela em Camada por Cima das Barras */}
-            <svg className="absolute left-14 right-2 top-0 bottom-0 w-[calc(100%-4rem)] h-full overflow-visible pointer-events-none z-20">
-              {/* Linha Amarela Contínua ligando os pontos */}
+            {/* SVG Curva Amarela Perfeitamente Alinhada com o Topo das Barras de 2026 */}
+            <svg 
+              className="absolute left-14 right-2 top-0 bottom-0 w-[calc(100%-4rem)] h-full overflow-visible pointer-events-none z-20"
+              viewBox="0 0 1200 220"
+              preserveAspectRatio="none"
+            >
+              {/* Linha Amarela Contínua ligando os topos */}
               {curvePoints.length > 1 && (
                 <polyline
                   fill="none"
@@ -280,25 +271,33 @@ export default function DashboardTab() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   points={curvePoints
-                    .map((p) => `${(p.index + 0.5) * (100 / 12)}%,${p.yPx}`)
+                    .map((p) => {
+                      const x = (p.index + 0.5) * (1200 / 12);
+                      const y = 220 - (p.val / maxVal) * 220;
+                      return `${x},${y}`;
+                    })
                     .join(" ")}
                 />
               )}
 
-              {/* Pontos Círculos Amarelos sobre a linha */}
-              {curvePoints.map((p) => (
-                <circle
-                  key={p.index}
-                  cx={`${(p.index + 0.5) * (100 / 12)}%`}
-                  cy={p.yPx}
-                  r="4"
-                  className="fill-[#EAB308] stroke-white stroke-2"
-                />
-              ))}
+              {/* Pontos Círculos Amarelos sobre cada barra */}
+              {curvePoints.map((p) => {
+                const x = (p.index + 0.5) * (1200 / 12);
+                const y = 220 - (p.val / maxVal) * 220;
+                return (
+                  <circle
+                    key={p.index}
+                    cx={x}
+                    cy={y}
+                    r="4.5"
+                    className="fill-[#EAB308] stroke-white stroke-2"
+                  />
+                );
+              })}
             </svg>
 
             {/* Renderização das 12 Colunas de Barras */}
-            {comparativoMensal.map((m, idx) => {
+            {comparativoMensal.map((m) => {
               const heightAnoAnterior = Math.min(100, (m.valAnoAnterior / maxVal) * 100);
               const heightAnoAtual = Math.min(100, (m.valAnoAtual / maxVal) * 100);
               const isSelected = activeMonth === m.mes;
@@ -319,7 +318,7 @@ export default function DashboardTab() {
                   </div>
 
                   {/* Grupo de Barras Duplas (Ano Anterior vs Ano Atual) */}
-                  <div className="flex items-end justify-center gap-1 w-full max-w-[36px] h-full">
+                  <div className="flex items-end justify-center gap-1.5 w-full max-w-[40px] h-full">
                     {/* Barra Ano Anterior (Azul Claro) */}
                     <div
                       className="w-1/2 bg-[#93C5FD] rounded-t-xs hover:bg-blue-400 transition-all"

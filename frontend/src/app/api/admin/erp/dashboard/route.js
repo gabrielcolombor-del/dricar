@@ -8,6 +8,16 @@ export const dynamic = "force-dynamic";
 const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const MESES_FULL = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
 
+// Extrator UTC seguro para evitar distorções de fuso horário (ex: 01/04 GMT-3 virar 31/03)
+function getIsoYearMonth(dateInput) {
+  if (!dateInput) return { year: 0, monthIndex: 0 };
+  const d = new Date(dateInput);
+  const iso = d.toISOString();
+  const year = parseInt(iso.slice(0, 4));
+  const monthIndex = parseInt(iso.slice(5, 7)) - 1; // 0 a 11
+  return { year, monthIndex };
+}
+
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,8 +26,8 @@ export async function GET(request) {
     }
 
     const hoje = new Date();
-    const anoAtual = hoje.getFullYear();
-    const mesAtualIndex = hoje.getMonth(); // 0 a 11
+    const { year: anoAtual, monthIndex: mesAtualIndex } = getIsoYearMonth(hoje);
+    const anoAnterior = anoAtual - 1;
 
     // Buscar TODAS as vendas do banco de dados
     const todasVendas = await prisma.venda.findMany({
@@ -26,8 +36,8 @@ export async function GET(request) {
 
     // 1. Mês Atual
     const vendasMesAtual = todasVendas.filter(v => {
-      const d = new Date(v.dataVenda);
-      return d.getFullYear() === anoAtual && d.getMonth() === mesAtualIndex;
+      const { year, monthIndex } = getIsoYearMonth(v.dataVenda);
+      return year === anoAtual && monthIndex === mesAtualIndex;
     });
 
     const faturamentoMesAtual = vendasMesAtual.reduce((acc, v) => 
@@ -36,10 +46,10 @@ export async function GET(request) {
     const carrosVendidosMes = vendasMesAtual.length;
     const ticketMedioMes = carrosVendidosMes > 0 ? faturamentoMesAtual / carrosVendidosMes : 0;
 
-    // 2. Ano Atual (Jan 1 até Hoje)
+    // 2. Ano Atual (Jan a Dez)
     const vendasAnoAtual = todasVendas.filter(v => {
-      const d = new Date(v.dataVenda);
-      return d.getFullYear() === anoAtual;
+      const { year } = getIsoYearMonth(v.dataVenda);
+      return year === anoAtual;
     });
 
     const faturamentoAnoAtual = vendasAnoAtual.reduce((acc, v) => 
@@ -50,13 +60,10 @@ export async function GET(request) {
 
     const percentualDoTotalAno = faturamentoAnoAtual > 0 ? (faturamentoMesAtual / faturamentoAnoAtual) * 100 : 0;
 
-    // 3. Ano Anterior (Mesmo Período: Jan 1 até Mês Atual Index no Ano Passado)
-    const anoAnterior = anoAtual - 1;
-    const fimMesAnoAnteriorMesmoPeriodo = new Date(anoAnterior, mesAtualIndex + 1, 0, 23, 59, 59);
-
+    // 3. Ano Anterior (Mesmo Período: Jan a Mês Atual Index no Ano Passado)
     const vendasAnoAnteriorMesmoPeriodo = todasVendas.filter(v => {
-      const d = new Date(v.dataVenda);
-      return d.getFullYear() === anoAnterior && d <= fimMesAnoAnteriorMesmoPeriodo;
+      const { year, monthIndex } = getIsoYearMonth(v.dataVenda);
+      return year === anoAnterior && monthIndex <= mesAtualIndex;
     });
 
     const faturamentoAnoAnteriorMesmoPeriodo = vendasAnoAnteriorMesmoPeriodo.reduce((acc, v) => 
@@ -81,24 +88,21 @@ export async function GET(request) {
     const comparativoMensal = MESES_ABREV.map((mesNome, index) => {
       // Vendas do ano atual neste mês
       const valAnoAtual = vendasAnoAtual
-        .filter(v => new Date(v.dataVenda).getMonth() === index)
+        .filter(v => getIsoYearMonth(v.dataVenda).monthIndex === index)
         .reduce((acc, v) => acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0);
 
       // Vendas do ano anterior neste mês
       const valAnoAnterior = todasVendas
         .filter(v => {
-          const d = new Date(v.dataVenda);
-          return d.getFullYear() === anoAnterior && d.getMonth() === index;
+          const { year, monthIndex } = getIsoYearMonth(v.dataVenda);
+          return year === anoAnterior && monthIndex === index;
         })
         .reduce((acc, v) => acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0);
 
-      const isFuturo = index > mesAtualIndex;
-
       return {
         mes: mesNome,
-        valAnoAtual: isFuturo ? 0 : valAnoAtual,
+        valAnoAtual,
         valAnoAnterior,
-        isFuturo,
       };
     });
 
