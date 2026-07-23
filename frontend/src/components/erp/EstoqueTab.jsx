@@ -462,7 +462,7 @@ export default function EstoqueTab() {
           <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col gap-6 animate-slide-in">
             <div className="flex justify-between items-start border-b border-gray-100 pb-3">
               <div>
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Centro de Custo</span>
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Centro de Custo & Informações</span>
                 <h4 className="font-extrabold text-sm text-brand-blue uppercase mt-1">
                   Placa: {selectedVeiculo.placa}
                 </h4>
@@ -474,6 +474,32 @@ export default function EstoqueTab() {
               >
                 ✕
               </button>
+            </div>
+
+            {/* Datas de Entrada e Saída do Estoque */}
+            <div className="grid grid-cols-2 gap-3 bg-gray-50/80 p-3.5 rounded-xl border border-gray-200/80">
+              <div>
+                <span className="text-[9px] text-gray-500 uppercase font-bold block flex items-center gap-1">
+                  📅 Data Entrada (Estoque)
+                </span>
+                <span className="text-xs font-extrabold text-slate-900 block mt-1">
+                  {selectedVeiculo.dataEntrada 
+                    ? new Date(selectedVeiculo.dataEntrada).toLocaleDateString("pt-BR", { timeZone: "UTC" })
+                    : "Não informada"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[9px] text-gray-500 uppercase font-bold block flex items-center gap-1">
+                  🚪 Data Saída (Estoque)
+                </span>
+                <span className="text-xs font-extrabold text-slate-900 block mt-1">
+                  {selectedVeiculo.status === "Vendido" && selectedVeiculo.vendas && selectedVeiculo.vendas.length > 0
+                    ? new Date(selectedVeiculo.vendas[0].dataVenda).toLocaleDateString("pt-BR", { timeZone: "UTC" })
+                    : selectedVeiculo.status === "Vendido"
+                      ? "Vendido (Data não reg.)"
+                      : "Em Pátio (Em aberto)"}
+                </span>
+              </div>
             </div>
 
             {/* Cost breakdown cards */}

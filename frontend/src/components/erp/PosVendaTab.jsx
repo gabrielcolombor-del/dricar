@@ -341,11 +341,37 @@ export default function PosVendaTab() {
                   required
                 >
                   <option value="">Selecione o veículo...</option>
-                  {veiculos.map(v => (
-                    <option key={v.id} value={v.id}>
-                      {v.marca} {v.modelo} - Placa: {v.placa} ({v.status})
-                    </option>
-                  ))}
+                  
+                  {/* Grupo: Veículos em Pátio / Estoque */}
+                  <optgroup label="🚗 VEÍCULOS EM PÁTIO / ESTOQUE">
+                    {veiculos.filter(v => v.status !== "Vendido").map(v => (
+                      <option key={v.id} value={v.id}>
+                        {v.marca} {v.modelo} - Placa: {v.placa} ({v.status})
+                      </option>
+                    ))}
+                  </optgroup>
+
+                  {/* Grupo: Veículos Vendidos nos Últimos 3 Meses */}
+                  <optgroup label="✅ VEÍCULOS VENDIDOS (ÚLTIMOS 3 MESES)">
+                    {veiculos.filter(v => {
+                      if (v.status !== "Vendido") return false;
+                      const limite90Dias = new Date();
+                      limite90Dias.setDate(limite90Dias.getDate() - 90);
+                      const dataRef = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda) 
+                        ? new Date(v.vendas[0].dataVenda) 
+                        : new Date(v.dataEntrada);
+                      return dataRef >= limite90Dias;
+                    }).map(v => {
+                      const dataVendaStr = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda)
+                        ? new Date(v.vendas[0].dataVenda).toLocaleDateString("pt-BR", { timeZone: "UTC" })
+                        : null;
+                      return (
+                        <option key={v.id} value={v.id}>
+                          {v.marca} {v.modelo} - Placa: {v.placa} (Vendido{dataVendaStr ? ` em ${dataVendaStr}` : ""})
+                        </option>
+                      );
+                    })}
+                  </optgroup>
                 </select>
               </div>
 

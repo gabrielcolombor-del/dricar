@@ -3,6 +3,48 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
+export async function GET(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+    }
+
+    const despesas = await prisma.despesaVeiculo.findMany({
+      include: {
+        veiculo: {
+          select: {
+            id: true,
+            placa: true,
+            marca: true,
+            modelo: true,
+            status: true,
+            dataEntrada: true,
+            vendas: {
+              select: {
+                dataVenda: true,
+                valorVendaVeiculo: true,
+              },
+              orderBy: { dataVenda: "desc" },
+              take: 1,
+            },
+          },
+        },
+      },
+      orderBy: {
+        dataDespesa: "desc",
+      },
+    });
+
+    return NextResponse.json(despesas);
+  } catch (error) {
+    console.error("Erro ao carregar despesas de pós venda:", error);
+    return NextResponse.json({ error: "Erro ao buscar pós venda." }, { status: 500 });
+  }
+}
+
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
