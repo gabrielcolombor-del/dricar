@@ -13,6 +13,9 @@ export default function EstoqueTab() {
   const [filtroMarca, setFiltroMarca] = useState("");
   const [filtroAno, setFiltroAno] = useState("");
   const [buscaGeral, setBuscaGeral] = useState("");
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
+  const [tipoDataFiltro, setTipoDataFiltro] = useState("qualquer");
 
   // Modal Novo Veículo
   const [showModal, setShowModal] = useState(false);
@@ -72,7 +75,7 @@ export default function EstoqueTab() {
   const marcasUnicas = [...new Set(veiculos.map(v => v.marca))].sort();
   const anosUnicos = [...new Set(veiculos.map(v => v.anoMod))].sort((a,b) => b - a);
 
-  // Filtragem com busca multi-parâmetros
+  // Filtragem com busca multi-parâmetros e filtro de datas
   const veiculosFiltrados = veiculos.filter(v => {
     const matchStatus = filtroStatus ? v.status === filtroStatus : true;
     const matchMarca = filtroMarca ? v.marca === filtroMarca : true;
@@ -90,7 +93,28 @@ export default function EstoqueTab() {
       (v.despesas && v.despesas.some(d => d.categoria && d.categoria.toLowerCase().includes(term)))
     );
 
-    return matchStatus && matchMarca && matchAno && matchBusca;
+    let matchData = true;
+    if (dataInicio || dataFim) {
+      const dInicio = dataInicio ? new Date(dataInicio + "T00:00:00Z") : null;
+      const dFim = dataFim ? new Date(dataFim + "T23:59:59Z") : null;
+
+      const dtEntrada = v.dataEntrada ? new Date(v.dataEntrada) : null;
+      const dtSaida = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda)
+        ? new Date(v.vendas[0].dataVenda)
+        : null;
+
+      if (tipoDataFiltro === "entrada") {
+        matchData = dtEntrada && (!dInicio || dtEntrada >= dInicio) && (!dFim || dtEntrada <= dFim);
+      } else if (tipoDataFiltro === "saida") {
+        matchData = dtSaida && (!dInicio || dtSaida >= dInicio) && (!dFim || dtSaida <= dFim);
+      } else {
+        const matchEntrada = dtEntrada && (!dInicio || dtEntrada >= dInicio) && (!dFim || dtEntrada <= dFim);
+        const matchSaida = dtSaida && (!dInicio || dtSaida >= dInicio) && (!dFim || dtSaida <= dFim);
+        matchData = matchEntrada || matchSaida;
+      }
+    }
+
+    return matchStatus && matchMarca && matchAno && matchBusca && matchData;
   });
 
   // Formatador de placa
@@ -337,6 +361,52 @@ export default function EstoqueTab() {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Filtro por Período de Datas */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-150 w-full text-xs">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+              📅 Período:
+            </span>
+
+            <select
+              value={tipoDataFiltro}
+              onChange={(e) => setTipoDataFiltro(e.target.value)}
+              className="border border-gray-300 rounded-lg py-1 px-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+            >
+              <option value="qualquer">Entrada ou Saída</option>
+              <option value="entrada">Data de Entrada</option>
+              <option value="saida">Data de Saída / Venda</option>
+            </select>
+
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-gray-400 font-medium">De:</span>
+              <input
+                type="date"
+                value={dataInicio}
+                onChange={(e) => setDataInicio(e.target.value)}
+                className="border border-gray-300 rounded-lg py-1 px-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+              />
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-gray-400 font-medium">Até:</span>
+              <input
+                type="date"
+                value={dataFim}
+                onChange={(e) => setDataFim(e.target.value)}
+                className="border border-gray-300 rounded-lg py-1 px-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+              />
+            </div>
+
+            {(dataInicio || dataFim) && (
+              <button
+                onClick={() => { setDataInicio(""); setDataFim(""); }}
+                className="text-red-600 hover:text-red-800 text-[11px] font-bold bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
+              >
+                ✕ Limpar Datas
+              </button>
+            )}
           </div>
         </div>
 
