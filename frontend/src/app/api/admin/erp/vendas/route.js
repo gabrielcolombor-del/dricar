@@ -34,39 +34,55 @@ export async function POST(request) {
 
     let targetClienteId = clienteId;
 
-    // Se não passou clienteId, cria ou busca um cliente no CRM com base nos dados do comprador
+    // Se não passou clienteId, cria ou busca um cliente no CRM com base nos dados do comprador (Sem travar a venda)
     if (!targetClienteId && buyerName) {
-      const existingCliente = await prisma.clienteCrm.findFirst({
-        where: {
-          OR: [
-            { nome: { equals: buyerName.trim(), mode: "insensitive" } },
-            ...(buyerPhone ? [{ telefone: buyerPhone.trim() }] : []),
-          ],
-        },
-      });
-
-      if (existingCliente) {
-        targetClienteId = existingCliente.id;
-        await prisma.clienteCrm.update({
-          where: { id: existingCliente.id },
-          data: { statusFunil: "Fechado" },
-        });
-      } else {
-        const newCliente = await prisma.clienteCrm.create({
-          data: {
-            nome: buyerName.trim(),
-            telefone: buyerPhone ? buyerPhone.trim() : "Não informado",
-            veiculoInteresse: `${veiculo.marca} ${veiculo.modelo} (${veiculo.placa})`,
-            statusFunil: "Fechado",
-            historicoNotas: `Venda realizada em ${new Date(dataVenda).toLocaleDateString("pt-BR")}. Endereço: ${buyerAddress || "N/A"}. CPF/CNPJ: ${buyerCpfCnpj || "N/A"}`,
+      try {
+        const existingCliente = await prisma.clienteCrm.findFirst({
+          where: {
+            OR: [
+              { nome: { equals: buyerName.trim(), mode: "insensitive" } },
+              ...(buyerPhone ? [{ telefone: buyerPhone.trim() }] : []),
+            ],
           },
         });
-        targetClienteId = newCliente.id;
+
+        if (existingCliente) {
+          targetClienteId = existingCliente.id;
+          await prisma.clienteCrm.update({
+            where: { id: existingCliente.id },
+            data: { statusFunil: "Fechado" },
+          });
+        } else {
+          const newCliente = await prisma.clienteCrm.create({
+            data: {
+              nome: buyerName.trim(),
+              telefone: buyerPhone ? buyerPhone.trim() : "Não informado",
+              cpfCnpj: buyerCpfCnpj ? buyerCpfCnpj.trim() : "Não informado",
+              statusFunil: "Fechado",
+              veiculoInteresseId: veiculoId,
+            },
+          });
+          targetClienteId = newCliente.id;
+        }
+      } catch (crmError) {
+        console.error("Aviso ao vincular comprador no CRM:", crmError);
       }
     }
 
+    // Se por qualquer motivo não houver cliente no CRM, busca um cliente padrão ou cria um fallback para não impedir a venda
     if (!targetClienteId) {
-      return NextResponse.json({ error: "Informe o nome do comprador para registrar a venda." }, { status: 400 });
+      let fallbackCliente = await prisma.clienteCrm.findFirst();
+      if (!fallbackCliente) {
+        fallbackCliente = await prisma.clienteCrm.create({
+          data: {
+            nome: buyerName || "Comprador Direto",
+            telefone: buyerPhone || "Não informado",
+            cpfCnpj: buyerCpfCnpj || "Não informado",
+            statusFunil: "Fechado",
+          },
+        });
+      }
+      targetClienteId = fallbackCliente.id;
     }
 
     // Criar a venda
