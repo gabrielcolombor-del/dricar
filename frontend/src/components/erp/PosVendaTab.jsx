@@ -338,9 +338,21 @@ export default function PosVendaTab() {
                   className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                   required
                 >
-                  <option value="">Selecione o veículo vendido...</option>
+                  <option value="">Selecione o veículo (vendido até 3 meses)...</option>
                   
-                  {veiculos.filter(v => v.status === "Vendido" || (v.vendas && v.vendas.length > 0)).map(v => {
+                  {veiculos.filter(v => {
+                    const isVendido = v.status === "Vendido" || (v.vendas && v.vendas.length > 0);
+                    if (!isVendido) return false;
+
+                    const limite90Dias = new Date();
+                    limite90Dias.setDate(limite90Dias.getDate() - 90);
+
+                    const dataRef = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda)
+                      ? new Date(v.vendas[0].dataVenda)
+                      : new Date(v.dataEntrada);
+
+                    return dataRef >= limite90Dias;
+                  }).map(v => {
                     const dataVendaStr = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda)
                       ? new Date(v.vendas[0].dataVenda).toLocaleDateString("pt-BR", { timeZone: "UTC" })
                       : null;
