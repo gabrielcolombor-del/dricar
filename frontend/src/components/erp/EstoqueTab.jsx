@@ -16,6 +16,12 @@ export default function EstoqueTab() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [tipoDataFiltro, setTipoDataFiltro] = useState("qualquer");
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const ITENS_POR_PAGINA = 15;
+
+  useEffect(() => {
+    setPaginaAtual(1);
+  }, [filtroStatus, filtroMarca, filtroAno, buscaGeral, dataInicio, dataFim, tipoDataFiltro]);
 
   // Modal Novo Veículo
   const [showModal, setShowModal] = useState(false);
@@ -116,6 +122,12 @@ export default function EstoqueTab() {
 
     return matchStatus && matchMarca && matchAno && matchBusca && matchData;
   });
+
+  // Cálculo da Paginação (15 veículos por página)
+  const totalPaginas = Math.ceil(veiculosFiltrados.length / ITENS_POR_PAGINA) || 1;
+  const inicioIndex = (paginaAtual - 1) * ITENS_POR_PAGINA;
+  const fimIndex = inicioIndex + ITENS_POR_PAGINA;
+  const veiculosPaginados = veiculosFiltrados.slice(inicioIndex, fimIndex);
 
   // Formatador de placa
   const handlePlacaChange = (val) => {
@@ -459,7 +471,7 @@ export default function EstoqueTab() {
                     <td colSpan="7" className="p-8 text-center text-gray-400 text-xs">Nenhum veículo encontrado.</td>
                   </tr>
                 ) : (
-                  veiculosFiltrados.map(v => (
+                  veiculosPaginados.map(v => (
                     <tr
                       key={v.id}
                       onClick={() => setSelectedVeiculo(v)}
@@ -538,6 +550,49 @@ export default function EstoqueTab() {
               </tbody>
             </table>
           </div>
+
+          {/* Rodapé de Paginação (Máximo 15 veículos por página) */}
+          {veiculosFiltrados.length > 0 && (
+            <div className="bg-gray-50/80 border-t border-gray-200 px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <span className="text-gray-500 font-semibold text-[11px]">
+                Mostrando <span className="font-extrabold text-slate-900">{inicioIndex + 1}</span> a{" "}
+                <span className="font-extrabold text-slate-900">{Math.min(fimIndex, veiculosFiltrados.length)}</span> de{" "}
+                <span className="font-extrabold text-brand-blue">{veiculosFiltrados.length}</span> veículos
+              </span>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
+                <button
+                  onClick={() => setPaginaAtual(prev => Math.max(prev - 1, 1))}
+                  disabled={paginaAtual === 1}
+                  className="px-2.5 py-1 rounded-md border border-gray-300 font-bold bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs cursor-pointer"
+                >
+                  ◀ Anterior
+                </button>
+
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setPaginaAtual(page)}
+                    className={`px-2.5 py-1 rounded-md border text-xs font-bold transition-all cursor-pointer ${
+                      paginaAtual === page
+                        ? "bg-brand-blue text-white border-brand-blue shadow-xs"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => setPaginaAtual(prev => Math.min(prev + 1, totalPaginas))}
+                  disabled={paginaAtual === totalPaginas}
+                  className="px-2.5 py-1 rounded-md border border-gray-300 font-bold bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs cursor-pointer"
+                >
+                  Próximo ▶
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Center of Cost Panel */}
