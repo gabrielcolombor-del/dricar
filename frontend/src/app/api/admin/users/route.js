@@ -101,6 +101,70 @@ export async function POST(request) {
   }
 }
 
+// PUT: Atualiza um usuário existente (login, nome, cargo e senha opcional)
+export async function PUT(request) {
+  try {
+    const auth = await checkAdminSession();
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const body = await request.json();
+    const { id, name, email, password, role } = body;
+
+    if (!id || !name || !email || !role) {
+      return NextResponse.json({ error: "ID, nome, login e cargo são obrigatórios." }, { status: 400 });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanRole = role.toLowerCase().trim();
+
+    const validRoles = ["admin", "manager", "seller"];
+    if (!validRoles.includes(cleanRole)) {
+      return NextResponse.json({ error: "Cargo inválido." }, { status: 400 });
+    }
+
+    // Verificar se o novo login/email já está em uso por OUTRO usuário
+    const existing = await prisma.user.findFirst({
+      where: {
+        email: cleanEmail,
+        NOT: { id: id },
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json({ error: "Este login/e-mail já está sendo utilizado por outra conta." }, { status: 400 });
+    }
+
+    const updateData = {
+      name: name.trim(),
+      email: cleanEmail,
+      role: cleanRole,
+    };
+
+    // Se forneceu uma nova senha, gera a hash
+    if (password && password.trim() !== "") {
+      updateData.password = await bcrypt.hash(password.trim(), 10);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error("Erro ao atualizar usuário:", error);
+    return NextResponse.json({ error: `Erro ao atualizar conta: ${error.message}` }, { status: 500 });
+  }
+}
+
 // DELETE: Exclui um usuário
 export async function DELETE(request) {
   try {

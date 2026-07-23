@@ -42,6 +42,7 @@ export default function AdminPage() {
   // Estado para gerenciamento de usuários (Apenas Administrador)
   const [usersList, setUsersList] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [newUserForm, setNewUserForm] = useState({
     name: "",
     email: "",
@@ -173,29 +174,60 @@ export default function AdminPage() {
     }
   }
 
-  // Cria um novo usuário (Apenas Admin)
-  const handleCreateUser = async (e) => {
+  // Inicia edição de um usuário existente
+  const startEditUser = (u) => {
+    setEditingUser(u);
+    setNewUserForm({
+      name: u.name || "",
+      email: u.email || "",
+      password: "",
+      role: u.role || "manager",
+    });
+    setError("");
+  };
+
+  // Cancela edição de usuário
+  const cancelEditUser = () => {
+    setEditingUser(null);
+    setNewUserForm({
+      name: "",
+      email: "",
+      password: "",
+      role: "manager",
+    });
+  };
+
+  // Cadastra ou Atualiza um usuário (Apenas Admin)
+  const handleSaveUser = async (e) => {
     e.preventDefault();
     setError("");
     setActionLoading(true);
     try {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
+      const isEditing = Boolean(editingUser);
+      const url = "/api/admin/users";
+      const method = isEditing ? "PUT" : "POST";
+      const payload = isEditing 
+        ? { id: editingUser.id, ...newUserForm } 
+        : newUserForm;
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUserForm),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
+        setEditingUser(null);
         setNewUserForm({
           name: "",
           email: "",
           password: "",
-          role: "seller",
+          role: "manager",
         });
         fetchUsers();
       } else {
         const errData = await res.json();
-        setError(errData.error || "Erro ao criar funcionário.");
+        setError(errData.error || `Erro ao ${isEditing ? "atualizar" : "criar"} funcionário.`);
       }
     } catch (err) {
       setError("Erro ao se comunicar com o servidor.");
@@ -1193,11 +1225,24 @@ export default function AdminPage() {
             </h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Form de Cadastro */}
+              {/* Form de Cadastro / Edição */}
               <div className="bg-gray-50 border border-gray-150 rounded-xl p-6 h-fit">
-                <h3 className="text-sm font-bold text-gray-700 uppercase mb-4">Cadastrar Novo Funcionário</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-sm font-bold text-gray-700 uppercase">
+                    {editingUser ? `Editar Conta: ${editingUser.name}` : "Cadastrar Novo Funcionário"}
+                  </h3>
+                  {editingUser && (
+                    <button 
+                      type="button"
+                      onClick={cancelEditUser}
+                      className="text-[11px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                    >
+                      ✕ Cancelar
+                    </button>
+                  )}
+                </div>
                 
-                <form onSubmit={handleCreateUser} className="flex flex-col gap-4 text-gray-800">
+                <form onSubmit={handleSaveUser} className="flex flex-col gap-4 text-gray-800">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Nome Completo</label>
                     <input 
@@ -1223,14 +1268,16 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
+                      {editingUser ? "Nova Senha (deixe em branco se não quiser alterar)" : "Senha"}
+                    </label>
                     <input 
                       type="password"
-                      placeholder="Senha de acesso..."
+                      placeholder={editingUser ? "Manter senha atual..." : "Senha de acesso..."}
                       value={newUserForm.password}
                       onChange={(e) => setNewUserForm(prev => ({ ...prev, password: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
-                      required
+                      required={!editingUser}
                     />
                   </div>
 
@@ -1239,7 +1286,7 @@ export default function AdminPage() {
                     <select 
                       value={newUserForm.role}
                       onChange={(e) => setNewUserForm(prev => ({ ...prev, role: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800 font-semibold"
                       required
                     >
                       <option value="manager">Administrativo</option>
@@ -1253,7 +1300,7 @@ export default function AdminPage() {
                     disabled={actionLoading}
                     className="w-full bg-brand-blue text-white rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-opacity cursor-pointer mt-2"
                   >
-                    {actionLoading ? "Cadastrando..." : "Cadastrar Funcionário"}
+                    {actionLoading ? "Salvando..." : editingUser ? "Salvar Alterações" : "Cadastrar Funcionário"}
                   </button>
                 </form>
               </div>
@@ -1295,14 +1342,25 @@ export default function AdminPage() {
                                   {getRoleBadge(u.role)}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end gap-2">
+                                <button 
+                                  onClick={() => startEditUser(u)}
+                                  disabled={actionLoading}
+                                  className="text-brand-blue hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-xs font-bold flex items-center gap-1"
+                                  title="Editar login e senha desta conta"
+                                >
+                                  ✏️ Editar
+                                </button>
+
                                 {isSelf ? (
-                                  <span className="text-xs text-gray-400 italic font-medium px-3 py-1.5">Sua Conta</span>
+                                  <span className="text-[10px] bg-purple-50 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200">
+                                    Sua Conta
+                                  </span>
                                 ) : (
                                   <button 
                                     onClick={() => handleDeleteUser(u.id)}
                                     disabled={actionLoading}
-                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-xs font-bold"
                                   >
                                     Excluir
                                   </button>
