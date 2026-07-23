@@ -84,8 +84,9 @@ export default function AdminPage() {
 
   // Identificação rápida dos cargos
   const isAdmin = user?.role?.toLowerCase() === "admin";
-  const isAdministrativo = user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "admin"; // Administrativo ou Admin
+  const isAdministrativo = user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "admin";
   const isVendedor = user?.role?.toLowerCase() === "seller";
+  const isPosVendaRole = user?.role?.toLowerCase() === "posvenda" || user?.role?.toLowerCase() === "admin";
 
   // Tradução do cargo para exibição amigável
   const getRoleBadge = (role) => {
@@ -93,6 +94,7 @@ export default function AdminPage() {
       case "admin": return "Administrador";
       case "manager": return "Administrativo";
       case "seller": return "Vendedor";
+      case "posvenda": return "Pós Venda";
       default: return "Funcionário";
     }
   };
@@ -103,8 +105,10 @@ export default function AdminPage() {
     const role = user.role?.toLowerCase();
     if (role === "seller" && !["erp_crm", "estoque"].includes(activeTab)) {
       setActiveTab("erp_crm");
-    } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_posvenda", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
+    } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
       setActiveTab("erp_estoque");
+    } else if (role === "posvenda" && !["erp_posvenda", "erp_estoque", "erp_crm"].includes(activeTab)) {
+      setActiveTab("erp_posvenda");
     }
   }, [user, activeTab]);
 
@@ -766,7 +770,7 @@ export default function AdminPage() {
             </button>
           )}
           
-          {isAdministrativo && (
+          {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
             <button 
               onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
               className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
@@ -782,7 +786,7 @@ export default function AdminPage() {
             🤝 CRM e Funil Vendas
           </button>
 
-          {isAdministrativo && (
+          {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
             <button 
               onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
               className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
@@ -791,7 +795,7 @@ export default function AdminPage() {
             </button>
           )}
           
-          {isAdministrativo && (
+          {(isAdmin || user?.role?.toLowerCase() === "manager") && (
             <button 
               onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
               className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
@@ -800,18 +804,22 @@ export default function AdminPage() {
             </button>
           )}
 
-          <span className="h-4 w-[1px] bg-gray-300 mx-2 shrink-0"></span>
+          {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor) && (
+            <>
+              <span className="h-4 w-[1px] bg-gray-300 mx-2 shrink-0"></span>
 
-          <span className="text-[10px] font-extrabold uppercase text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md shrink-0">
-            🌐 Catálogo Site
-          </span>
-          
-          <button 
-            onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
-            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
-          >
-            📦 Catálogo Ativo ({activeCars.length})
-          </button>
+              <span className="text-[10px] font-extrabold uppercase text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md shrink-0">
+                🌐 Catálogo Site
+              </span>
+              
+              <button 
+                onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
+                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              >
+                📦 Catálogo Ativo ({activeCars.length})
+              </button>
+            </>
+          )}
 
           {activeTab === "cadastrar" && (
             <button 
@@ -855,10 +863,10 @@ export default function AdminPage() {
 
         {/* ERP TABS RENDERING */}
         {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
-        {activeTab === "erp_estoque" && isAdministrativo && <EstoqueTab />}
+        {activeTab === "erp_estoque" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <EstoqueTab />}
         {activeTab === "erp_crm" && <CrmTab />}
-        {activeTab === "erp_posvenda" && isAdministrativo && <PosVendaTab />}
-        {activeTab === "erp_financeiro" && isAdministrativo && <FinanceiroTab />}
+        {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab />}
+        {activeTab === "erp_financeiro" && (isAdmin || user?.role?.toLowerCase() === "manager") && <FinanceiroTab />}
 
         {/* TAB 1: ESTOQUE ATIVO */}
         {activeTab === "estoque" && (
@@ -1302,6 +1310,7 @@ export default function AdminPage() {
                     >
                       <option value="manager">Administrativo</option>
                       <option value="seller">Vendedor</option>
+                      <option value="posvenda">Pós Venda</option>
                       <option value="admin">Administrador</option>
                     </select>
                   </div>

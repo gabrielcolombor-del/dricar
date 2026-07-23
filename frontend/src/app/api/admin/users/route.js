@@ -63,7 +63,7 @@ export async function POST(request) {
     const cleanEmail = email.toLowerCase().trim();
     const cleanRole = role.toLowerCase().trim();
 
-    const validRoles = ["admin", "manager", "seller"];
+    const validRoles = ["admin", "manager", "seller", "posvenda"];
     if (!validRoles.includes(cleanRole)) {
       return NextResponse.json({ error: "Cargo inválido." }, { status: 400 });
     }
@@ -119,7 +119,7 @@ export async function PUT(request) {
     const cleanEmail = email.toLowerCase().trim();
     const cleanRole = role.toLowerCase().trim();
 
-    const validRoles = ["admin", "manager", "seller"];
+    const validRoles = ["admin", "manager", "seller", "posvenda"];
     if (!validRoles.includes(cleanRole)) {
       return NextResponse.json({ error: "Cargo inválido." }, { status: 400 });
     }

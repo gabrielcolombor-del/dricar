@@ -12,6 +12,7 @@ enum Role {
   admin
   manager
   seller
+  posvenda
 }
 
 model User {

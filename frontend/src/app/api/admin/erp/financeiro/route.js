@@ -36,8 +36,8 @@ export async function POST(request) {
     const { action, id, descricao, valor, dataVencimento, statusPagamento, tipo } = body;
 
     const role = session.user.role?.toLowerCase();
-    if (role === "seller") {
-      return NextResponse.json({ error: "Apenas gerentes e administradores podem gerenciar custos operacionais." }, { status: 403 });
+    if (role === "seller" || role === "posvenda") {
+      return NextResponse.json({ error: "Apenas gerentes e administradores podem gerenciar custos operacionais da loja." }, { status: 403 });
     }
 
     if (action === "delete") {
