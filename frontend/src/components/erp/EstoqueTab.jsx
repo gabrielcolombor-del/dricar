@@ -45,6 +45,7 @@ export default function EstoqueTab() {
   // Modal de Venda de Veículo (Baixa + Geração de PDF Oficial DRI-CAR)
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [saleLoading, setSaleLoading] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
   const [saleError, setSaleError] = useState("");
   const [targetSaleVeiculo, setTargetSaleVeiculo] = useState(null);
   const [saleForm, setSaleForm] = useState({
@@ -55,7 +56,7 @@ export default function EstoqueTab() {
     buyerPhone: "",
     buyerAddress: "",
     buyerCidadeUf: "Guarapari / ES",
-    buyerCep: "29.210-000",
+    buyerCep: "",
     salePrice: "",
     salePriceExtenso: "",
     entryTradeText: "",
@@ -276,6 +277,34 @@ export default function EstoqueTab() {
     }
   };
 
+  // Buscar Endereço Automático via ViaCEP
+  const handleCepChange = async (cepVal) => {
+    setSaleForm(prev => ({ ...prev, buyerCep: cepVal }));
+    const clean = cepVal.replace(/\D/g, "");
+    if (clean.length === 8) {
+      setCepLoading(true);
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          let addressText = "";
+          if (data.logradouro) addressText += data.logradouro;
+          if (data.bairro) addressText += (addressText ? `, ${data.bairro}` : data.bairro);
+
+          setSaleForm(prev => ({
+            ...prev,
+            buyerAddress: addressText || prev.buyerAddress,
+            buyerCidadeUf: data.localidade && data.uf ? `${data.localidade} / ${data.uf}` : prev.buyerCidadeUf,
+          }));
+        }
+      } catch (e) {
+        console.error("Erro ao buscar CEP:", e);
+      } finally {
+        setCepLoading(false);
+      }
+    }
+  };
+
   // Abrir Modal de Venda de Veículo
   const openSaleModal = (v) => {
     const priceNum = Number(v.valorCompra);
@@ -288,7 +317,7 @@ export default function EstoqueTab() {
       buyerPhone: "",
       buyerAddress: "",
       buyerCidadeUf: "Guarapari / ES",
-      buyerCep: "29.210-000",
+      buyerCep: "",
       salePrice: "R$ " + priceNum.toLocaleString("pt-BR"),
       salePriceExtenso: numeroParaExtenso(priceNum),
       entryTradeText: "",
@@ -332,8 +361,8 @@ export default function EstoqueTab() {
 
       const data = await res.json();
       if (res.ok) {
-        // Gerar o documento PDF Oficial DRI-CAR para o usuário baixar automaticamente
-        generateSalePdf({
+        // Gerar o documento de Contrato DRI-CAR idêntico ao modelo Word original
+        await generateSalePdf({
           veiculo: targetSaleVeiculo,
           buyerName: saleForm.buyerName,
           buyerCpfCnpj: saleForm.buyerCpfCnpj,
@@ -1042,7 +1071,6 @@ export default function EstoqueTab() {
                     >
                       <option value="Disponível">Disponível</option>
                       <option value="Em Preparação">Em Preparação</option>
-                      <option value="Vendido">Vendido</option>
                       <option value="Em processo de Transf.">Em processo de Transf.</option>
                       <option value="Transferido">Transferido</option>
                       <option value="Transferência em aberto">Transferência em aberto</option>
@@ -1133,7 +1161,7 @@ export default function EstoqueTab() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Ex: JOACY CARNEIRO DA SILVA"
+                    placeholder="Ex: João da Silva Santos"
                     value={saleForm.buyerName}
                     onChange={(e) => setSaleForm(prev => ({ ...prev, buyerName: e.target.value }))}
                     className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
@@ -1146,7 +1174,7 @@ export default function EstoqueTab() {
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">CPF / CNPJ</label>
                     <input
                       type="text"
-                      placeholder="Ex: 851.881.827-34"
+                      placeholder="Ex: 123.456.789-00"
                       value={saleForm.buyerCpfCnpj}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCpfCnpj: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
@@ -1156,7 +1184,7 @@ export default function EstoqueTab() {
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">RG / Inscrição</label>
                     <input
                       type="text"
-                      placeholder="Ex: 071418826"
+                      placeholder="Ex: 12.345.678-9"
                       value={saleForm.buyerRg}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerRg: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
@@ -1183,19 +1211,22 @@ export default function EstoqueTab() {
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">Telefone / WhatsApp</label>
                     <input
                       type="text"
-                      placeholder="Ex: (27) 99826-5665"
+                      placeholder="Ex: (27) 99999-8888"
                       value={saleForm.buyerPhone}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerPhone: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
                     />
                   </div>
                   <div>
-                    <label className="block font-extrabold text-slate-900 uppercase mb-1">CEP</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1 flex justify-between items-center">
+                      <span>CEP</span>
+                      {cepLoading && <span className="text-[10px] text-brand-blue font-bold animate-pulse">🔍 Buscando...</span>}
+                    </label>
                     <input
                       type="text"
-                      placeholder="Ex: 29.210-390"
+                      placeholder="Ex: 29230-000"
                       value={saleForm.buyerCep}
-                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCep: e.target.value }))}
+                      onChange={(e) => handleCepChange(e.target.value)}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
                     />
                   </div>
@@ -1206,7 +1237,7 @@ export default function EstoqueTab() {
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">Endereço Completo</label>
                     <input
                       type="text"
-                      placeholder="Ex: Rua Manaus, 10 - Camurugi"
+                      placeholder="Ex: Rua das Flores, 123 - Centro"
                       value={saleForm.buyerAddress}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerAddress: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
