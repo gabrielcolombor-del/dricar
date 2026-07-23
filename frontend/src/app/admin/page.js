@@ -771,7 +771,7 @@ export default function AdminPage() {
               onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
               className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
             >
-              🚗 Estoque & Custos Placa
+              🚗 Estoque & Histórico
             </button>
           )}
           

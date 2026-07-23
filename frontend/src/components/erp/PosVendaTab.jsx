@@ -332,7 +332,7 @@ export default function PosVendaTab() {
             <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-gray-700 uppercase mb-1">
-                  Veículo (Estoque)
+                  Veículo Vendido (Pós Venda)
                 </label>
                 <select
                   value={formExpense.veiculoId}
@@ -340,38 +340,18 @@ export default function PosVendaTab() {
                   className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                   required
                 >
-                  <option value="">Selecione o veículo...</option>
+                  <option value="">Selecione o veículo vendido...</option>
                   
-                  {/* Grupo: Veículos em Pátio / Estoque */}
-                  <optgroup label="🚗 VEÍCULOS EM PÁTIO / ESTOQUE">
-                    {veiculos.filter(v => v.status !== "Vendido").map(v => (
+                  {veiculos.filter(v => v.status === "Vendido" || (v.vendas && v.vendas.length > 0)).map(v => {
+                    const dataVendaStr = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda)
+                      ? new Date(v.vendas[0].dataVenda).toLocaleDateString("pt-BR", { timeZone: "UTC" })
+                      : null;
+                    return (
                       <option key={v.id} value={v.id}>
-                        {v.marca} {v.modelo} - Placa: {v.placa} ({v.status})
+                        {v.marca} {v.modelo} - Placa: {v.placa} (Vendido{dataVendaStr ? ` em ${dataVendaStr}` : ""})
                       </option>
-                    ))}
-                  </optgroup>
-
-                  {/* Grupo: Veículos Vendidos nos Últimos 3 Meses */}
-                  <optgroup label="✅ VEÍCULOS VENDIDOS (ÚLTIMOS 3 MESES)">
-                    {veiculos.filter(v => {
-                      if (v.status !== "Vendido") return false;
-                      const limite90Dias = new Date();
-                      limite90Dias.setDate(limite90Dias.getDate() - 90);
-                      const dataRef = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda) 
-                        ? new Date(v.vendas[0].dataVenda) 
-                        : new Date(v.dataEntrada);
-                      return dataRef >= limite90Dias;
-                    }).map(v => {
-                      const dataVendaStr = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda)
-                        ? new Date(v.vendas[0].dataVenda).toLocaleDateString("pt-BR", { timeZone: "UTC" })
-                        : null;
-                      return (
-                        <option key={v.id} value={v.id}>
-                          {v.marca} {v.modelo} - Placa: {v.placa} (Vendido{dataVendaStr ? ` em ${dataVendaStr}` : ""})
-                        </option>
-                      );
-                    })}
-                  </optgroup>
+                    );
+                  })}
                 </select>
               </div>
 
