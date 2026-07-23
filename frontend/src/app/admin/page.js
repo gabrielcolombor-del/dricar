@@ -7,6 +7,7 @@ import { signIn, signOut } from "next-auth/react";
 import DashboardTab from "@/components/erp/DashboardTab";
 import EstoqueTab from "@/components/erp/EstoqueTab";
 import CrmTab from "@/components/erp/CrmTab";
+import PosVendaTab from "@/components/erp/PosVendaTab";
 import FinanceiroTab from "@/components/erp/FinanceiroTab";
 
 const PREDEFINED_ACCESSORIES = [
@@ -102,7 +103,7 @@ export default function AdminPage() {
     const role = user.role?.toLowerCase();
     if (role === "seller" && !["erp_crm", "estoque"].includes(activeTab)) {
       setActiveTab("erp_crm");
-    } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
+    } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_posvenda", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
       setActiveTab("erp_estoque");
     }
   }, [user, activeTab]);
@@ -780,6 +781,15 @@ export default function AdminPage() {
           >
             🤝 CRM e Funil Vendas
           </button>
+
+          {isAdministrativo && (
+            <button 
+              onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            >
+              🛠️ Pós Venda
+            </button>
+          )}
           
           {isAdministrativo && (
             <button 
@@ -847,6 +857,7 @@ export default function AdminPage() {
         {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
         {activeTab === "erp_estoque" && isAdministrativo && <EstoqueTab />}
         {activeTab === "erp_crm" && <CrmTab />}
+        {activeTab === "erp_posvenda" && isAdministrativo && <PosVendaTab />}
         {activeTab === "erp_financeiro" && isAdministrativo && <FinanceiroTab />}
 
         {/* TAB 1: ESTOQUE ATIVO */}

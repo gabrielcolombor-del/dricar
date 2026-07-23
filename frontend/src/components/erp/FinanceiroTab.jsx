@@ -316,78 +316,18 @@ export default function FinanceiroTab() {
               </button>
             </div>
 
-            {/* Form Mode Selector (Geral ou Veículo) */}
-            {!formCusto.id && (
-              <div className="flex bg-gray-100 rounded-lg p-1 text-[10px] font-bold border border-gray-200 select-none">
-                <button
-                  type="button"
-                  onClick={() => { setFormMode("geral"); setFormError(""); }}
-                  className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${
-                    formMode === "geral" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400"
-                  }`}
-                >
-                  🏢 Custo Geral
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setFormMode("veiculo"); setFormError(""); }}
-                  className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${
-                    formMode === "veiculo" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400"
-                  }`}
-                >
-                  🚗 Custo por Veículo
-                </button>
-              </div>
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              {formMode === "geral" ? (
-                <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Descrição</label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Aluguel do Showroom"
-                    value={formCusto.descricao}
-                    onChange={(e) => setFormCusto(prev => ({ ...prev, descricao: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
-                    required
-                  />
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Veículo (Estoque)</label>
-                    <select
-                      value={formCusto.veiculoId}
-                      onChange={(e) => setFormCusto(prev => ({ ...prev, veiculoId: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
-                      required
-                    >
-                      <option value="">Selecione o veículo...</option>
-                      {veiculos.map(v => (
-                        <option key={v.id} value={v.id}>
-                          {v.placa} - {v.marca} {v.modelo} ({v.status})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Categoria de Custo</label>
-                    <select
-                      value={formCusto.categoriaVeiculo}
-                      onChange={(e) => setFormCusto(prev => ({ ...prev, categoriaVeiculo: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
-                    >
-                      <option value="Mecânica">Mecânica</option>
-                      <option value="Funilaria">Funilaria</option>
-                      <option value="Lavagem">Lavagem</option>
-                      <option value="IPVA">IPVA</option>
-                      <option value="Detalhamento">Detalhamento</option>
-                      <option value="Outros">Outros</option>
-                    </select>
-                  </div>
-                </>
-              )}
+              <div>
+                <label className="block font-bold text-gray-700 uppercase mb-1">Descrição</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Aluguel do Showroom, Energia, Sistema..."
+                  value={formCusto.descricao}
+                  onChange={(e) => setFormCusto(prev => ({ ...prev, descricao: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold placeholder-gray-400 focus:outline-none focus:border-brand-blue"
+                  required
+                />
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -397,50 +337,46 @@ export default function FinanceiroTab() {
                     placeholder="R$ 0"
                     value={formCusto.valor}
                     onChange={(e) => handlePriceChange(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white font-semibold"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold placeholder-gray-400 focus:outline-none focus:border-brand-blue"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">
-                    {formMode === "veiculo" ? "Data Despesa" : "Vencimento"}
-                  </label>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Data Vencimento</label>
                   <input
                     type="date"
                     value={formCusto.dataVencimento}
                     onChange={(e) => setFormCusto(prev => ({ ...prev, dataVencimento: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-xs"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-brand-blue"
                     required
                   />
                 </div>
               </div>
 
-              {formMode === "geral" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Classificação</label>
-                    <select
-                      value={formCusto.tipo}
-                      onChange={(e) => setFormCusto(prev => ({ ...prev, tipo: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
-                    >
-                      <option value="Fixo">Custo Fixo</option>
-                      <option value="Variável">Custo Variável</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Status Pagamento</label>
-                    <select
-                      value={formCusto.statusPagamento}
-                      onChange={(e) => setFormCusto(prev => ({ ...prev, statusPagamento: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
-                    >
-                      <option value="Pendente">Pendente</option>
-                      <option value="Pago">Pago</option>
-                    </select>
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Classificação</label>
+                  <select
+                    value={formCusto.tipo}
+                    onChange={(e) => setFormCusto(prev => ({ ...prev, tipo: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                  >
+                    <option value="Fixo">Custo Fixo</option>
+                    <option value="Variável">Custo Variável</option>
+                  </select>
                 </div>
-              )}
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Status Pagamento</label>
+                  <select
+                    value={formCusto.statusPagamento}
+                    onChange={(e) => setFormCusto(prev => ({ ...prev, statusPagamento: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                  >
+                    <option value="Pendente">Pendente</option>
+                    <option value="Pago">Pago</option>
+                  </select>
+                </div>
+              </div>
 
               {formError && (
                 <p className="text-red-600 font-semibold bg-red-50 p-2.5 rounded-lg">{formError}</p>
