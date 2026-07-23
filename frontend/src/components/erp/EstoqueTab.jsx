@@ -1353,7 +1353,7 @@ export default function EstoqueTab() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Seguros do Financiamento (opcional)</label>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Valor dos Seguros (Cláusula 8ª - Financiamento)</label>
                     <input
                       type="text"
                       placeholder="Ex: R$ 1.817,35"
