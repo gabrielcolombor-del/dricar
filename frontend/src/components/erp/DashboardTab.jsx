@@ -138,16 +138,16 @@ export default function DashboardTab() {
     <div className="space-y-8 animate-fade-in text-gray-800 font-sans pb-8">
       
       {/* BARRA SUPERIOR: CONTROLE DE SELEÇÃO DE ANO DO DASHBOARD */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
         <div>
-          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">PAINEL DE INDICADORES</span>
-          <h2 className="text-xl font-extrabold flex items-center gap-2">
+          <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider block">PAINEL DE INDICADORES</span>
+          <h2 className="text-lg sm:text-xl font-extrabold flex items-center gap-2">
             📊 Faturamento e Desempenho Dricar
           </h2>
         </div>
 
         {/* SELETOR DE ANO */}
-        <div className="flex items-center gap-3 bg-slate-800/80 border border-slate-700 p-2 rounded-xl">
+        <div className="flex items-center justify-between sm:justify-start gap-3 bg-slate-800/80 border border-slate-700 p-2 rounded-xl w-full sm:w-auto">
           <label htmlFor="anoSelect" className="text-xs font-bold text-slate-300 uppercase tracking-wide">
             Ano de Análise:
           </label>
@@ -173,7 +173,7 @@ export default function DashboardTab() {
         </h4>
 
         {/* 4 CARDS GRID (Top Row) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           
           {/* CARD 1: Faturamento Mês Atual */}
           <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow transition-all relative overflow-hidden flex flex-col justify-between border-l-4 border-l-emerald-500">
@@ -257,7 +257,7 @@ export default function DashboardTab() {
         </h4>
 
         {/* 2 CARDS GRID (Middle Row) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
           
           {/* CARD 5: Carros Vendidos Ano */}
           <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm hover:shadow transition-all relative overflow-hidden flex flex-col justify-between border-l-4 border-l-blue-500">
@@ -299,7 +299,7 @@ export default function DashboardTab() {
       </div>
 
       {/* SECTION 3: GRÁFICO 1 - FATURAMENTO MENSAL (SEM A LINHA DA CURVA) */}
-      <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm space-y-6">
+      <div className="bg-white border border-gray-150 rounded-2xl p-4 sm:p-6 shadow-sm space-y-6">
         
         {/* Header do Gráfico */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -312,7 +312,7 @@ export default function DashboardTab() {
             </p>
           </div>
 
-          {/* Legenda Limpa (Sem a Curva Amarela) */}
+          {/* Legenda Limpa */}
           <div className="flex items-center gap-5 text-xs font-semibold text-gray-600 shrink-0">
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-xs bg-[#1E293B] block"></span>
@@ -325,69 +325,78 @@ export default function DashboardTab() {
           </div>
         </div>
 
-        {/* ÁREA DO GRÁFICO (Barras Duplas Limpas) */}
-        <div className="relative pt-6 pb-6">
-          
-          {/* Linhas de Grade Horizontais */}
-          <div className="absolute inset-x-12 top-6 bottom-12 flex flex-col justify-between pointer-events-none z-0">
-            {[maxVal, maxVal * 0.75, maxVal * 0.5, maxVal * 0.25, 0].map((level) => (
-              <div key={level} className="flex items-center w-full">
-                <span className="w-12 text-[10px] text-gray-400 font-mono pr-2 text-right shrink-0">
-                  {formatYAxis(level)}
-                </span>
-                <div className="w-full border-b border-gray-100 border-dashed"></div>
-              </div>
-            ))}
-          </div>
+        {/* Dica visual para mobile */}
+        <div className="sm:hidden text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200/80 px-3 py-1.5 rounded-lg flex items-center justify-center gap-1">
+          <span>👈</span>
+          <span>Deslize o gráfico para os lados para comparar os meses</span>
+          <span>👉</span>
+        </div>
 
-          {/* Container das Colunas dos Meses */}
-          <div className="relative pl-14 pr-2 h-[220px] flex items-end justify-between z-10">
+        {/* ÁREA DO GRÁFICO (ROLAGEM HORIZONTAL EM MOBILE) */}
+        <div className="relative overflow-x-auto pb-4 pt-2 scrollbar-thin touch-pan-x">
+          <div className="min-w-[620px] relative pt-6 pb-2">
             
-            {comparativoMensal.map((m) => {
-              const heightAnoAnterior = Math.min(100, (m.valAnoAnterior / maxVal) * 100);
-              const heightAnoAtual = Math.min(100, (m.valAnoAtual / maxVal) * 100);
-              const isSelected = activeMonth === m.mes;
-
-              return (
-                <div
-                  key={m.mes}
-                  onClick={() => setActiveMonth(isSelected ? null : m.mes)}
-                  className={`flex-1 flex flex-col items-center justify-end h-full group cursor-pointer relative transition-all ${
-                    isSelected ? "bg-amber-50/30 rounded-xl" : ""
-                  }`}
-                >
-                  {/* Tooltip Interativo */}
-                  <div className="absolute -top-14 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] p-2 rounded-lg shadow-xl z-30 pointer-events-none whitespace-nowrap">
-                    <p className="font-bold border-b border-gray-700 pb-0.5">{m.mes}</p>
-                    <p className="text-blue-300">{meta.anoAtual}: R$ {m.valAnoAtual.toLocaleString("pt-BR")}</p>
-                    <p className="text-blue-100">{meta.anoAnterior}: R$ {m.valAnoAnterior.toLocaleString("pt-BR")}</p>
-                  </div>
-
-                  {/* Grupo de Barras Duplas */}
-                  <div className="flex items-end justify-center gap-1.5 w-full max-w-[40px] h-full">
-                    {/* Barra Ano Anterior (Azul Claro) */}
-                    <div
-                      className="w-1/2 bg-[#93C5FD] rounded-t-xs hover:bg-blue-400 transition-all"
-                      style={{ height: `${heightAnoAnterior}%` }}
-                    ></div>
-
-                    {/* Barra Ano Atual (Navy Dark) */}
-                    <div
-                      className="w-1/2 bg-[#1E293B] rounded-t-xs hover:bg-slate-800 transition-all"
-                      style={{ height: `${heightAnoAtual}%` }}
-                    ></div>
-                  </div>
-
-                  {/* Nome do Mês */}
-                  <span className={`text-[11px] font-semibold mt-3 transition-colors ${
-                    isSelected ? "text-amber-700 font-extrabold" : "text-gray-500 group-hover:text-gray-900"
-                  }`}>
-                    {m.mes}
+            {/* Linhas de Grade Horizontais */}
+            <div className="absolute inset-x-12 top-6 bottom-12 flex flex-col justify-between pointer-events-none z-0">
+              {[maxVal, maxVal * 0.75, maxVal * 0.5, maxVal * 0.25, 0].map((level) => (
+                <div key={level} className="flex items-center w-full">
+                  <span className="w-12 text-[10px] text-gray-400 font-mono pr-2 text-right shrink-0">
+                    {formatYAxis(level)}
                   </span>
+                  <div className="w-full border-b border-gray-100 border-dashed"></div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
 
+            {/* Container das Colunas dos Meses */}
+            <div className="relative pl-14 pr-2 h-[220px] flex items-end justify-between z-10">
+              
+              {comparativoMensal.map((m) => {
+                const heightAnoAnterior = Math.min(100, (m.valAnoAnterior / maxVal) * 100);
+                const heightAnoAtual = Math.min(100, (m.valAnoAtual / maxVal) * 100);
+                const isSelected = activeMonth === m.mes;
+
+                return (
+                  <div
+                    key={m.mes}
+                    onClick={() => setActiveMonth(isSelected ? null : m.mes)}
+                    className={`flex-1 flex flex-col items-center justify-end h-full group cursor-pointer relative transition-all ${
+                      isSelected ? "bg-amber-50/30 rounded-xl" : ""
+                    }`}
+                  >
+                    {/* Tooltip Interativo */}
+                    <div className="absolute -top-14 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] p-2 rounded-lg shadow-xl z-30 pointer-events-none whitespace-nowrap">
+                      <p className="font-bold border-b border-gray-700 pb-0.5">{m.mes}</p>
+                      <p className="text-blue-300">{meta.anoAtual}: R$ {m.valAnoAtual.toLocaleString("pt-BR")}</p>
+                      <p className="text-blue-100">{meta.anoAnterior}: R$ {m.valAnoAnterior.toLocaleString("pt-BR")}</p>
+                    </div>
+
+                    {/* Grupo de Barras Duplas */}
+                    <div className="flex items-end justify-center gap-1.5 w-full max-w-[40px] h-full">
+                      {/* Barra Ano Anterior (Azul Claro) */}
+                      <div
+                        className="w-1/2 bg-[#93C5FD] rounded-t-xs hover:bg-blue-400 transition-all"
+                        style={{ height: `${heightAnoAnterior}%` }}
+                      ></div>
+
+                      {/* Barra Ano Atual (Navy Dark) */}
+                      <div
+                        className="w-1/2 bg-[#1E293B] rounded-t-xs hover:bg-slate-800 transition-all"
+                        style={{ height: `${heightAnoAtual}%` }}
+                      ></div>
+                    </div>
+
+                    {/* Nome do Mês */}
+                    <span className={`text-[11px] font-semibold mt-3 transition-colors ${
+                      isSelected ? "text-amber-700 font-extrabold" : "text-gray-500 group-hover:text-gray-900"
+                    }`}>
+                      {m.mes}
+                    </span>
+                  </div>
+                );
+              })}
+
+            </div>
           </div>
         </div>
 
@@ -396,12 +405,12 @@ export default function DashboardTab() {
           const m = comparativoMensal.find(x => x.mes === activeMonth);
           if (!m) return null;
           return (
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs animate-fade-in">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs animate-fade-in">
               <div>
                 <span className="font-bold text-slate-800 uppercase block">Detalhamento do Mês: {m.mes}</span>
                 <span className="text-slate-500">Comparativo direto de vendas registradas entre {meta.anoAtual} e {meta.anoAnterior}.</span>
               </div>
-              <div className="flex gap-6 text-right">
+              <div className="flex gap-6 text-right self-end sm:self-auto">
                 <div>
                   <span className="text-[10px] text-gray-400 uppercase font-bold block">{meta.anoAnterior}</span>
                   <span className="font-extrabold text-blue-600">R$ {m.valAnoAnterior.toLocaleString("pt-BR")}</span>
@@ -422,7 +431,7 @@ export default function DashboardTab() {
         const maxCatCount = Math.max(...vendasPorCategoria.map(c => c.quantidade), 1);
 
         return (
-          <div className="bg-white border border-gray-150 rounded-2xl p-6 shadow-sm space-y-6">
+          <div className="bg-white border border-gray-150 rounded-2xl p-4 sm:p-6 shadow-sm space-y-6">
             
             {/* Header com Filtro de Tempo Personalizado */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-gray-100 pb-5">
@@ -435,32 +444,32 @@ export default function DashboardTab() {
                 </p>
               </div>
 
-              {/* FILTRO DE INTERVALO DE DATAS (Data Início até Data Fim + Presets) */}
-              <div className="flex flex-wrap items-center gap-2 bg-slate-50 border border-gray-200 p-2.5 rounded-xl text-xs">
+              {/* FILTRO DE INTERVALO DE DATAS */}
+              <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 bg-slate-50 border border-gray-200 p-2.5 rounded-xl text-xs w-full lg:w-auto">
                 
                 {/* Botões de Preset */}
-                <div className="flex items-center gap-1">
+                <div className="grid grid-cols-4 sm:flex items-center gap-1 w-full sm:w-auto">
                   <button
                     onClick={() => handlePresetDate("ano_atual")}
-                    className="px-2 py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded font-semibold text-[11px] text-gray-700 cursor-pointer"
+                    className="px-2 py-1.5 sm:py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded font-semibold text-[11px] text-gray-700 cursor-pointer text-center"
                   >
                     {selectedYear}
                   </button>
                   <button
                     onClick={() => handlePresetDate("ano_anterior")}
-                    className="px-2 py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded font-semibold text-[11px] text-gray-700 cursor-pointer"
+                    className="px-2 py-1.5 sm:py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded font-semibold text-[11px] text-gray-700 cursor-pointer text-center"
                   >
                     {selectedYear - 1}
                   </button>
                   <button
                     onClick={() => handlePresetDate("ultimos_12")}
-                    className="px-2 py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded font-semibold text-[11px] text-gray-700 cursor-pointer"
+                    className="px-2 py-1.5 sm:py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded font-semibold text-[11px] text-gray-700 cursor-pointer text-center"
                   >
                     Últimos 12m
                   </button>
                   <button
                     onClick={() => handlePresetDate("todo_periodo")}
-                    className="px-2 py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded font-semibold text-[11px] text-gray-700 cursor-pointer"
+                    className="px-2 py-1.5 sm:py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded font-semibold text-[11px] text-gray-700 cursor-pointer text-center"
                   >
                     Tudo
                   </button>
@@ -469,23 +478,23 @@ export default function DashboardTab() {
                 <div className="h-4 w-px bg-gray-300 mx-1 hidden sm:block"></div>
 
                 {/* Seletores de Data Personalizados */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 w-full sm:w-auto mt-1 sm:mt-0">
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-white border border-gray-200 text-gray-800 text-[11px] px-2 py-1 rounded font-mono focus:outline-none cursor-pointer"
+                    className="flex-1 sm:flex-none bg-white border border-gray-200 text-gray-800 text-[11px] px-2 py-1 rounded font-mono focus:outline-none cursor-pointer"
                   />
-                  <span className="text-gray-400 font-bold">até</span>
+                  <span className="text-gray-400 font-bold text-[10px] sm:text-xs">até</span>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-white border border-gray-200 text-gray-800 text-[11px] px-2 py-1 rounded font-mono focus:outline-none cursor-pointer"
+                    className="flex-1 sm:flex-none bg-white border border-gray-200 text-gray-800 text-[11px] px-2 py-1 rounded font-mono focus:outline-none cursor-pointer"
                   />
                   <button
                     onClick={handleFilterCategoryDates}
-                    className="bg-brand-blue hover:bg-blue-700 text-white font-bold px-3 py-1 rounded text-[11px] transition-colors cursor-pointer"
+                    className="w-full sm:w-auto bg-brand-blue hover:bg-blue-700 text-white font-bold px-3 py-1 rounded text-[11px] transition-colors cursor-pointer text-center"
                   >
                     Filtrar
                   </button>
@@ -495,11 +504,11 @@ export default function DashboardTab() {
             </div>
 
             {/* Totalizador de Veículos do Período Filtrado */}
-            <div className="flex justify-between items-center text-xs text-gray-500 font-semibold px-1">
-              <span>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-gray-500 font-semibold px-1">
+              <span className="text-[11px] sm:text-xs">
                 Período: <strong className="text-slate-900">{startDate || "Início"}</strong> até <strong className="text-slate-900">{endDate || "Atualidade"}</strong>
               </span>
-              <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-bold">
+              <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-bold text-[11px] sm:text-xs self-start sm:self-auto">
                 Total do Período: {totalVendasFiltradasCategoria} veículos vendidos
               </span>
             </div>

@@ -78,33 +78,120 @@ export default function CrmTab() {
     fetchCRMData();
   }, []);
 
+  // Drag & Drop States (Mouse & Touch)
+  const [draggingLeadId, setDraggingLeadId] = useState(null);
+  const [dragOverColId, setDragOverColId] = useState(null);
+  const [touchDrag, setTouchDrag] = useState(null); // { lead, x, y, targetColId }
+
   const veiculosDisponiveis = veiculos.filter(v => v.status === "Disponível");
 
-  // Drag and Drop handlers
-  const handleDragStart = (e, leadId) => {
-    e.dataTransfer.setData("text/plain", leadId);
+  // Mouse Drag and Drop handlers
+  const handleDragStart = (e, lead) => {
+    if (lead.statusFunil === "Fechado") return;
+    e.dataTransfer.setData("text/plain", lead.id);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggingLeadId(lead.id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingLeadId(null);
+    setDragOverColId(null);
+  };
+
+  const handleDragOver = (e, targetStatus) => {
+    e.preventDefault();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = "move";
+    }
+    if (dragOverColId !== targetStatus) {
+      setDragOverColId(targetStatus);
+    }
+  };
+
+  const handleDragLeave = (e, targetStatus) => {
+    if (e.currentTarget && !e.currentTarget.contains(e.relatedTarget)) {
+      if (dragOverColId === targetStatus) {
+        setDragOverColId(null);
+      }
+    }
   };
 
   const handleDrop = async (e, targetStatus) => {
-    e.preventDefault();
-    const leadId = e.dataTransfer.getData("text/plain");
+    if (e) e.preventDefault();
+    const leadId = (e && e.dataTransfer && e.dataTransfer.getData("text/plain")) || draggingLeadId;
+    
+    setDragOverColId(null);
+    setDraggingLeadId(null);
+    
     if (!leadId) return;
+
+    const leadObj = leads.find(l => l.id === leadId);
+    if (!leadObj || leadObj.statusFunil === targetStatus) return;
 
     // Se mover para "Fechado", deve forçar a abertura do modal de vendas
     if (targetStatus === "Fechado") {
-      const leadObj = leads.find(l => l.id === leadId);
-      if (leadObj) {
-        if (!leadObj.veiculoInteresseId) {
-          alert("Por favor, vincule um veículo de interesse ao lead antes de registrar a venda.");
-          return;
-        }
-        openRegisterSale(leadObj);
+      if (!leadObj.veiculoInteresseId) {
+        alert("Por favor, vincule um veículo de interesse ao lead antes de registrar a venda.");
+        return;
       }
+      openRegisterSale(leadObj);
       return;
     }
 
     // Se não, atualiza direto
     await updateLeadStatus(leadId, targetStatus);
+  };
+
+  // Touch Drag and Drop Handlers (Dispositivos Mobile / Touchscreen)
+  const handleTouchStart = (e, lead) => {
+    if (lead.statusFunil === "Fechado") return;
+    if (e.target.closest("button") || e.target.closest("a")) return;
+    
+    const touch = e.touches[0];
+    setTouchDrag({
+      lead,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      x: touch.clientX,
+      y: touch.clientY,
+      targetColId: lead.statusFunil,
+    });
+    setDraggingLeadId(lead.id);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchDrag) return;
+    const touch = e.touches[0];
+    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+    const colElem = elem ? elem.closest("[data-kanban-col]") : null;
+    const colId = colElem ? colElem.getAttribute("data-kanban-col") : null;
+
+    setTouchDrag(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY, targetColId: colId } : null);
+    if (colId) {
+      setDragOverColId(colId);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (!touchDrag) return;
+    const targetStatus = touchDrag.targetColId;
+    const leadObj = touchDrag.lead;
+
+    setTouchDrag(null);
+    setDraggingLeadId(null);
+    setDragOverColId(null);
+
+    if (targetStatus && targetStatus !== leadObj.statusFunil) {
+      if (targetStatus === "Fechado") {
+        if (!leadObj.veiculoInteresseId) {
+          alert("Por favor, vincule um veículo de interesse ao lead antes de registrar a venda.");
+          return;
+        }
+        openRegisterSale(leadObj);
+        return;
+      }
+      await updateLeadStatus(leadObj.id, targetStatus);
+    }
   };
 
   const updateLeadStatus = async (leadId, newStatus) => {
@@ -353,17 +440,17 @@ export default function CrmTab() {
   return (
     <div className="space-y-6 text-gray-800 animate-fade-in">
       {/* Top Banner and Quick Add */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h4 className="font-extrabold text-brand-blue text-sm uppercase tracking-wider">Gestão Comercial - ERP & CRM</h4>
-          <p className="text-xs text-gray-400">Controle o funil do CRM, movimente leads no Kanban e confira o histórico de faturamento de vendas do site.</p>
+          <h4 className="font-extrabold text-brand-blue text-xs sm:text-sm uppercase tracking-wider">Gestão Comercial - ERP & CRM</h4>
+          <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">Controle o funil do CRM, movimente leads no Kanban e confira o histórico de faturamento de vendas do site.</p>
         </div>
         
         {/* Toggle subtabs */}
-        <div className="flex bg-gray-100 rounded-lg p-1 text-xs font-bold border border-gray-200 shrink-0 select-none">
+        <div className="flex bg-gray-100 rounded-lg p-1 text-xs font-bold border border-gray-200 shrink-0 select-none w-full sm:w-auto justify-center sm:justify-start">
           <button
             onClick={() => setSubTab("kanban")}
-            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-none px-3 py-1.5 rounded-md transition-all cursor-pointer text-center ${
               subTab === "kanban" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400 hover:text-gray-600"
             }`}
           >
@@ -371,7 +458,7 @@ export default function CrmTab() {
           </button>
           <button
             onClick={() => setSubTab("vendas_catalogo")}
-            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-none px-3 py-1.5 rounded-md transition-all cursor-pointer text-center ${
               subTab === "vendas_catalogo" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400 hover:text-gray-600"
             }`}
           >
@@ -393,7 +480,7 @@ export default function CrmTab() {
               setFormError("");
               setShowLeadModal(true);
             }}
-            className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-3 rounded-lg flex items-center justify-center gap-1.5 transition-all self-end sm:self-auto cursor-pointer"
+            className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-2.5 sm:py-3 rounded-lg flex items-center justify-center gap-1.5 transition-all w-full sm:w-auto cursor-pointer"
           >
             ➕ Novo Lead
           </button>
@@ -407,39 +494,62 @@ export default function CrmTab() {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-blue"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 items-start overflow-x-auto pb-4">
-            {COLUNAS.map(col => {
-              const agora = new Date();
-              const limite30Dias = new Date(agora.getTime() - 30 * 24 * 60 * 60 * 1000);
+          <div className="space-y-3">
+            {/* Mobile Column Quick Chips Navigator */}
+            <div className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px] font-bold">
+              <span className="text-[10px] text-gray-400 uppercase font-extrabold pr-1 shrink-0">Ir para:</span>
+              {COLUNAS.map(col => (
+                <a
+                  key={col.id}
+                  href={`#kanban-col-${col.id}`}
+                  className="px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 whitespace-nowrap shrink-0 hover:bg-gray-50 active:scale-95 transition-all"
+                >
+                  {col.title}
+                </a>
+              ))}
+            </div>
 
-              const leadsNaColuna = leads.filter(l => {
-                if (l.statusFunil !== col.id) return false;
-                if (col.id === "Fechado") {
-                  if (l.vendas && l.vendas.length > 0) {
-                    const dataVenda = new Date(l.vendas[0].dataVenda);
-                    return dataVenda >= limite30Dias;
+            {/* Kanban Columns Slider */}
+            <div className="flex md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 items-start overflow-x-auto pb-4 snap-x snap-mandatory touch-pan-x scrollbar-thin">
+              {COLUNAS.map(col => {
+                const agora = new Date();
+                const limite30Dias = new Date(agora.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+                const leadsNaColuna = leads.filter(l => {
+                  if (l.statusFunil !== col.id) return false;
+                  if (col.id === "Fechado") {
+                    if (l.vendas && l.vendas.length > 0) {
+                      const dataVenda = new Date(l.vendas[0].dataVenda);
+                      return dataVenda >= limite30Dias;
+                    }
+                    return true;
                   }
                   return true;
-                }
-                return true;
-              });
-
-              // ORDENAÇÃO: Se for a coluna "Fechado", ordenar por dataVenda da MAIS RECENTE para a MAIS ANTIGA
-              if (col.id === "Fechado") {
-                leadsNaColuna.sort((a, b) => {
-                  const timeA = a.vendas && a.vendas.length > 0 ? new Date(a.vendas[0].dataVenda).getTime() : 0;
-                  const timeB = b.vendas && b.vendas.length > 0 ? new Date(b.vendas[0].dataVenda).getTime() : 0;
-                  return timeB - timeA; // Decrescente (mais nova no topo)
                 });
-              }
 
-              return (
-                <div
-                  key={col.id}
-                  onDragOver={e => e.preventDefault()}
-                  onDrop={e => handleDrop(e, col.id)}
-                  className="bg-gray-50 border border-gray-200 rounded-2xl p-4 min-w-[220px] flex flex-col gap-4 min-h-[500px]"
-                >
+                // ORDENAÇÃO: Se for a coluna "Fechado", ordenar por dataVenda da MAIS RECENTE para a MAIS ANTIGA
+                if (col.id === "Fechado") {
+                  leadsNaColuna.sort((a, b) => {
+                    const timeA = a.vendas && a.vendas.length > 0 ? new Date(a.vendas[0].dataVenda).getTime() : 0;
+                    const timeB = b.vendas && b.vendas.length > 0 ? new Date(b.vendas[0].dataVenda).getTime() : 0;
+                    return timeB - timeA; // Decrescente (mais nova no topo)
+                  });
+                }
+
+                return (
+                  <div
+                    key={col.id}
+                    id={`kanban-col-${col.id}`}
+                    data-kanban-col={col.id}
+                    onDragOver={e => handleDragOver(e, col.id)}
+                    onDragLeave={e => handleDragLeave(e, col.id)}
+                    onDrop={e => handleDrop(e, col.id)}
+                    className={`bg-gray-50 border rounded-2xl p-3.5 sm:p-4 min-w-[85vw] sm:min-w-[250px] md:min-w-0 shrink-0 md:shrink flex flex-col gap-4 min-h-[450px] sm:min-h-[500px] snap-center transition-all duration-200 ${
+                      dragOverColId === col.id 
+                        ? "border-2 border-brand-blue bg-blue-50/70 shadow-lg ring-4 ring-brand-blue/20 scale-[1.01]" 
+                        : "border-gray-200"
+                    }`}
+                  >
                   {/* Column Header */}
                   <div className={`p-2.5 rounded-xl border text-center font-bold text-xs uppercase ${col.color}`}>
                     {col.title} ({leadsNaColuna.length})
@@ -462,11 +572,17 @@ export default function CrmTab() {
                           <div
                             key={lead.id}
                             draggable={lead.statusFunil !== "Fechado"}
-                            onDragStart={e => handleDragStart(e, lead.id)}
-                            className={`bg-white border border-gray-155 p-3.5 rounded-xl shadow-sm hover:shadow transition-shadow flex flex-col gap-2 relative ${
-                              lead.statusFunil === "Fechado" 
-                                ? "border-green-300 opacity-90 cursor-default" 
-                                : "cursor-grab active:cursor-grabbing"
+                            onDragStart={e => handleDragStart(e, lead)}
+                            onDragEnd={handleDragEnd}
+                            onTouchStart={e => handleTouchStart(e, lead)}
+                            onTouchMove={handleTouchMove}
+                            onTouchEnd={handleTouchEnd}
+                            className={`bg-white border p-3.5 rounded-xl shadow-sm hover:shadow transition-all flex flex-col gap-2 relative ${
+                              draggingLeadId === lead.id
+                                ? "border-2 border-dashed border-brand-blue opacity-40 scale-95 shadow-md"
+                                : lead.statusFunil === "Fechado" 
+                                  ? "border-green-300 opacity-90 cursor-default" 
+                                  : "border-gray-150 hover:border-brand-blue/40 cursor-grab active:cursor-grabbing"
                             }`}
                           >
                             {/* Title & Actions */}
@@ -513,78 +629,95 @@ export default function CrmTab() {
                               )}
                             </div>
 
-                          {/* Vehicle of Interest */}
-                          <div className="bg-gray-50/70 border border-gray-100 p-2 rounded-lg text-[10px] flex flex-col">
-                            <span className="text-[8px] text-gray-400 uppercase font-bold block">Interesse</span>
-                            {lead.veiculoInteresse ? (
-                              <div className="font-semibold text-brand-blue flex justify-between gap-1 items-center mt-0.5">
-                                <span className="truncate">{lead.veiculoInteresse.marca} {lead.veiculoInteresse.modelo}</span>
-                                <span className="bg-brand-blue/10 text-brand-blue px-1 rounded font-mono font-bold shrink-0">{lead.veiculoInteresse.placa}</span>
-                              </div>
-                            ) : (
-                              <span className="text-gray-400 italic mt-0.5">Não vinculado</span>
-                            )}
-                          </div>
+                            {/* Vehicle of Interest */}
+                            <div className="bg-gray-50/70 border border-gray-100 p-2 rounded-lg text-[10px] flex flex-col">
+                              <span className="text-[8px] text-gray-400 uppercase font-bold block">Interesse</span>
+                              {lead.veiculoInteresse ? (
+                                <div className="font-semibold text-brand-blue flex justify-between gap-1 items-center mt-0.5">
+                                  <span className="truncate">{lead.veiculoInteresse.marca} {lead.veiculoInteresse.modelo}</span>
+                                  <span className="bg-brand-blue/10 text-brand-blue px-1 rounded font-mono font-bold shrink-0">{lead.veiculoInteresse.placa}</span>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 italic mt-0.5">Não vinculado</span>
+                              )}
+                            </div>
 
-                          {/* Mobile navigation / Register Sale button */}
-                          <div className="flex flex-wrap justify-between items-center gap-2 mt-2 pt-2 border-t border-gray-100">
-                            {lead.statusFunil !== "Fechado" && lead.statusFunil !== "Perdido" && (
-                              <div className="flex gap-1.5">
-                                {/* Move back */}
-                                {col.id !== "Novo Lead" && (
+                            {/* Mobile navigation / Register Sale button */}
+                            <div className="flex flex-wrap justify-between items-center gap-2 mt-2 pt-2 border-t border-gray-100">
+                              {lead.statusFunil !== "Fechado" && lead.statusFunil !== "Perdido" && (
+                                <div className="flex gap-1.5">
+                                  {/* Move back */}
+                                  {col.id !== "Novo Lead" && (
+                                    <button
+                                      onClick={() => {
+                                        const colIndex = COLUNAS.findIndex(c => c.id === col.id);
+                                        updateLeadStatus(lead.id, COLUNAS[colIndex - 1].id);
+                                      }}
+                                      className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1 rounded text-[10px]"
+                                      title="Voltar Funil"
+                                    >
+                                      ◀
+                                    </button>
+                                  )}
+                                  {/* Move forward */}
                                   <button
                                     onClick={() => {
                                       const colIndex = COLUNAS.findIndex(c => c.id === col.id);
-                                      updateLeadStatus(lead.id, COLUNAS[colIndex - 1].id);
+                                      const nextStatus = COLUNAS[colIndex + 1].id;
+                                      if (nextStatus === "Fechado") {
+                                        if (!lead.veiculoInteresseId) {
+                                          alert("Por favor, vincule um veículo ao lead para registrar venda.");
+                                          return;
+                                        }
+                                        openRegisterSale(lead);
+                                      } else {
+                                        updateLeadStatus(lead.id, nextStatus);
+                                      }
                                     }}
                                     className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1 rounded text-[10px]"
-                                    title="Voltar Funil"
+                                    title="Avançar Funil"
                                   >
-                                    ◀
+                                    ▶
                                   </button>
-                                )}
-                                {/* Move forward */}
-                                <button
-                                  onClick={() => {
-                                    const colIndex = COLUNAS.findIndex(c => c.id === col.id);
-                                    const nextStatus = COLUNAS[colIndex + 1].id;
-                                    if (nextStatus === "Fechado") {
-                                      if (!lead.veiculoInteresseId) {
-                                        alert("Por favor, vincule um veículo ao lead para registrar venda.");
-                                        return;
-                                      }
-                                      openRegisterSale(lead);
-                                    } else {
-                                      updateLeadStatus(lead.id, nextStatus);
-                                    }
-                                  }}
-                                  className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1 rounded text-[10px]"
-                                  title="Avançar Funil"
-                                >
-                                  ▶
-                                </button>
-                              </div>
-                            )}
+                                </div>
+                              )}
 
-                            {lead.statusFunil !== "Fechado" && lead.veiculoInteresseId && (
-                              <button
-                                onClick={() => openRegisterSale(lead)}
-                                className="bg-green-600 hover:bg-green-700 text-white font-bold text-[9px] px-2 py-1 rounded transition-colors ml-auto cursor-pointer"
-                              >
-                                Registrar Venda
-                              </button>
-                            )}
+                              {lead.statusFunil !== "Fechado" && lead.veiculoInteresseId && (
+                                <button
+                                  onClick={() => openRegisterSale(lead)}
+                                  className="bg-green-600 hover:bg-green-700 text-white font-bold text-[9px] px-2 py-1 rounded transition-colors ml-auto cursor-pointer"
+                                >
+                                  Registrar Venda
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })
                     )}
                   </div>
                 </div>
               );
             })}
           </div>
-        )
+        </div>
+      )
+    )}
+
+      {/* Touch Drag Ghost Overlay (Mobile Floating Card) */}
+      {touchDrag && (
+        <div
+          className="fixed z-50 pointer-events-none p-3.5 bg-brand-blue text-white rounded-xl shadow-2xl border-2 border-amber-400 opacity-95 text-xs font-bold w-60 -translate-x-1/2 -translate-y-1/2 flex items-center justify-between"
+          style={{ left: `${touchDrag.x}px`, top: `${touchDrag.y}px` }}
+        >
+          <div className="truncate">
+            <span className="block text-[9px] text-amber-300 font-extrabold uppercase">Movendo Lead</span>
+            <span>{touchDrag.lead.nome}</span>
+          </div>
+          <span className="text-[10px] bg-amber-400 text-slate-900 px-2 py-0.5 rounded font-extrabold uppercase shrink-0">
+            {touchDrag.targetColId || "Arraste..."}
+          </span>
+        </div>
       )}
 
       {/* RENDER WEBSITE SALES HISTORY (Moved Tab) */}
@@ -652,8 +785,8 @@ export default function CrmTab() {
 
       {/* Modal Lead */}
       {showLeadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-[450px] shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 animate-fade-in">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 w-[95%] sm:w-full max-w-[450px] max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <h3 className="text-md font-bold text-brand-blue uppercase mb-4">
               {formLead.id ? "Editar Lead" : "Cadastrar Novo Lead"}
             </h3>
@@ -671,7 +804,7 @@ export default function CrmTab() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-gray-700 uppercase mb-1">Telefone</label>
                   <input
@@ -696,7 +829,7 @@ export default function CrmTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-gray-700 uppercase mb-1">Status Funil</label>
                   <select
@@ -756,8 +889,8 @@ export default function CrmTab() {
 
       {/* Modal Registrar Venda (F&I) */}
       {showSaleModal && selectedLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 w-full max-w-[450px] shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 animate-fade-in">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 w-[95%] sm:w-full max-w-[450px] max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <h3 className="text-md font-bold text-green-700 uppercase mb-2">Registrar Venda (Conversão CRM)</h3>
             <p className="text-xs text-gray-500 mb-4">
               Registrar faturamento da venda do veículo para <strong>{selectedLead.nome}</strong>.

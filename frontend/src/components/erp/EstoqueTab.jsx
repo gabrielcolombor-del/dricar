@@ -266,11 +266,11 @@ export default function EstoqueTab() {
   return (
     <div className="space-y-6 text-gray-800 animate-fade-in">
       {/* Top Filter and Actions */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-center flex-grow max-w-3xl">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center flex-grow max-w-3xl">
           {/* Campo de Busca Geral */}
-          <div className="flex-grow min-w-[220px]">
+          <div className="flex-grow min-w-full sm:min-w-[220px]">
             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">🔍 Pesquisar Veículo / Peças / Placa</label>
             <div className="relative">
               <input
@@ -292,49 +292,51 @@ export default function EstoqueTab() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</label>
-            <select
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value)}
-              className="border border-gray-200 rounded-lg py-2 px-3 text-xs bg-white focus:outline-none focus:border-brand-blue"
-            >
-              <option value="">Todos</option>
-              <option value="Disponível">Disponível</option>
-              <option value="Vendido">Vendido</option>
-              <option value="Em Preparação">Em Preparação</option>
-              <option value="Em processo de Transf.">Em processo de Transf.</option>
-              <option value="Transferido">Transferido</option>
-              <option value="Transferência em aberto">Transferência em aberto</option>
-            </select>
-          </div>
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</label>
+              <select
+                value={filtroStatus}
+                onChange={(e) => setFiltroStatus(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white focus:outline-none focus:border-brand-blue"
+              >
+                <option value="">Todos</option>
+                <option value="Disponível">Disponível</option>
+                <option value="Vendido">Vendido</option>
+                <option value="Em Preparação">Em Preparação</option>
+                <option value="Em processo de Transf.">Em processo de Transf.</option>
+                <option value="Transferido">Transferido</option>
+                <option value="Transferência em aberto">Transferência em aberto</option>
+              </select>
+            </div>
 
-          <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Marca</label>
-            <select
-              value={filtroMarca}
-              onChange={(e) => setFiltroMarca(e.target.value)}
-              className="border border-gray-200 rounded-lg py-2 px-3 text-xs bg-white focus:outline-none focus:border-brand-blue"
-            >
-              <option value="">Todas</option>
-              {marcasUnicas.map(m => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Marca</label>
+              <select
+                value={filtroMarca}
+                onChange={(e) => setFiltroMarca(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white focus:outline-none focus:border-brand-blue"
+              >
+                <option value="">Todas</option>
+                {marcasUnicas.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
 
-          <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Ano</label>
-            <select
-              value={filtroAno}
-              onChange={(e) => setFiltroAno(e.target.value)}
-              className="border border-gray-200 rounded-lg py-2 px-3 text-xs bg-white focus:outline-none focus:border-brand-blue"
-            >
-              <option value="">Todos</option>
-              {anosUnicos.map(a => (
-                <option key={a} value={a}>{a}</option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Ano</label>
+              <select
+                value={filtroAno}
+                onChange={(e) => setFiltroAno(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white focus:outline-none focus:border-brand-blue"
+              >
+                <option value="">Todos</option>
+                {anosUnicos.map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -358,7 +360,7 @@ export default function EstoqueTab() {
             setFormError("");
             setShowModal(true);
           }}
-          className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-3 rounded-lg flex items-center justify-center gap-1.5 transition-all self-end md:self-auto cursor-pointer"
+          className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-2.5 sm:py-3 rounded-lg flex items-center justify-center gap-1.5 transition-all w-full md:w-auto cursor-pointer"
         >
           ➕ Novo Veículo
         </button>

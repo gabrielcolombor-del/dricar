@@ -172,10 +172,10 @@ export default function FinanceiroTab() {
   return (
     <div className="space-y-6 text-gray-800 animate-fade-in">
       {/* Top Banner and Quick Add */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h4 className="font-extrabold text-brand-blue text-sm uppercase tracking-wider">Custos Gerais da Operação</h4>
-          <p className="text-xs text-gray-400">Lançamento e controle de despesas gerais da empresa e custos particulares de preparação de veículos.</p>
+          <h4 className="font-extrabold text-brand-blue text-xs sm:text-sm uppercase tracking-wider">Custos Gerais da Operação</h4>
+          <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">Lançamento e controle de despesas gerais da empresa e custos particulares de preparação de veículos.</p>
         </div>
         <button
           onClick={() => {
@@ -193,27 +193,27 @@ export default function FinanceiroTab() {
             setFormError("");
             setShowForm(true);
           }}
-          className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-3 rounded-lg flex items-center justify-center gap-1.5 transition-all self-end sm:self-auto cursor-pointer"
+          className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-2.5 sm:py-3 rounded-lg flex items-center justify-center gap-1.5 transition-all w-full sm:w-auto cursor-pointer"
         >
           💸 Registrar Custo
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="bg-white border border-gray-150 p-5 rounded-2xl shadow-sm text-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+        <div className="bg-white border border-gray-150 p-4 sm:p-5 rounded-2xl shadow-sm text-center">
           <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block">Total Pago</span>
           <span className="text-lg font-extrabold text-green-600 block mt-1">
             R$ {totalPago.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </span>
         </div>
-        <div className="bg-white border border-gray-150 p-5 rounded-2xl shadow-sm text-center">
+        <div className="bg-white border border-gray-150 p-4 sm:p-5 rounded-2xl shadow-sm text-center">
           <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block">Total Pendente</span>
           <span className="text-lg font-extrabold text-amber-600 block mt-1">
             R$ {totalPendente.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </span>
         </div>
-        <div className="bg-white border border-gray-150 p-5 rounded-2xl shadow-sm text-center bg-gray-50/50">
+        <div className="bg-white border border-gray-150 p-4 sm:p-5 rounded-2xl shadow-sm text-center bg-gray-50/50">
           <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider block">Total Lançado</span>
           <span className="text-lg font-extrabold text-gray-900 block mt-1">
             R$ {(totalPago + totalPendente).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}

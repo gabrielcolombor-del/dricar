@@ -46,7 +46,7 @@ export default function AdminPage() {
     name: "",
     email: "",
     password: "",
-    role: "seller",
+    role: "manager",
   });
 
   // Estado para cadastro/edição
@@ -82,18 +82,29 @@ export default function AdminPage() {
 
   // Identificação rápida dos cargos
   const isAdmin = user?.role?.toLowerCase() === "admin";
-  const isGerente = user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "admin"; // Gerente ou Admin
+  const isAdministrativo = user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "admin"; // Administrativo ou Admin
   const isVendedor = user?.role?.toLowerCase() === "seller";
 
   // Tradução do cargo para exibição amigável
   const getRoleBadge = (role) => {
     switch (role?.toLowerCase()) {
       case "admin": return "Administrador";
-      case "manager": return "Gerente";
+      case "manager": return "Administrativo";
       case "seller": return "Vendedor";
       default: return "Funcionário";
     }
   };
+
+  // Proteção automática de abas por nível de acesso (Guarda de Rota)
+  useEffect(() => {
+    if (!user) return;
+    const role = user.role?.toLowerCase();
+    if (role === "seller" && !["erp_crm", "estoque"].includes(activeTab)) {
+      setActiveTab("erp_crm");
+    } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
+      setActiveTab("erp_estoque");
+    }
+  }, [user, activeTab]);
 
   // Verifica autenticação inicial usando a rota nativa do NextAuth
   useEffect(() => {
@@ -105,6 +116,14 @@ export default function AdminPage() {
           if (session && session.user) {
             setIsAuthenticated(true);
             setUser(session.user);
+
+            const role = session.user.role?.toLowerCase();
+            if (role === "seller") {
+              setActiveTab("erp_crm");
+            } else if (role === "manager") {
+              setActiveTab("erp_estoque");
+            }
+
             fetchCars();
           }
         }
@@ -236,7 +255,12 @@ export default function AdminPage() {
         setIsAuthenticated(true);
         setUser(session.user);
         
-        if (session.user.role.toLowerCase() === "seller") {
+        const role = session.user.role?.toLowerCase();
+        if (role === "seller") {
+          setActiveTab("erp_crm");
+        } else if (role === "manager") {
+          setActiveTab("erp_estoque");
+        } else {
           setActiveTab("erp_dashboard");
         }
         
@@ -676,43 +700,47 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
       <Header />
       
-      <main className="flex-grow w-full max-w-[1200px] mx-auto py-10 px-6">
+      <main className="flex-grow w-full max-w-[1200px] mx-auto py-5 sm:py-10 px-3 sm:px-6">
         {/* Top Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none">Painel de Controle</h1>
-            <p className="text-gray-500 text-sm mt-2">
-              Funcionário: <strong className="text-brand-blue">{user?.name}</strong> 
-              <span className="ml-2 bg-brand-blue/10 text-brand-blue px-2.5 py-0.5 rounded-full text-xs font-bold uppercase">{getRoleBadge(user?.role)}</span>
+            <h1 className="text-[26px] sm:text-[32px] font-extrabold text-brand-blue uppercase leading-tight">Painel de Controle</h1>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-2 flex flex-wrap items-center gap-1.5">
+              <span>Funcionário: <strong className="text-brand-blue">{user?.name}</strong></span>
+              <span className="bg-brand-blue/10 text-brand-blue px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase">{getRoleBadge(user?.role)}</span>
             </p>
           </div>
           <button 
             onClick={handleLogout}
-            className="border border-red-200 text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            className="border border-red-200 text-red-600 hover:bg-red-50 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer self-start sm:self-auto"
           >
             Sair do Painel
           </button>
         </div>
 
         {/* Tabs Menu */}
-        <div className="flex border-b border-gray-200 mb-8 gap-4 overflow-x-auto pb-1.5 scrollbar-thin select-none items-center">
+        <div className="flex border-b border-gray-200 mb-6 sm:mb-8 gap-2.5 sm:gap-4 overflow-x-auto pb-2 scrollbar-none select-none items-center touch-pan-x w-full">
           <span className="text-[10px] font-extrabold uppercase text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md shrink-0">
             📊 ERP & CRM
           </span>
           
-          <button 
-            onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
-            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
-          >
-            📈 Dashboard
-          </button>
+          {isAdmin && (
+            <button 
+              onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            >
+              📈 Dashboard
+            </button>
+          )}
           
-          <button 
-            onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
-            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
-          >
-            🚗 Estoque & Custos Placa
-          </button>
+          {isAdministrativo && (
+            <button 
+              onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            >
+              🚗 Estoque & Custos Placa
+            </button>
+          )}
           
           <button 
             onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
@@ -721,12 +749,14 @@ export default function AdminPage() {
             🤝 CRM e Funil Vendas
           </button>
           
-          <button 
-            onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
-            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
-          >
-            💸 Financeiro Geral
-          </button>
+          {isAdministrativo && (
+            <button 
+              onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            >
+              💸 Financeiro Geral
+            </button>
+          )}
 
           <span className="h-4 w-[1px] bg-gray-300 mx-2 shrink-0"></span>
 
@@ -782,10 +812,10 @@ export default function AdminPage() {
         )}
 
         {/* ERP TABS RENDERING */}
-        {activeTab === "erp_dashboard" && <DashboardTab />}
-        {activeTab === "erp_estoque" && <EstoqueTab />}
+        {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
+        {activeTab === "erp_estoque" && isAdministrativo && <EstoqueTab />}
         {activeTab === "erp_crm" && <CrmTab />}
-        {activeTab === "erp_financeiro" && <FinanceiroTab />}
+        {activeTab === "erp_financeiro" && isAdministrativo && <FinanceiroTab />}
 
         {/* TAB 1: ESTOQUE ATIVO */}
         {activeTab === "estoque" && (
@@ -1212,8 +1242,8 @@ export default function AdminPage() {
                       className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
                       required
                     >
+                      <option value="manager">Administrativo</option>
                       <option value="seller">Vendedor</option>
-                      <option value="manager">Gerente</option>
                       <option value="admin">Administrador</option>
                     </select>
                   </div>
