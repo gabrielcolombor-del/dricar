@@ -271,14 +271,14 @@ export default function EstoqueTab() {
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center flex-grow max-w-3xl">
           {/* Campo de Busca Geral */}
           <div className="flex-grow min-w-full sm:min-w-[220px]">
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">🔍 Pesquisar Veículo / Peças / Placa</label>
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">🔍 Pesquisar Veículo / Peças / Placa</label>
             <div className="relative">
               <input
                 type="text"
                 placeholder="Buscar por placa, modelo, renavam, chassi, peças..."
                 value={buscaGeral}
                 onChange={(e) => setBuscaGeral(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg py-2 pl-8 pr-7 text-xs bg-white focus:outline-none focus:border-brand-blue"
+                className="w-full border border-gray-300 rounded-lg py-2 pl-8 pr-7 text-xs bg-white text-slate-900 font-medium placeholder-gray-400 focus:outline-none focus:border-brand-blue"
               />
               <span className="absolute left-2.5 top-2 text-gray-400 text-xs">🔍</span>
               {buscaGeral && (
@@ -294,11 +294,11 @@ export default function EstoqueTab() {
 
           <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3">
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</label>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Status</label>
               <select
                 value={filtroStatus}
                 onChange={(e) => setFiltroStatus(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white focus:outline-none focus:border-brand-blue"
+                className="w-full border border-gray-300 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
               >
                 <option value="">Todos</option>
                 <option value="Disponível">Disponível</option>
@@ -311,11 +311,11 @@ export default function EstoqueTab() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Marca</label>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Marca</label>
               <select
                 value={filtroMarca}
                 onChange={(e) => setFiltroMarca(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white focus:outline-none focus:border-brand-blue"
+                className="w-full border border-gray-300 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
               >
                 <option value="">Todas</option>
                 {marcasUnicas.map(m => (
@@ -325,11 +325,11 @@ export default function EstoqueTab() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Ano</label>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Ano</label>
               <select
                 value={filtroAno}
                 onChange={(e) => setFiltroAno(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white focus:outline-none focus:border-brand-blue"
+                className="w-full border border-gray-300 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
               >
                 <option value="">Todos</option>
                 {anosUnicos.map(a => (
@@ -522,7 +522,7 @@ export default function EstoqueTab() {
                       <select
                         value={formExpense.categoria}
                         onChange={(e) => setFormExpense(prev => ({ ...prev, categoria: e.target.value }))}
-                        className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white"
+                        className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                       >
                         <option value="Mecânica">Mecânica</option>
                         <option value="Funilaria">Funilaria</option>
@@ -539,7 +539,7 @@ export default function EstoqueTab() {
                         placeholder="R$ 0"
                         value={formExpense.valor}
                         onChange={(e) => handleExpensePriceChange(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white"
+                        className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white text-slate-900 font-bold placeholder-gray-400 focus:outline-none focus:border-brand-blue"
                         required
                       />
                     </div>
@@ -551,7 +551,7 @@ export default function EstoqueTab() {
                       type="date"
                       value={formExpense.dataDespesa}
                       onChange={(e) => setFormExpense(prev => ({ ...prev, dataDespesa: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white"
+                      className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                       required
                     />
                   </div>
@@ -637,7 +637,7 @@ export default function EstoqueTab() {
                       placeholder="Ex: ABC-1234"
                       value={formVeiculo.placa}
                       onChange={(e) => handlePlacaChange(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white uppercase font-mono text-xs focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold uppercase font-mono text-xs focus:border-brand-blue placeholder-gray-400"
                       required
                       disabled={!!formVeiculo.id}
                     />
@@ -649,7 +649,7 @@ export default function EstoqueTab() {
                       placeholder="Número Renavam..."
                       value={formVeiculo.renavam}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, renavam: e.target.value.replace(/\D/g, "") }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white font-mono text-xs focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold font-mono text-xs focus:border-brand-blue placeholder-gray-400"
                     />
                   </div>
                   <div>
@@ -659,7 +659,7 @@ export default function EstoqueTab() {
                       placeholder="Número do Chassi..."
                       value={formVeiculo.chassi}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, chassi: e.target.value.toUpperCase().trim() }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white font-mono text-xs focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold font-mono text-xs focus:border-brand-blue placeholder-gray-400"
                     />
                   </div>
                 </div>
@@ -672,7 +672,7 @@ export default function EstoqueTab() {
                       placeholder="Ex: Chevrolet"
                       value={formVeiculo.marca}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, marca: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue placeholder-gray-400"
                       required
                     />
                   </div>
@@ -683,7 +683,7 @@ export default function EstoqueTab() {
                       placeholder="Ex: Onix"
                       value={formVeiculo.modelo}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, modelo: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue placeholder-gray-400"
                       required
                     />
                   </div>
@@ -694,7 +694,7 @@ export default function EstoqueTab() {
                       placeholder="Ex: 2019"
                       value={formVeiculo.anoFab}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, anoFab: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue placeholder-gray-400"
                       required
                     />
                   </div>
@@ -705,7 +705,7 @@ export default function EstoqueTab() {
                       placeholder="Ex: 2020"
                       value={formVeiculo.anoMod}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, anoMod: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue placeholder-gray-400"
                       required
                     />
                   </div>
@@ -719,7 +719,7 @@ export default function EstoqueTab() {
                       placeholder="R$ 0"
                       value={formVeiculo.valorCompra}
                       onChange={(e) => handlePriceChange(e.target.value, "valorCompra")}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white font-bold focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:border-brand-blue placeholder-gray-400"
                       required
                     />
                   </div>
@@ -729,7 +729,7 @@ export default function EstoqueTab() {
                       type="date"
                       value={formVeiculo.dataEntrada}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, dataEntrada: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-xs"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold text-xs focus:border-brand-blue"
                       required
                     />
                   </div>
@@ -738,7 +738,7 @@ export default function EstoqueTab() {
                     <select
                       value={formVeiculo.status}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, status: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue"
                     >
                       <option value="Disponível">Disponível</option>
                       <option value="Em Preparação">Em Preparação</option>

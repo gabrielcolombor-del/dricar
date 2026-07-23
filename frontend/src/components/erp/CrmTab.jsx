@@ -799,7 +799,7 @@ export default function CrmTab() {
                   placeholder="Nome do cliente..."
                   value={formLead.nome}
                   onChange={(e) => setFormLead(prev => ({ ...prev, nome: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold placeholder-gray-400 focus:outline-none focus:border-brand-blue"
                   required
                 />
               </div>
@@ -812,7 +812,7 @@ export default function CrmTab() {
                     placeholder="Ex: (11) 99999-9999"
                     value={formLead.telefone}
                     onChange={(e) => handleTelefoneChange(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold placeholder-gray-400 focus:outline-none focus:border-brand-blue"
                     required
                   />
                 </div>
@@ -823,7 +823,7 @@ export default function CrmTab() {
                     placeholder="Ex: 000.000.000-00"
                     value={formLead.cpfCnpj}
                     onChange={(e) => handleCpfChange(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white font-mono"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold font-mono placeholder-gray-400 focus:outline-none focus:border-brand-blue"
                     required
                   />
                 </div>
@@ -835,7 +835,7 @@ export default function CrmTab() {
                   <select
                     value={formLead.statusFunil}
                     onChange={(e) => setFormLead(prev => ({ ...prev, statusFunil: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                     disabled={formLead.statusFunil === "Fechado"}
                   >
                     <option value="Novo Lead">Novo Lead</option>
@@ -850,7 +850,7 @@ export default function CrmTab() {
                   <select
                     value={formLead.veiculoInteresseId}
                     onChange={(e) => setFormLead(prev => ({ ...prev, veiculoInteresseId: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                   >
                     <option value="">Nenhum</option>
                     {veiculosDisponiveis.map(v => (
@@ -870,16 +870,16 @@ export default function CrmTab() {
                 <button
                   type="button"
                   onClick={() => setShowLeadModal(false)}
-                  className="border border-gray-300 text-gray-600 px-4 py-2.5 rounded-lg font-bold hover:bg-gray-100 transition-colors"
+                  className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="bg-brand-blue text-white px-6 py-2.5 rounded-lg font-bold hover:opacity-90 transition-opacity"
+                  className="bg-brand-blue text-white px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity"
                 >
-                  {formLoading ? "Salvando..." : "Confirmar Lead"}
+                  {formLoading ? "Salvando..." : "Salvar Lead"}
                 </button>
               </div>
             </form>
@@ -916,7 +916,7 @@ export default function CrmTab() {
                     placeholder="R$ 0"
                     value={formVenda.valorVendaVeiculo}
                     onChange={(e) => handlePriceChange(e.target.value, "valorVendaVeiculo")}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white font-bold text-gray-900"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white font-extrabold text-slate-900 placeholder-gray-400 focus:outline-none focus:border-brand-blue"
                     required
                   />
                 </div>
@@ -928,7 +928,7 @@ export default function CrmTab() {
                     placeholder="R$ 0"
                     value={formVenda.valorRetornoBancario}
                     onChange={(e) => handlePriceChange(e.target.value, "valorRetornoBancario")}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white font-bold text-green-600"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white font-extrabold text-emerald-600 placeholder-gray-400 focus:outline-none focus:border-brand-blue"
                   />
                   <span className="text-[8px] text-gray-400 mt-1 block">Comissão da financeira</span>
                 </div>
@@ -940,7 +940,7 @@ export default function CrmTab() {
                   type="date"
                   value={formVenda.dataVenda}
                   onChange={(e) => setFormVenda(prev => ({ ...prev, dataVenda: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                   required
                 />
               </div>
