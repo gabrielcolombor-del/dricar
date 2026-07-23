@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { generateSalePdf } from "@/lib/generateSalePdf";
+import { generateSalePdf, numeroParaExtenso } from "@/lib/generateSalePdf";
 
 export default function EstoqueTab() {
   const [veiculos, setVeiculos] = useState([]);
@@ -42,7 +42,7 @@ export default function EstoqueTab() {
     chassi: "",
   });
 
-  // Modal de Venda de Veículo (Baixa + Geração de PDF)
+  // Modal de Venda de Veículo (Baixa + Geração de PDF Oficial DRI-CAR)
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [saleLoading, setSaleLoading] = useState(false);
   const [saleError, setSaleError] = useState("");
@@ -50,13 +50,23 @@ export default function EstoqueTab() {
   const [saleForm, setSaleForm] = useState({
     buyerName: "",
     buyerCpfCnpj: "",
+    buyerRg: "",
+    buyerEstadoCivil: "Solteiro(a)",
     buyerPhone: "",
     buyerAddress: "",
+    buyerCidadeUf: "Guarapari / ES",
+    buyerCep: "29.210-000",
     salePrice: "",
+    salePriceExtenso: "",
+    entryTradeText: "",
+    financedSaldoText: "",
+    segurosValue: "",
+    notes: "a transferência do veículo será paga pela loja.",
     saleDate: new Date().toISOString().split("T")[0],
-    paymentMethod: "À Vista (PIX/Transferência)",
-    sellerName: "",
-    notes: "",
+    combustivel: "FLEX",
+    cor: "",
+    quilometragem: "",
+    tipoVeiculo: "AUTOMÓVEL",
   });
 
   // Modal/Form Lançamento Despesa
@@ -268,23 +278,34 @@ export default function EstoqueTab() {
 
   // Abrir Modal de Venda de Veículo
   const openSaleModal = (v) => {
+    const priceNum = Number(v.valorCompra);
     setTargetSaleVeiculo(v);
     setSaleForm({
       buyerName: "",
       buyerCpfCnpj: "",
+      buyerRg: "",
+      buyerEstadoCivil: "Solteiro(a)",
       buyerPhone: "",
       buyerAddress: "",
-      salePrice: "R$ " + Number(v.valorCompra).toLocaleString("pt-BR"),
+      buyerCidadeUf: "Guarapari / ES",
+      buyerCep: "29.210-000",
+      salePrice: "R$ " + priceNum.toLocaleString("pt-BR"),
+      salePriceExtenso: numeroParaExtenso(priceNum),
+      entryTradeText: "",
+      financedSaldoText: "",
+      segurosValue: "",
+      notes: "a transferência do veículo será paga pela loja.",
       saleDate: new Date().toISOString().split("T")[0],
-      paymentMethod: "À Vista (PIX/Transferência)",
-      sellerName: "",
-      notes: "",
+      combustivel: "FLEX",
+      cor: "",
+      quilometragem: "",
+      tipoVeiculo: "AUTOMÓVEL",
     });
     setSaleError("");
     setShowSaleModal(true);
   };
 
-  // Submeter Venda de Veículo (Dar Baixa + Gerar PDF)
+  // Submeter Venda de Veículo (Dar Baixa + Gerar PDF Oficial DRI-CAR)
   const handleSaleSubmit = async (e) => {
     e.preventDefault();
     if (!targetSaleVeiculo) return;
@@ -311,18 +332,28 @@ export default function EstoqueTab() {
 
       const data = await res.json();
       if (res.ok) {
-        // Gerar o documento PDF para o usuário baixar automaticamente
+        // Gerar o documento PDF Oficial DRI-CAR para o usuário baixar automaticamente
         generateSalePdf({
           veiculo: targetSaleVeiculo,
           buyerName: saleForm.buyerName,
           buyerCpfCnpj: saleForm.buyerCpfCnpj,
+          buyerRg: saleForm.buyerRg,
+          buyerEstadoCivil: saleForm.buyerEstadoCivil,
           buyerPhone: saleForm.buyerPhone,
           buyerAddress: saleForm.buyerAddress,
+          buyerCidadeUf: saleForm.buyerCidadeUf,
+          buyerCep: saleForm.buyerCep,
           salePrice: valorVendaNum,
-          saleDate: saleForm.saleDate,
-          paymentMethod: saleForm.paymentMethod,
-          sellerName: saleForm.sellerName,
+          salePriceExtenso: saleForm.salePriceExtenso,
+          entryTradeText: saleForm.entryTradeText,
+          financedSaldoText: saleForm.financedSaldoText,
+          segurosValue: saleForm.segurosValue,
           notes: saleForm.notes,
+          saleDate: saleForm.saleDate,
+          combustivel: saleForm.combustivel,
+          cor: saleForm.cor,
+          quilometragem: saleForm.quilometragem,
+          tipoVeiculo: saleForm.tipoVeiculo,
         });
 
         setShowSaleModal(false);
@@ -1093,7 +1124,7 @@ export default function EstoqueTab() {
               {/* Seção 1: Dados do Comprador */}
               <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
                 <h4 className="font-extrabold text-gray-700 uppercase text-[11px] flex items-center gap-1.5">
-                  👤 Dados do Comprador
+                  👤 2. Dados do Comprador
                 </h4>
 
                 <div>
@@ -1102,7 +1133,7 @@ export default function EstoqueTab() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Ex: João da Silva Santos"
+                    placeholder="Ex: JOACY CARNEIRO DA SILVA"
                     value={saleForm.buyerName}
                     onChange={(e) => setSaleForm(prev => ({ ...prev, buyerName: e.target.value }))}
                     className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
@@ -1110,60 +1141,163 @@ export default function EstoqueTab() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block font-bold text-gray-700 uppercase mb-1">CPF / CNPJ</label>
                     <input
                       type="text"
-                      placeholder="Ex: 123.456.789-00"
+                      placeholder="Ex: 851.881.827-34"
                       value={saleForm.buyerCpfCnpj}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCpfCnpj: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                     />
                   </div>
                   <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">RG / Inscrição</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: 071418826"
+                      value={saleForm.buyerRg}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerRg: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Estado Civil</label>
+                    <select
+                      value={saleForm.buyerEstadoCivil}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerEstadoCivil: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    >
+                      <option value="Solteiro(a)">Solteiro(a)</option>
+                      <option value="Casado(a)">Casado(a)</option>
+                      <option value="Divorciado(a)">Divorciado(a)</option>
+                      <option value="Viúvo(a)">Viúvo(a)</option>
+                      <option value="União Estável">União Estável</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
                     <label className="block font-bold text-gray-700 uppercase mb-1">Telefone / WhatsApp</label>
                     <input
                       type="text"
-                      placeholder="Ex: (11) 98765-4321"
+                      placeholder="Ex: (27) 99826-5665"
                       value={saleForm.buyerPhone}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerPhone: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                     />
                   </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">CEP</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: 29.210-390"
+                      value={saleForm.buyerCep}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCep: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Endereço Completo</label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Rua das Flores, 123 - São Paulo / SP"
-                    value={saleForm.buyerAddress}
-                    onChange={(e) => setSaleForm(prev => ({ ...prev, buyerAddress: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Endereço Completo</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Rua Manaus, 10 - Camurugi"
+                      value={saleForm.buyerAddress}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerAddress: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Cidade / UF</label>
+                    <input
+                      type="text"
+                      value={saleForm.buyerCidadeUf}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCidadeUf: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Seção 2: Dados da Venda */}
+              {/* Seção 2: Especificações Adicionais do Veículo */}
               <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
                 <h4 className="font-extrabold text-gray-700 uppercase text-[11px] flex items-center gap-1.5">
-                  💵 Condições Financeiras da Venda
+                  🚗 3. Complemento do Veículo no Contrato
+                </h4>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Combustível</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: FLEX"
+                      value={saleForm.combustivel}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, combustivel: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-semibold uppercase"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Cor</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: VERMELHA"
+                      value={saleForm.cor}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, cor: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-semibold uppercase"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">KM Atual</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: 109.821"
+                      value={saleForm.quilometragem}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, quilometragem: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Tipo</label>
+                    <input
+                      type="text"
+                      placeholder="AUTOMÓVEL"
+                      value={saleForm.tipoVeiculo}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, tipoVeiculo: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-semibold uppercase"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção 3: Valor e Condições de Pagamento */}
+              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
+                <h4 className="font-extrabold text-gray-700 uppercase text-[11px] flex items-center gap-1.5">
+                  💵 4. Valor e Condições de Pagamento
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-bold text-gray-700 uppercase mb-1">
-                      Valor Real da Venda (R$) <span className="text-red-500">*</span>
+                      Valor Total da Venda (R$) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={saleForm.salePrice}
                       onChange={(e) => {
                         const clean = e.target.value.replace(/\D/g, "");
-                        if (!clean) return setSaleForm(prev => ({ ...prev, salePrice: "" }));
-                        const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
-                        setSaleForm(prev => ({ ...prev, salePrice: formatted }));
+                        if (!clean) return setSaleForm(prev => ({ ...prev, salePrice: "", salePriceExtenso: "" }));
+                        const num = Number(clean);
+                        const formatted = "R$ " + num.toLocaleString("pt-BR");
+                        setSaleForm(prev => ({
+                          ...prev,
+                          salePrice: formatted,
+                          salePriceExtenso: numeroParaExtenso(num),
+                        }));
                       }}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-emerald-700 font-extrabold text-sm focus:outline-none focus:border-brand-blue"
                       required
@@ -1184,44 +1318,61 @@ export default function EstoqueTab() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Forma de Pagamento</label>
-                    <select
-                      value={saleForm.paymentMethod}
-                      onChange={(e) => setSaleForm(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
-                    >
-                      <option value="À Vista (PIX/Transferência)">À Vista (PIX/Transferência)</option>
-                      <option value="Financiamento Bancário">Financiamento Bancário</option>
-                      <option value="Troca com Troco">Troca com Troco</option>
-                      <option value="Entrada + Financiamento">Entrada + Financiamento</option>
-                      <option value="Cartão de Crédito">Cartão de Crédito</option>
-                      <option value="Outros">Outros</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Vendedor Responsável</label>
-                    <input
-                      type="text"
-                      placeholder="Nome do Vendedor / Consultor"
-                      value={saleForm.sellerName}
-                      onChange={(e) => setSaleForm(prev => ({ ...prev, sellerName: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
-                    />
-                  </div>
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Valor por Extenso</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: (cinquenta e quatro mil e novecentos reais)"
+                    value={saleForm.salePriceExtenso}
+                    onChange={(e) => setSaleForm(prev => ({ ...prev, salePriceExtenso: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-800 font-medium"
+                  />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Observações / Termo de Garantia</label>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Entrada em Veículo / Troca (opcional)</label>
                   <textarea
-                    rows="3"
-                    placeholder="Digite observações sobre garantia, entrega, estado do veículo ou prazos de documento..."
-                    value={saleForm.notes}
-                    onChange={(e) => setSaleForm(prev => ({ ...prev, notes: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-medium focus:outline-none focus:border-brand-blue"
+                    rows="2"
+                    placeholder="Ex: GM MONTANA 2012/2013, cor BRANCA, placa ODN4G12, avaliado em R$ 28.000,00."
+                    value={saleForm.entryTradeText}
+                    onChange={(e) => setSaleForm(prev => ({ ...prev, entryTradeText: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-medium"
                   ></textarea>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Saldo Financiado / Banco (opcional)</label>
+                  <textarea
+                    rows="2"
+                    placeholder="Ex: R$ 26.900,00 financiados pelo BANCO ITAÚ em 48 parcelas de R$ 948,34."
+                    value={saleForm.financedSaldoText}
+                    onChange={(e) => setSaleForm(prev => ({ ...prev, financedSaldoText: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-medium"
+                  ></textarea>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Seguros do Financiamento (opcional)</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: R$ 1.817,35"
+                      value={saleForm.segurosValue}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, segurosValue: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Observações de Transferência / Loja</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: a transferência do veículo será paga pela loja."
+                      value={saleForm.notes}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, notes: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-medium"
+                    />
+                  </div>
                 </div>
               </div>
 
