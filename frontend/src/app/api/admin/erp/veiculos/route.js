@@ -182,41 +182,25 @@ export async function POST(request) {
       await syncVeiculoToCar(updated, catalogData);
       return NextResponse.json({ success: true, veiculo: updated });
     } else {
-      // Criar
-      // Verificar se a placa já existe
-      const existing = await prisma.veiculo.findUnique({
-        where: { placa: placa.toUpperCase().trim() },
+      // Criar novo veículo
+      const cleanPlaca = placa.toUpperCase().trim();
+
+      // Verificar se existe um veículo ativo com essa placa no pátio
+      const activeInStock = await prisma.veiculo.findFirst({
+        where: {
+          placa: cleanPlaca,
+          status: { notIn: ["Vendido", "Transferido"] },
+        },
       });
 
-      if (existing) {
-        if (existing.status !== "Vendido" && existing.status !== "Transferido") {
-          return NextResponse.json({ error: "Este veículo já está ativo no pátio/estoque com esta placa." }, { status: 400 });
-        }
-
-        // Recompra de veículo: O cliente vendeu o veículo de volta para a loja!
-        // Atualiza a entrada do veículo com novo valor de compra e data de entrada, reativando-o em estoque.
-        const reBought = await prisma.veiculo.update({
-          where: { id: existing.id },
-          data: {
-            marca: marca.trim(),
-            modelo: modelo.trim(),
-            anoFab: parseInt(anoFab),
-            anoMod: parseInt(anoMod),
-            valorCompra: parseFloat(valorCompra),
-            dataEntrada: new Date(dataEntrada),
-            status: status || "Disponível",
-            documentoPendente: !!documentoPendente,
-            renavam: renavam || existing.renavam,
-            chassi: chassi || existing.chassi,
-          },
-        });
-        await syncVeiculoToCar(reBought, catalogData);
-        return NextResponse.json({ success: true, veiculo: reBought, reCompra: true });
+      if (activeInStock) {
+        return NextResponse.json({ error: "Este veículo já está ativo no pátio/estoque com esta placa." }, { status: 400 });
       }
 
+      // Cria um registro de veículo NOVO e independente para o novo ciclo na loja
       const newVeiculo = await prisma.veiculo.create({
         data: {
-          placa: placa.toUpperCase().trim(),
+          placa: cleanPlaca,
           marca: marca.trim(),
           modelo: modelo.trim(),
           anoFab: parseInt(anoFab),

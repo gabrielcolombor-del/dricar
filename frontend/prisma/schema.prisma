@@ -58,7 +58,7 @@ model Car {
 model Veiculo {
   id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   car         Car?
-  placa       String           @unique
+  placa       String
   marca       String
   modelo      String
   anoFab      Int              @map("ano_fab")
