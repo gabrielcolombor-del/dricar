@@ -189,7 +189,29 @@ export async function POST(request) {
       });
 
       if (existing) {
-        return NextResponse.json({ error: "Já existe um veículo cadastrado com esta placa." }, { status: 400 });
+        if (existing.status !== "Vendido" && existing.status !== "Transferido") {
+          return NextResponse.json({ error: "Este veículo já está ativo no pátio/estoque com esta placa." }, { status: 400 });
+        }
+
+        // Recompra de veículo: O cliente vendeu o veículo de volta para a loja!
+        // Atualiza a entrada do veículo com novo valor de compra e data de entrada, reativando-o em estoque.
+        const reBought = await prisma.veiculo.update({
+          where: { id: existing.id },
+          data: {
+            marca: marca.trim(),
+            modelo: modelo.trim(),
+            anoFab: parseInt(anoFab),
+            anoMod: parseInt(anoMod),
+            valorCompra: parseFloat(valorCompra),
+            dataEntrada: new Date(dataEntrada),
+            status: status || "Disponível",
+            documentoPendente: !!documentoPendente,
+            renavam: renavam || existing.renavam,
+            chassi: chassi || existing.chassi,
+          },
+        });
+        await syncVeiculoToCar(reBought, catalogData);
+        return NextResponse.json({ success: true, veiculo: reBought, reCompra: true });
       }
 
       const newVeiculo = await prisma.veiculo.create({

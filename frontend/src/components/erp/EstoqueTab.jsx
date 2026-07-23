@@ -377,7 +377,7 @@ export default function EstoqueTab() {
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Placa</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Veículo</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Ano</th>
-                  <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Compra</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Compra / Venda</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Status</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Doc.</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-center">Ações</th>
@@ -406,8 +406,21 @@ export default function EstoqueTab() {
                       <td className="p-4 text-xs text-gray-500">
                         {v.anoFab}/{v.anoMod}
                       </td>
-                      <td className="p-4 text-xs font-bold text-gray-900">
-                        R$ {Number(v.valorCompra).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      <td className="p-4 text-xs font-bold">
+                        <div className="text-slate-900 font-extrabold text-[11px] flex items-center gap-1">
+                          <span className="text-gray-400 font-semibold text-[10px]">🛒 Compra:</span>
+                          <span>R$ {Number(v.valorCompra).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        {v.status === "Vendido" && v.vendas && v.vendas.length > 0 ? (
+                          <div className="text-emerald-700 font-extrabold text-[11px] mt-0.5 flex items-center gap-1">
+                            <span className="text-emerald-600 font-semibold text-[10px]">💰 Venda:</span>
+                            <span>R$ {Number(v.vendas[0].valorVendaVeiculo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        ) : v.status === "Vendido" ? (
+                          <div className="text-emerald-700 font-bold text-[10px] mt-0.5">💰 Vendido</div>
+                        ) : (
+                          <div className="text-gray-400 font-medium text-[10px] mt-0.5">📦 Em Pátio</div>
+                        )}
                       </td>
                       <td className="p-4 text-xs">
                         <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
@@ -502,27 +515,42 @@ export default function EstoqueTab() {
               </div>
             </div>
 
-            {/* Cost breakdown cards */}
+            {/* Preços de Compra e Venda discriminados */}
             <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="bg-gray-50 p-3 rounded-xl">
-                <span className="text-[9px] text-gray-400 uppercase font-bold block">Valor Compra</span>
-                <span className="text-xs font-extrabold text-gray-900 block mt-1">
-                  R$ {Number(selectedVeiculo.valorCompra).toLocaleString("pt-BR")}
+              <div className="bg-gray-50 p-3 rounded-xl border border-gray-200/60">
+                <span className="text-[9px] text-gray-500 uppercase font-extrabold block">🛒 Preço Compra (Entrada)</span>
+                <span className="text-xs font-extrabold text-slate-900 block mt-1">
+                  R$ {Number(selectedVeiculo.valorCompra).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-100/50">
-                <span className="text-[9px] text-amber-500 uppercase font-bold block">Total Despesas</span>
-                <span className="text-xs font-extrabold text-amber-800 block mt-1">
-                  R$ {calcularTotalDespesas(selectedVeiculo).toLocaleString("pt-BR")}
+
+              <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100">
+                <span className="text-[9px] text-emerald-700 uppercase font-extrabold block">💰 Preço Venda (Saída)</span>
+                <span className="text-xs font-extrabold text-emerald-800 block mt-1">
+                  {selectedVeiculo.status === "Vendido" && selectedVeiculo.vendas && selectedVeiculo.vendas.length > 0
+                    ? `R$ ${Number(selectedVeiculo.vendas[0].valorVendaVeiculo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                    : selectedVeiculo.status === "Vendido"
+                      ? "Vendido"
+                      : "Em Pátio (Em Aberto)"}
                 </span>
               </div>
             </div>
 
-            <div className="bg-blue-50/30 p-3 rounded-xl border border-blue-100/50 text-center">
-              <span className="text-[9px] text-brand-blue uppercase font-bold block">Custo Total de Aquisição</span>
-              <span className="text-sm font-extrabold text-brand-blue block mt-1">
-                R$ {(Number(selectedVeiculo.valorCompra) + calcularTotalDespesas(selectedVeiculo)).toLocaleString("pt-BR")}
-              </span>
+            {/* Cost breakdown cards */}
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-100/50">
+                <span className="text-[9px] text-amber-600 uppercase font-bold block">🔧 Total Despesas</span>
+                <span className="text-xs font-extrabold text-amber-800 block mt-1">
+                  R$ {calcularTotalDespesas(selectedVeiculo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              <div className="bg-blue-50/30 p-3 rounded-xl border border-blue-100/50">
+                <span className="text-[9px] text-brand-blue uppercase font-bold block">🏷️ Custo Total Aquisição</span>
+                <span className="text-xs font-extrabold text-brand-blue block mt-1">
+                  R$ {(Number(selectedVeiculo.valorCompra) + calcularTotalDespesas(selectedVeiculo)).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
             </div>
 
             {/* List of Registered Expenses */}
