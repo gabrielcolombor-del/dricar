@@ -928,13 +928,6 @@ export default function AdminPage() {
                               </span>
                             )}
                             <div className="flex justify-center items-center gap-3">
-                              <button 
-                                onClick={() => openCrmModal(car)}
-                                className="bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                              >
-                                Marcar Vendido
-                              </button>
-                              
                               {!isVendedor && (
                                 <button 
                                   onClick={() => startEditCar(car)}

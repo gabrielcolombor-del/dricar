@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { generateSalePdf } from "@/lib/generateSalePdf";
 
 export default function EstoqueTab() {
   const [veiculos, setVeiculos] = useState([]);
@@ -39,6 +40,23 @@ export default function EstoqueTab() {
     documentoPendente: false,
     renavam: "",
     chassi: "",
+  });
+
+  // Modal de Venda de Veículo (Baixa + Geração de PDF)
+  const [showSaleModal, setShowSaleModal] = useState(false);
+  const [saleLoading, setSaleLoading] = useState(false);
+  const [saleError, setSaleError] = useState("");
+  const [targetSaleVeiculo, setTargetSaleVeiculo] = useState(null);
+  const [saleForm, setSaleForm] = useState({
+    buyerName: "",
+    buyerCpfCnpj: "",
+    buyerPhone: "",
+    buyerAddress: "",
+    salePrice: "",
+    saleDate: new Date().toISOString().split("T")[0],
+    paymentMethod: "À Vista (PIX/Transferência)",
+    sellerName: "",
+    notes: "",
   });
 
   // Modal/Form Lançamento Despesa
@@ -245,6 +263,77 @@ export default function EstoqueTab() {
       }
     } catch (err) {
       alert("Erro ao tentar excluir.");
+    }
+  };
+
+  // Abrir Modal de Venda de Veículo
+  const openSaleModal = (v) => {
+    setTargetSaleVeiculo(v);
+    setSaleForm({
+      buyerName: "",
+      buyerCpfCnpj: "",
+      buyerPhone: "",
+      buyerAddress: "",
+      salePrice: "R$ " + Number(v.valorCompra).toLocaleString("pt-BR"),
+      saleDate: new Date().toISOString().split("T")[0],
+      paymentMethod: "À Vista (PIX/Transferência)",
+      sellerName: "",
+      notes: "",
+    });
+    setSaleError("");
+    setShowSaleModal(true);
+  };
+
+  // Submeter Venda de Veículo (Dar Baixa + Gerar PDF)
+  const handleSaleSubmit = async (e) => {
+    e.preventDefault();
+    if (!targetSaleVeiculo) return;
+    setSaleLoading(true);
+    setSaleError("");
+
+    const cleanPrice = saleForm.salePrice.replace(/\D/g, "");
+    const valorVendaNum = parseFloat(cleanPrice) || 0;
+
+    try {
+      const res = await fetch("/api/admin/erp/vendas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          veiculoId: targetSaleVeiculo.id,
+          buyerName: saleForm.buyerName,
+          buyerCpfCnpj: saleForm.buyerCpfCnpj,
+          buyerPhone: saleForm.buyerPhone,
+          buyerAddress: saleForm.buyerAddress,
+          valorVendaVeiculo: valorVendaNum,
+          dataVenda: saleForm.saleDate,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        // Gerar o documento PDF para o usuário baixar automaticamente
+        generateSalePdf({
+          veiculo: targetSaleVeiculo,
+          buyerName: saleForm.buyerName,
+          buyerCpfCnpj: saleForm.buyerCpfCnpj,
+          buyerPhone: saleForm.buyerPhone,
+          buyerAddress: saleForm.buyerAddress,
+          salePrice: valorVendaNum,
+          saleDate: saleForm.saleDate,
+          paymentMethod: saleForm.paymentMethod,
+          sellerName: saleForm.sellerName,
+          notes: saleForm.notes,
+        });
+
+        setShowSaleModal(false);
+        fetchVeiculos();
+      } else {
+        setSaleError(data.error || "Erro ao registrar venda.");
+      }
+    } catch (err) {
+      setSaleError("Erro de comunicação ao registrar venda.");
+    } finally {
+      setSaleLoading(false);
     }
   };
 
@@ -512,7 +601,16 @@ export default function EstoqueTab() {
                         )}
                       </td>
                       <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-center gap-2">
+                        <div className="flex justify-center items-center gap-1.5">
+                          {v.status !== "Vendido" && (
+                            <button
+                              onClick={() => openSaleModal(v)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-pointer flex items-center gap-1 shadow-xs whitespace-nowrap"
+                              title="Dar baixa / Vender veículo e gerar PDF"
+                            >
+                              💰 Vender
+                            </button>
+                          )}
                           <button
                             onClick={() => startEditVeiculo(v)}
                             className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white p-1.5 rounded-md text-[10px] font-bold transition-all cursor-pointer"
@@ -596,6 +694,15 @@ export default function EstoqueTab() {
                 ✕
               </button>
             </div>
+
+            {selectedVeiculo.status !== "Vendido" && (
+              <button
+                onClick={() => openSaleModal(selectedVeiculo)}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-3 rounded-xl flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
+              >
+                💰 Realizar Venda deste Veículo & Gerar PDF
+              </button>
+            )}
 
             {/* Datas de Entrada e Saída do Estoque */}
             <div className="grid grid-cols-2 gap-3 bg-gray-50/80 p-3.5 rounded-xl border border-gray-200/80">
@@ -943,6 +1050,199 @@ export default function EstoqueTab() {
                   className="bg-brand-blue text-white px-8 py-2.5 rounded-lg font-bold hover:opacity-90 transition-opacity"
                 >
                   {formLoading ? "Salvando..." : "Confirmar Entrada"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* MODAL DE VENDA DE VEÍCULO (BAIXA + GERAR PDF) */}
+      {showSaleModal && targetSaleVeiculo && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-gray-150 pb-4">
+              <div>
+                <span className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider block">
+                  📄 Baixa de Estoque & Documentação em PDF
+                </span>
+                <h3 className="text-lg font-extrabold text-slate-900 uppercase mt-0.5">
+                  💰 Vender Veículo: <span className="text-brand-blue">{targetSaleVeiculo.marca} {targetSaleVeiculo.modelo}</span>
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowSaleModal(false)}
+                className="text-gray-400 hover:text-gray-650 text-base font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Banner do Carro */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex justify-between items-center text-xs">
+              <div>
+                <span className="text-gray-400 font-bold block text-[10px] uppercase">Veículo Selecionado</span>
+                <span className="font-extrabold text-slate-900">{targetSaleVeiculo.marca} {targetSaleVeiculo.modelo} ({targetSaleVeiculo.anoFab}/{targetSaleVeiculo.anoMod})</span>
+              </div>
+              <div className="text-right">
+                <span className="text-gray-400 font-bold block text-[10px] uppercase">Placa</span>
+                <span className="font-mono font-extrabold text-brand-blue">{targetSaleVeiculo.placa}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaleSubmit} className="space-y-4 text-xs">
+              {/* Seção 1: Dados do Comprador */}
+              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
+                <h4 className="font-extrabold text-gray-700 uppercase text-[11px] flex items-center gap-1.5">
+                  👤 Dados do Comprador
+                </h4>
+
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">
+                    Nome Completo do Comprador <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: João da Silva Santos"
+                    value={saleForm.buyerName}
+                    onChange={(e) => setSaleForm(prev => ({ ...prev, buyerName: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">CPF / CNPJ</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: 123.456.789-00"
+                      value={saleForm.buyerCpfCnpj}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCpfCnpj: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Telefone / WhatsApp</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: (11) 98765-4321"
+                      value={saleForm.buyerPhone}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerPhone: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Endereço Completo</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Rua das Flores, 123 - São Paulo / SP"
+                    value={saleForm.buyerAddress}
+                    onChange={(e) => setSaleForm(prev => ({ ...prev, buyerAddress: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                  />
+                </div>
+              </div>
+
+              {/* Seção 2: Dados da Venda */}
+              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
+                <h4 className="font-extrabold text-gray-700 uppercase text-[11px] flex items-center gap-1.5">
+                  💵 Condições Financeiras da Venda
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">
+                      Valor Real da Venda (R$) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={saleForm.salePrice}
+                      onChange={(e) => {
+                        const clean = e.target.value.replace(/\D/g, "");
+                        if (!clean) return setSaleForm(prev => ({ ...prev, salePrice: "" }));
+                        const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
+                        setSaleForm(prev => ({ ...prev, salePrice: formatted }));
+                      }}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-emerald-700 font-extrabold text-sm focus:outline-none focus:border-brand-blue"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">
+                      Data da Venda <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={saleForm.saleDate}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, saleDate: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Forma de Pagamento</label>
+                    <select
+                      value={saleForm.paymentMethod}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    >
+                      <option value="À Vista (PIX/Transferência)">À Vista (PIX/Transferência)</option>
+                      <option value="Financiamento Bancário">Financiamento Bancário</option>
+                      <option value="Troca com Troco">Troca com Troco</option>
+                      <option value="Entrada + Financiamento">Entrada + Financiamento</option>
+                      <option value="Cartão de Crédito">Cartão de Crédito</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Vendedor Responsável</label>
+                    <input
+                      type="text"
+                      placeholder="Nome do Vendedor / Consultor"
+                      value={saleForm.sellerName}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, sellerName: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Observações / Termo de Garantia</label>
+                  <textarea
+                    rows="3"
+                    placeholder="Digite observações sobre garantia, entrega, estado do veículo ou prazos de documento..."
+                    value={saleForm.notes}
+                    onChange={(e) => setSaleForm(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-medium focus:outline-none focus:border-brand-blue"
+                  ></textarea>
+                </div>
+              </div>
+
+              {saleError && (
+                <p className="text-red-600 font-semibold bg-red-50 p-3 rounded-lg border border-red-100">{saleError}</p>
+              )}
+
+              <div className="flex gap-4 justify-end pt-4 border-t border-gray-150">
+                <button
+                  type="button"
+                  onClick={() => setShowSaleModal(false)}
+                  className="border border-gray-300 text-gray-650 px-5 py-2.5 rounded-lg font-bold hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={saleLoading}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-2.5 rounded-lg font-extrabold transition-all shadow-md cursor-pointer flex items-center gap-2"
+                >
+                  {saleLoading ? "Registrando Venda..." : "💰 Confirmar Venda & Gerar PDF"}
                 </button>
               </div>
             </form>

@@ -11,40 +11,82 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { veiculoId, clienteId, valorVendaVeiculo, valorRetornoBancario, dataVenda } = body;
+    const {
+      veiculoId,
+      clienteId,
+      buyerName,
+      buyerPhone,
+      buyerCpfCnpj,
+      buyerAddress,
+      valorVendaVeiculo,
+      valorRetornoBancario,
+      dataVenda,
+    } = body;
 
-    // Verificar se o veículo e o cliente existem
+    // Verificar se o veículo existe
     const veiculo = await prisma.veiculo.findUnique({ where: { id: veiculoId } });
     if (!veiculo) {
       return NextResponse.json({ error: "Veículo não encontrado." }, { status: 400 });
     }
     if (veiculo.status === "Vendido") {
-      return NextResponse.json({ error: "Este veículo já foi vendido." }, { status: 400 });
+      return NextResponse.json({ error: "Este veículo já foi registrado como Vendido." }, { status: 400 });
     }
 
-    const cliente = await prisma.clienteCrm.findUnique({ where: { id: clienteId } });
-    if (!cliente) {
-      return NextResponse.json({ error: "Cliente não encontrado." }, { status: 400 });
+    let targetClienteId = clienteId;
+
+    // Se não passou clienteId, cria ou busca um cliente no CRM com base nos dados do comprador
+    if (!targetClienteId && buyerName) {
+      const existingCliente = await prisma.clienteCrm.findFirst({
+        where: {
+          OR: [
+            { nome: { equals: buyerName.trim(), mode: "insensitive" } },
+            ...(buyerPhone ? [{ telefone: buyerPhone.trim() }] : []),
+          ],
+        },
+      });
+
+      if (existingCliente) {
+        targetClienteId = existingCliente.id;
+        await prisma.clienteCrm.update({
+          where: { id: existingCliente.id },
+          data: { statusFunil: "Fechado" },
+        });
+      } else {
+        const newCliente = await prisma.clienteCrm.create({
+          data: {
+            nome: buyerName.trim(),
+            telefone: buyerPhone ? buyerPhone.trim() : "Não informado",
+            veiculoInteresse: `${veiculo.marca} ${veiculo.modelo} (${veiculo.placa})`,
+            statusFunil: "Fechado",
+            historicoNotas: `Venda realizada em ${new Date(dataVenda).toLocaleDateString("pt-BR")}. Endereço: ${buyerAddress || "N/A"}. CPF/CNPJ: ${buyerCpfCnpj || "N/A"}`,
+          },
+        });
+        targetClienteId = newCliente.id;
+      }
+    }
+
+    if (!targetClienteId) {
+      return NextResponse.json({ error: "Informe o nome do comprador para registrar a venda." }, { status: 400 });
     }
 
     // Criar a venda
     const newVenda = await prisma.venda.create({
       data: {
         veiculoId,
-        clienteId,
+        clienteId: targetClienteId,
         valorVendaVeiculo: parseFloat(valorVendaVeiculo),
         valorRetornoBancario: parseFloat(valorRetornoBancario || 0),
         dataVenda: new Date(dataVenda),
       },
     });
 
-    // Atualizar o status do lead no CRM para "Fechado"
-    await prisma.clienteCrm.update({
-      where: { id: clienteId },
-      data: { statusFunil: "Fechado" },
+    // Atualizar o status do veículo no ERP para "Vendido"
+    await prisma.veiculo.update({
+      where: { id: veiculoId },
+      data: { status: "Vendido" },
     });
 
-    // Atualizar o status do carro no catálogo para vendido
+    // Atualizar o status do carro no catálogo do site para "sold"
     await prisma.car.updateMany({
       where: { veiculoId },
       data: { status: "sold" },
