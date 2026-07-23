@@ -692,25 +692,25 @@ export default function AdminPage() {
             
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Login / Usuário</label>
+                <label className="block text-xs font-extrabold text-slate-900 uppercase mb-2">Login / Usuário</label>
                 <input 
                   type="text"
                   placeholder="Ex: admdricar"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue bg-white text-gray-800"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm font-bold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue bg-white text-slate-900 placeholder:text-gray-400"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Senha</label>
+                <label className="block text-xs font-extrabold text-slate-900 uppercase mb-2">Senha</label>
                 <input 
                   type="password"
                   placeholder="Digite sua senha..."
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue bg-white text-gray-800"
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm font-bold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue bg-white text-slate-900 placeholder:text-gray-400"
                   required
                 />
               </div>

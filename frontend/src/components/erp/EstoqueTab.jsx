@@ -1123,12 +1123,12 @@ export default function EstoqueTab() {
             <form onSubmit={handleSaleSubmit} className="space-y-4 text-xs">
               {/* Seção 1: Dados do Comprador */}
               <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
-                <h4 className="font-extrabold text-gray-700 uppercase text-[11px] flex items-center gap-1.5">
+                <h4 className="font-extrabold text-slate-900 uppercase text-[11px] flex items-center gap-1.5">
                   👤 2. Dados do Comprador
                 </h4>
 
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">
+                  <label className="block font-extrabold text-slate-900 uppercase mb-1">
                     Nome Completo do Comprador <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -1136,38 +1136,38 @@ export default function EstoqueTab() {
                     placeholder="Ex: JOACY CARNEIRO DA SILVA"
                     value={saleForm.buyerName}
                     onChange={(e) => setSaleForm(prev => ({ ...prev, buyerName: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">CPF / CNPJ</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">CPF / CNPJ</label>
                     <input
                       type="text"
                       placeholder="Ex: 851.881.827-34"
                       value={saleForm.buyerCpfCnpj}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCpfCnpj: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">RG / Inscrição</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">RG / Inscrição</label>
                     <input
                       type="text"
                       placeholder="Ex: 071418826"
                       value={saleForm.buyerRg}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerRg: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Estado Civil</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Estado Civil</label>
                     <select
                       value={saleForm.buyerEstadoCivil}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerEstadoCivil: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     >
                       <option value="Solteiro(a)">Solteiro(a)</option>
                       <option value="Casado(a)">Casado(a)</option>
@@ -1180,45 +1180,45 @@ export default function EstoqueTab() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Telefone / WhatsApp</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Telefone / WhatsApp</label>
                     <input
                       type="text"
                       placeholder="Ex: (27) 99826-5665"
                       value={saleForm.buyerPhone}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerPhone: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">CEP</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">CEP</label>
                     <input
                       type="text"
                       placeholder="Ex: 29.210-390"
                       value={saleForm.buyerCep}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCep: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-2">
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Endereço Completo</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Endereço Completo</label>
                     <input
                       type="text"
                       placeholder="Ex: Rua Manaus, 10 - Camurugi"
                       value={saleForm.buyerAddress}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerAddress: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Cidade / UF</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Cidade / UF</label>
                     <input
                       type="text"
                       value={saleForm.buyerCidadeUf}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCidadeUf: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -1226,49 +1226,49 @@ export default function EstoqueTab() {
 
               {/* Seção 2: Especificações Adicionais do Veículo */}
               <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
-                <h4 className="font-extrabold text-gray-700 uppercase text-[11px] flex items-center gap-1.5">
+                <h4 className="font-extrabold text-slate-900 uppercase text-[11px] flex items-center gap-1.5">
                   🚗 3. Complemento do Veículo no Contrato
                 </h4>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Combustível</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Combustível</label>
                     <input
                       type="text"
                       placeholder="Ex: FLEX"
                       value={saleForm.combustivel}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, combustivel: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-semibold uppercase"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase placeholder:text-gray-400"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Cor</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Cor</label>
                     <input
                       type="text"
                       placeholder="Ex: VERMELHA"
                       value={saleForm.cor}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, cor: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-semibold uppercase"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase placeholder:text-gray-400"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">KM Atual</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">KM Atual</label>
                     <input
                       type="text"
                       placeholder="Ex: 109.821"
                       value={saleForm.quilometragem}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, quilometragem: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-semibold"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Tipo</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Tipo</label>
                     <input
                       type="text"
                       placeholder="AUTOMÓVEL"
                       value={saleForm.tipoVeiculo}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, tipoVeiculo: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-semibold uppercase"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -1276,13 +1276,13 @@ export default function EstoqueTab() {
 
               {/* Seção 3: Valor e Condições de Pagamento */}
               <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
-                <h4 className="font-extrabold text-gray-700 uppercase text-[11px] flex items-center gap-1.5">
+                <h4 className="font-extrabold text-slate-900 uppercase text-[11px] flex items-center gap-1.5">
                   💵 4. Valor e Condições de Pagamento
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">
                       Valor Total da Venda (R$) <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -1305,72 +1305,72 @@ export default function EstoqueTab() {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">
                       Data da Venda <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
                       value={saleForm.saleDate}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, saleDate: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Valor por Extenso</label>
+                  <label className="block font-extrabold text-slate-900 uppercase mb-1">Valor por Extenso</label>
                   <input
                     type="text"
                     placeholder="Ex: (cinquenta e quatro mil e novecentos reais)"
                     value={saleForm.salePriceExtenso}
                     onChange={(e) => setSaleForm(prev => ({ ...prev, salePriceExtenso: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-800 font-medium"
+                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Entrada em Veículo / Troca (opcional)</label>
+                  <label className="block font-extrabold text-slate-900 uppercase mb-1">Entrada em Veículo / Troca (opcional)</label>
                   <textarea
                     rows="2"
                     placeholder="Ex: GM MONTANA 2012/2013, cor BRANCA, placa ODN4G12, avaliado em R$ 28.000,00."
                     value={saleForm.entryTradeText}
                     onChange={(e) => setSaleForm(prev => ({ ...prev, entryTradeText: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-medium"
+                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
                   ></textarea>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Saldo Financiado / Banco (opcional)</label>
+                  <label className="block font-extrabold text-slate-900 uppercase mb-1">Saldo Financiado / Banco (opcional)</label>
                   <textarea
                     rows="2"
                     placeholder="Ex: R$ 26.900,00 financiados pelo BANCO ITAÚ em 48 parcelas de R$ 948,34."
                     value={saleForm.financedSaldoText}
                     onChange={(e) => setSaleForm(prev => ({ ...prev, financedSaldoText: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-medium"
+                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
                   ></textarea>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Valor dos Seguros (Cláusula 8ª - Financiamento)</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Valor dos Seguros (Cláusula 8ª - Financiamento)</label>
                     <input
                       type="text"
                       placeholder="Ex: R$ 1.817,35"
                       value={saleForm.segurosValue}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, segurosValue: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-medium"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold text-gray-700 uppercase mb-1">Observações de Transferência / Loja</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Observações de Transferência / Loja</label>
                     <input
                       type="text"
                       placeholder="Ex: a transferência do veículo será paga pela loja."
                       value={saleForm.notes}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, notes: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-medium"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
                     />
                   </div>
                 </div>
