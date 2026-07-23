@@ -316,18 +316,77 @@ export default function FinanceiroTab() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-gray-700 uppercase mb-1">Descrição</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Aluguel do Showroom, Energia, Sistema..."
-                  value={formCusto.descricao}
-                  onChange={(e) => setFormCusto(prev => ({ ...prev, descricao: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold placeholder-gray-400 focus:outline-none focus:border-brand-blue"
-                  required
-                />
+            {/* Form Mode Selector (Geral ou Veículo) */}
+            {!formCusto.id && (
+              <div className="flex bg-gray-100 rounded-lg p-1 text-[10px] font-bold border border-gray-200 select-none">
+                <button
+                  type="button"
+                  onClick={() => { setFormMode("geral"); setFormError(""); }}
+                  className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${
+                    formMode === "geral" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400"
+                  }`}
+                >
+                  🏢 Custo Geral
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setFormMode("veiculo"); setFormError(""); }}
+                  className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${
+                    formMode === "veiculo" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400"
+                  }`}
+                >
+                  🚗 Custo por Veículo
+                </button>
               </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+              {formMode === "geral" ? (
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Descrição</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Aluguel do Showroom, Energia, Sistema..."
+                    value={formCusto.descricao}
+                    onChange={(e) => setFormCusto(prev => ({ ...prev, descricao: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold placeholder-gray-400 focus:outline-none focus:border-brand-blue"
+                    required
+                  />
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Veículo (Estoque / Pátio / Vendido)</label>
+                    <select
+                      value={formCusto.veiculoId}
+                      onChange={(e) => setFormCusto(prev => ({ ...prev, veiculoId: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                      required
+                    >
+                      <option value="">Selecione o veículo...</option>
+                      {veiculos.map(v => (
+                        <option key={v.id} value={v.id}>
+                          {v.marca} {v.modelo} - Placa: {v.placa} ({v.status})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Categoria de Custo</label>
+                    <select
+                      value={formCusto.categoriaVeiculo}
+                      onChange={(e) => setFormCusto(prev => ({ ...prev, categoriaVeiculo: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    >
+                      <option value="IPVA">IPVA</option>
+                      <option value="Licenciamento">Licenciamento</option>
+                      <option value="Multas">Multas</option>
+                      <option value="Transferências">Transferências</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+                </>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -342,7 +401,9 @@ export default function FinanceiroTab() {
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Data Vencimento</label>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">
+                    {formMode === "veiculo" ? "Data Despesa" : "Data Vencimento"}
+                  </label>
                   <input
                     type="date"
                     value={formCusto.dataVencimento}
@@ -353,30 +414,32 @@ export default function FinanceiroTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Classificação</label>
-                  <select
-                    value={formCusto.tipo}
-                    onChange={(e) => setFormCusto(prev => ({ ...prev, tipo: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
-                  >
-                    <option value="Fixo">Custo Fixo</option>
-                    <option value="Variável">Custo Variável</option>
-                  </select>
+              {formMode === "geral" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Classificação</label>
+                    <select
+                      value={formCusto.tipo}
+                      onChange={(e) => setFormCusto(prev => ({ ...prev, tipo: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    >
+                      <option value="Fixo">Custo Fixo</option>
+                      <option value="Variável">Custo Variável</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Status Pagamento</label>
+                    <select
+                      value={formCusto.statusPagamento}
+                      onChange={(e) => setFormCusto(prev => ({ ...prev, statusPagamento: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    >
+                      <option value="Pendente">Pendente</option>
+                      <option value="Pago">Pago</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Status Pagamento</label>
-                  <select
-                    value={formCusto.statusPagamento}
-                    onChange={(e) => setFormCusto(prev => ({ ...prev, statusPagamento: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
-                  >
-                    <option value="Pendente">Pendente</option>
-                    <option value="Pago">Pago</option>
-                  </select>
-                </div>
-              </div>
+              )}
 
               {formError && (
                 <p className="text-red-600 font-semibold bg-red-50 p-2.5 rounded-lg">{formError}</p>

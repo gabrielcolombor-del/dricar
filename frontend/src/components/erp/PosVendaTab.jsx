@@ -216,8 +216,6 @@ export default function PosVendaTab() {
               <option value="Mecânica">Mecânica</option>
               <option value="Funilaria">Funilaria</option>
               <option value="Lavagem">Lavagem</option>
-              <option value="IPVA">IPVA</option>
-              <option value="Detalhamento">Detalhamento</option>
               <option value="Outros">Outros</option>
             </select>
           </div>
@@ -368,8 +366,6 @@ export default function PosVendaTab() {
                   <option value="Mecânica">Mecânica</option>
                   <option value="Funilaria">Funilaria</option>
                   <option value="Lavagem">Lavagem</option>
-                  <option value="IPVA">IPVA</option>
-                  <option value="Detalhamento">Detalhamento</option>
                   <option value="Outros">Outros</option>
                 </select>
               </div>
