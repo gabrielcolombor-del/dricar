@@ -15,13 +15,12 @@ export default function EstoqueTab() {
   const [buscaGeral, setBuscaGeral] = useState("");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
-  const [tipoDataFiltro, setTipoDataFiltro] = useState("qualquer");
   const [paginaAtual, setPaginaAtual] = useState(1);
   const ITENS_POR_PAGINA = 15;
 
   useEffect(() => {
     setPaginaAtual(1);
-  }, [filtroStatus, filtroMarca, filtroAno, buscaGeral, dataInicio, dataFim, tipoDataFiltro]);
+  }, [filtroStatus, filtroMarca, filtroAno, buscaGeral, dataInicio, dataFim]);
 
   // Modal Novo Veículo
   const [showModal, setShowModal] = useState(false);
@@ -109,15 +108,9 @@ export default function EstoqueTab() {
         ? new Date(v.vendas[0].dataVenda)
         : null;
 
-      if (tipoDataFiltro === "entrada") {
-        matchData = dtEntrada && (!dInicio || dtEntrada >= dInicio) && (!dFim || dtEntrada <= dFim);
-      } else if (tipoDataFiltro === "saida") {
-        matchData = dtSaida && (!dInicio || dtSaida >= dInicio) && (!dFim || dtSaida <= dFim);
-      } else {
-        const matchEntrada = dtEntrada && (!dInicio || dtEntrada >= dInicio) && (!dFim || dtEntrada <= dFim);
-        const matchSaida = dtSaida && (!dInicio || dtSaida >= dInicio) && (!dFim || dtSaida <= dFim);
-        matchData = matchEntrada || matchSaida;
-      }
+      const matchEntrada = dtEntrada && (!dInicio || dtEntrada >= dInicio) && (!dFim || dtEntrada <= dFim);
+      const matchSaida = dtSaida && (!dInicio || dtSaida >= dInicio) && (!dFim || dtSaida <= dFim);
+      matchData = matchEntrada || matchSaida;
     }
 
     return matchStatus && matchMarca && matchAno && matchBusca && matchData;
@@ -380,16 +373,6 @@ export default function EstoqueTab() {
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
               📅 Período:
             </span>
-
-            <select
-              value={tipoDataFiltro}
-              onChange={(e) => setTipoDataFiltro(e.target.value)}
-              className="border border-gray-300 rounded-lg py-1 px-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
-            >
-              <option value="qualquer">Entrada ou Saída</option>
-              <option value="entrada">Data de Entrada</option>
-              <option value="saida">Data de Saída / Venda</option>
-            </select>
 
             <div className="flex items-center gap-1">
               <span className="text-[10px] text-gray-400 font-medium">De:</span>
