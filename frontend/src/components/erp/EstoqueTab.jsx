@@ -402,10 +402,10 @@ export default function EstoqueTab() {
     const activeCondicoesList = [];
     CONDICOES_OPCOES.forEach((opt) => {
       const item = saleForm.condicoesState?.[opt.id];
-      if (item?.checked && item?.text?.trim()) {
+      if (item?.checked) {
         activeCondicoesList.push({
           label: opt.docLabel,
-          text: item.text.trim(),
+          text: item?.text?.trim() || "",
         });
       }
     });
@@ -510,6 +510,56 @@ export default function EstoqueTab() {
       console.error("Erro ao regenerar contrato:", err);
       alert("Erro ao baixar o contrato do veículo.");
     }
+  };
+
+  // Funcao de teste para preencher formulário com dados aleatórios
+  const fillWithRandomData = () => {
+    const randomNames = ["Carlos Eduardo Souza", "Ana Maria Oliveira", "Roberto Ferreira Lima", "Mariana Barbosa Silva", "Fernanda Santos Rocha"];
+    const randomCpfs = ["123.456.789-00", "987.654.321-11", "456.789.123-22"];
+    const randomRgs = ["12.345.678-9", "98.765.432-1", "45.678.912-3"];
+    const randomStates = ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "União Estável"];
+    const randomPhones = ["(27) 99887-6543", "(27) 98112-3456", "(27) 99776-5432"];
+    const randomRuas = ["Rua das Palmeiras, 150", "Avenida Beira Mar, 400", "Rua Pedro Álvares Cabral, 85"];
+    const randomBairros = ["Centro", "Praia do Morro", "Muquiçaba"];
+    const randomCores = ["PRATA", "PRETA", "BRANCA", "CINZA"];
+
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const priceNum = targetSaleVeiculo?.valorCompra ? Number(targetSaleVeiculo.valorCompra) : 32000;
+    const formattedPrice = "R$ " + priceNum.toLocaleString("pt-BR");
+
+    setSaleForm({
+      buyerName: pick(randomNames),
+      buyerCpfCnpj: pick(randomCpfs),
+      buyerRg: pick(randomRgs),
+      buyerEstadoCivil: pick(randomStates),
+      buyerPhone: pick(randomPhones),
+      buyerRua: pick(randomRuas),
+      buyerBairro: pick(randomBairros),
+      buyerAddress: `${pick(randomRuas)} - ${pick(randomBairros)}`,
+      buyerCidadeUf: "Guarapari / ES",
+      buyerCep: "29200-000",
+      salePrice: formattedPrice,
+      salePriceExtenso: numeroParaExtenso(priceNum),
+      condicoesState: {
+        avista: { checked: true, text: `${formattedPrice} pago via PIX` },
+        entrada: { checked: false, text: "" },
+        saldo: { checked: false, text: "" },
+        cartao: { checked: false, text: "" },
+        promissoria: { checked: false, text: "" },
+        observacoes: { checked: false, text: "" },
+      },
+      entryTradeText: "",
+      financedSaldoText: "",
+      selectedSeguros: ["SEGURO PROTEÇÃO FINANCEIRA", "SEGURO AUTO ASSIST"],
+      outroSeguroNome: "",
+      segurosValue: "R$ 1.817,35",
+      notes: "",
+      saleDate: new Date().toISOString().split("T")[0],
+      combustivel: "FLEX",
+      cor: pick(randomCores),
+      quilometragem: "85.000",
+      tipoVeiculo: "AUTOMÓVEL",
+    });
   };
 
   // Excluir Despesa
@@ -1306,12 +1356,22 @@ export default function EstoqueTab() {
                   💰 Vender Veículo: <span className="text-brand-blue">{targetSaleVeiculo.marca} {targetSaleVeiculo.modelo}</span>
                 </h3>
               </div>
-              <button
-                onClick={() => setShowSaleModal(false)}
-                className="text-gray-400 hover:text-gray-650 text-base font-bold p-1 cursor-pointer"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={fillWithRandomData}
+                  className="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-extrabold text-xs px-3 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
+                  title="Preencher todos os campos com dados aleatórios de teste"
+                >
+                  🎲 Preencher com valores aleatórios
+                </button>
+                <button
+                  onClick={() => setShowSaleModal(false)}
+                  className="text-gray-400 hover:text-gray-650 text-base font-bold p-1 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Banner do Carro */}

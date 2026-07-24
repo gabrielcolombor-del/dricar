@@ -86,7 +86,7 @@ export async function generateSalePdf(saleData) {
   // Build CONDICOES_TEXT
   let activeCondicoes = [];
   if (Array.isArray(condicoesList) && condicoesList.length > 0) {
-    activeCondicoes = condicoesList.filter(c => c.text && c.text.trim());
+    activeCondicoes = condicoesList.filter(Boolean);
   } else {
     if (entryTradeText && entryTradeText.trim()) {
       activeCondicoes.push({ label: "Entrada em veículo:", text: entryTradeText.trim() });
@@ -101,16 +101,34 @@ export async function generateSalePdf(saleData) {
 
   let condicoesText = "";
   if (activeCondicoes.length > 0) {
-    condicoesText = activeCondicoes
+    const formatted = activeCondicoes
       .map((c, index) => {
-        let labelStr = c.label ? c.label.trim() : "";
-        if (labelStr && !labelStr.endsWith(":")) labelStr += ":";
+        if (typeof c === "string") return c.trim();
+        let labelStr = c.label ? String(c.label).trim() : "";
+        let textStr = c.text ? String(c.text).trim() : "";
+
+        if (!textStr && labelStr.endsWith(":")) {
+          labelStr = labelStr.replace(/:$/, "");
+        }
+
         const isLast = index === activeCondicoes.length - 1;
         const sep = isLast ? "." : ";";
-        return `${labelStr} ${c.text.trim()}${sep}`;
+
+        if (labelStr && textStr) {
+          return `${labelStr} ${textStr}${sep}`;
+        } else if (labelStr) {
+          return `${labelStr}${sep}`;
+        } else if (textStr) {
+          return `${textStr}${sep}`;
+        }
+        return "";
       })
-      .join(" ");
-  } else {
+      .filter(Boolean);
+
+    condicoesText = formatted.join(" ");
+  }
+
+  if (!condicoesText || condicoesText.includes("undefined")) {
     condicoesText = "À vista.";
   }
 
