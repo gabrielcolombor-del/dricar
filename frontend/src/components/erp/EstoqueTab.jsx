@@ -391,39 +391,52 @@ export default function EstoqueTab() {
     const valorVendaNum = parseFloat(cleanPrice) || 0;
     const computedAddress = [saleForm.buyerRua, saleForm.buyerBairro].filter(Boolean).join(" - ") || saleForm.buyerAddress || "";
 
+    const finalSegurosList = [...(saleForm.selectedSeguros || []).filter((s) => s !== "OUTROS")];
+    if ((saleForm.selectedSeguros || []).includes("OUTROS") && saleForm.outroSeguroNome?.trim()) {
+      finalSegurosList.push(saleForm.outroSeguroNome.trim().toUpperCase());
+    }
+
+    const activeCondicoesList = [];
+    CONDICOES_OPCOES.forEach((opt) => {
+      const item = saleForm.condicoesState?.[opt.id];
+      if (item?.checked && item?.text?.trim()) {
+        activeCondicoesList.push({
+          label: opt.docLabel,
+          text: item.text.trim(),
+        });
+      }
+    });
+
     try {
       const res = await fetch("/api/admin/erp/vendas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           veiculoId: targetSaleVeiculo.id,
+          valorVendaVeiculo: valorVendaNum,
+          valorRetornoBancario: 0,
+          dataVenda: saleForm.saleDate,
           buyerName: saleForm.buyerName,
           buyerCpfCnpj: saleForm.buyerCpfCnpj,
+          buyerRg: saleForm.buyerRg,
+          buyerEstadoCivil: saleForm.buyerEstadoCivil,
           buyerPhone: saleForm.buyerPhone,
           buyerAddress: computedAddress,
-          valorVendaVeiculo: valorVendaNum,
-          dataVenda: saleForm.saleDate,
+          buyerCidadeUf: saleForm.buyerCidadeUf,
+          buyerCep: saleForm.buyerCep,
+          salePriceExtenso: saleForm.salePriceExtenso,
+          condicoesList: activeCondicoesList,
+          segurosLista: finalSegurosList,
+          segurosValue: saleForm.segurosValue,
+          combustivel: saleForm.combustivel,
+          cor: saleForm.cor,
+          quilometragem: saleForm.quilometragem,
+          tipoVeiculo: saleForm.tipoVeiculo,
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        const finalSegurosList = [...(saleForm.selectedSeguros || []).filter((s) => s !== "OUTROS")];
-        if ((saleForm.selectedSeguros || []).includes("OUTROS") && saleForm.outroSeguroNome?.trim()) {
-          finalSegurosList.push(saleForm.outroSeguroNome.trim().toUpperCase());
-        }
-
-        const activeCondicoesList = [];
-        CONDICOES_OPCOES.forEach((opt) => {
-          const item = saleForm.condicoesState?.[opt.id];
-          if (item?.checked && item?.text?.trim()) {
-            activeCondicoesList.push({
-              label: opt.docLabel,
-              text: item.text.trim(),
-            });
-          }
-        });
-
         // Gerar o documento de Contrato DRI-CAR idêntico ao modelo Word original
         await generateSalePdf({
           veiculo: targetSaleVeiculo,
@@ -457,6 +470,42 @@ export default function EstoqueTab() {
       setSaleError("Erro de comunicação ao registrar venda.");
     } finally {
       setSaleLoading(false);
+    }
+  };
+
+  // Regenerar/Baixar Contrato salvo de venda (Disponível por 3 meses)
+  const handleDownloadContract = async (v, venda) => {
+    if (!venda || !venda.contratoPayload) {
+      alert("Os dados completos do contrato não estão disponíveis para este veículo.");
+      return;
+    }
+
+    try {
+      const payload = venda.contratoPayload;
+      await generateSalePdf({
+        veiculo: v,
+        buyerName: payload.buyerName,
+        buyerCpfCnpj: payload.buyerCpfCnpj,
+        buyerRg: payload.buyerRg,
+        buyerEstadoCivil: payload.buyerEstadoCivil,
+        buyerPhone: payload.buyerPhone,
+        buyerAddress: payload.buyerAddress,
+        buyerCidadeUf: payload.buyerCidadeUf,
+        buyerCep: payload.buyerCep,
+        salePrice: Number(venda.valorVendaVeiculo),
+        salePriceExtenso: payload.salePriceExtenso,
+        condicoesList: payload.condicoesList,
+        segurosLista: payload.segurosLista,
+        segurosValue: payload.segurosValue,
+        saleDate: venda.dataVenda ? String(venda.dataVenda).split("T")[0] : "",
+        combustivel: payload.combustivel,
+        cor: payload.cor,
+        quilometragem: payload.quilometragem,
+        tipoVeiculo: payload.tipoVeiculo,
+      });
+    } catch (err) {
+      console.error("Erro ao regenerar contrato:", err);
+      alert("Erro ao baixar o contrato do veículo.");
     }
   };
 
@@ -765,7 +814,7 @@ export default function EstoqueTab() {
                       </td>
                       <td className="p-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-center items-center gap-1.5">
-                          {v.status !== "Vendido" && (
+                          {v.status !== "Vendido" ? (
                             <button
                               onClick={() => openSaleModal(v)}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-pointer flex items-center gap-1 shadow-xs whitespace-nowrap"
@@ -773,6 +822,36 @@ export default function EstoqueTab() {
                             >
                               💰 Vender
                             </button>
+                          ) : (
+                            (() => {
+                              const venda = v.vendas && v.vendas.length > 0 ? v.vendas[0] : null;
+                              if (!venda || !venda.contratoPayload) return null;
+
+                              const dtVenda = new Date(venda.dataVenda);
+                              const diffDays = (new Date() - dtVenda) / (1000 * 60 * 60 * 24);
+                              const disponivelAte3Meses = diffDays <= 90;
+
+                              if (disponivelAte3Meses) {
+                                return (
+                                  <button
+                                    onClick={() => handleDownloadContract(v, venda)}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-pointer flex items-center gap-1 shadow-xs whitespace-nowrap"
+                                    title="Baixar Contrato (Disponível por 3 meses após a venda)"
+                                  >
+                                    📄 Contrato
+                                  </button>
+                                );
+                              } else {
+                                return (
+                                  <span
+                                    className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-1 rounded border border-gray-200"
+                                    title="O contrato esteve disponível por 3 meses e foi expirado."
+                                  >
+                                    ⏰ Expirado (3m)
+                                  </span>
+                                );
+                              }
+                            })()
                           )}
                           <button
                             onClick={() => startEditVeiculo(v)}

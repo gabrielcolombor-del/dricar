@@ -188,13 +188,17 @@ export async function generateSalePdf(saleData) {
     });
 
     const out = doc.getZip().generate({
-      type: "blob",
+      type: "arraybuffer",
       mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+
+    const blob = new Blob([out], {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     });
 
     const safeName = (buyerName || "Cliente").replace(/[^a-zA-Z0-9]/g, "_");
     const filename = `Contrato_Venda_Dricar_${veiculo?.placa || "Placa"}_${safeName}.docx`;
-    saveAs(out, filename);
+    saveAs(blob, filename);
   } catch (error) {
     console.error("Erro ao preencher contrato modelo Word:", error);
     alert("Ocorreu um erro ao gerar o documento do contrato. Por favor, tente novamente.");

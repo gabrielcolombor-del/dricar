@@ -26,7 +26,8 @@ xml = xml.replace(/\(cinquenta e quatro mil e novecentos reais\)/g, "{VALOR_EXTE
 // Substituir o bloco de parágrafos de Entrada, Saldo e Observações por {@CONDICOES_XML}
 const idxEntrada = xml.indexOf("Entrada em veículo");
 if (idxEntrada !== -1) {
-  const idxStart = xml.lastIndexOf("<w:p", idxEntrada);
+  let idxStart = xml.lastIndexOf("<w:p ", idxEntrada);
+  if (idxStart === -1) idxStart = xml.lastIndexOf("<w:p>", idxEntrada);
   const idxObs = xml.indexOf("Observação:", idxEntrada);
   const idxEnd = xml.indexOf("</w:p>", idxObs) + 6;
   if (idxStart !== -1 && idxObs !== -1 && idxEnd > idxStart) {

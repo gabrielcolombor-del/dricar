@@ -17,11 +17,42 @@ export async function POST(request) {
       buyerName,
       buyerPhone,
       buyerCpfCnpj,
+      buyerRg,
+      buyerEstadoCivil,
       buyerAddress,
+      buyerCidadeUf,
+      buyerCep,
+      salePriceExtenso,
+      condicoesList,
+      segurosLista,
+      segurosValue,
+      combustivel,
+      cor,
+      quilometragem,
+      tipoVeiculo,
       valorVendaVeiculo,
       valorRetornoBancario,
       dataVenda,
     } = body;
+
+    const contratoPayload = {
+      buyerName,
+      buyerCpfCnpj,
+      buyerRg,
+      buyerEstadoCivil,
+      buyerPhone,
+      buyerAddress,
+      buyerCidadeUf,
+      buyerCep,
+      salePriceExtenso,
+      condicoesList,
+      segurosLista,
+      segurosValue,
+      combustivel,
+      cor,
+      quilometragem,
+      tipoVeiculo,
+    };
 
     // Verificar se o veículo existe
     const veiculo = await prisma.veiculo.findUnique({ where: { id: veiculoId } });
@@ -93,6 +124,7 @@ export async function POST(request) {
         valorVendaVeiculo: parseFloat(valorVendaVeiculo),
         valorRetornoBancario: parseFloat(valorRetornoBancario || 0),
         dataVenda: new Date(dataVenda),
+        contratoPayload,
       },
     });
 

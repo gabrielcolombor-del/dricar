@@ -111,6 +111,7 @@ model Venda {
   valorVendaVeiculo    Decimal    @map("valor_venda_veiculo") @db.Decimal(12, 2)
   valorRetornoBancario Decimal    @map("valor_retorno_bancario") @db.Decimal(12, 2)
   dataVenda            DateTime   @map("data_venda") @db.Date
+  contratoPayload      Json?      @map("contrato_payload")
 
   @@map("vendas")
 }
