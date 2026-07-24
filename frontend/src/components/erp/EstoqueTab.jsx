@@ -3,6 +3,25 @@
 import { useState, useEffect } from "react";
 import { generateSalePdf, numeroParaExtenso } from "@/lib/generateSalePdf";
 
+const SEGURO_OPTIONS = [
+  "SEGURO PROTEÇÃO FINANCEIRA",
+  "SEGURO AUTO ASSIST",
+  "SEGURO AUTO RCF",
+  "SEGURO MÃO NA RODA",
+  "SEGURO ACIDENTES PESSOAIS PREMIADO",
+  "SEGURO AUTO CASCO",
+  "SEGURO TOTAL",
+  "OUTROS",
+];
+
+const CONDICOES_OPCOES = [
+  { id: "entrada", label: "ENTRADA EM VEÍCULO", docLabel: "Entrada em veículo:" },
+  { id: "saldo", label: "SALDO FINANCIADO", docLabel: "Saldo financiado:" },
+  { id: "cartao", label: "VALOR PAGO ATRAVÉS DE CARTÃO DE CRÉDITO", docLabel: "Valor pago através de cartão de crédito:" },
+  { id: "promissoria", label: "VALOR PAGO ATRAVÉS DE NOTA PROMISSÓRIA", docLabel: "Valor pago através de nota promissória:" },
+  { id: "observacoes", label: "OBSERVAÇÕES", docLabel: "Observação:" },
+];
+
 export default function EstoqueTab() {
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,20 +73,31 @@ export default function EstoqueTab() {
     buyerRg: "",
     buyerEstadoCivil: "Solteiro(a)",
     buyerPhone: "",
+    buyerRua: "",
+    buyerBairro: "",
     buyerAddress: "",
-    buyerCidadeUf: "Guarapari / ES",
+    buyerCidadeUf: "",
     buyerCep: "",
     salePrice: "",
     salePriceExtenso: "",
+    condicoesState: {
+      entrada: { checked: false, text: "" },
+      saldo: { checked: false, text: "" },
+      cartao: { checked: false, text: "" },
+      promissoria: { checked: false, text: "" },
+      observacoes: { checked: false, text: "" },
+    },
     entryTradeText: "",
     financedSaldoText: "",
+    selectedSeguros: [],
+    outroSeguroNome: "",
     segurosValue: "",
-    notes: "a transferência do veículo será paga pela loja.",
+    notes: "",
     saleDate: new Date().toISOString().split("T")[0],
-    combustivel: "FLEX",
+    combustivel: "",
     cor: "",
     quilometragem: "",
-    tipoVeiculo: "AUTOMÓVEL",
+    tipoVeiculo: "",
   });
 
   // Modal/Form Lançamento Despesa
@@ -279,21 +309,26 @@ export default function EstoqueTab() {
 
   // Buscar Endereço Automático via ViaCEP
   const handleCepChange = async (cepVal) => {
-    setSaleForm(prev => ({ ...prev, buyerCep: cepVal }));
-    const clean = cepVal.replace(/\D/g, "");
+    const clean = cepVal.replace(/\D/g, "").slice(0, 8);
+    let formattedCep = cepVal;
+    if (clean.length > 5) {
+      formattedCep = `${clean.slice(0, 5)}-${clean.slice(5)}`;
+    } else {
+      formattedCep = clean;
+    }
+
+    setSaleForm(prev => ({ ...prev, buyerCep: formattedCep }));
+
     if (clean.length === 8) {
       setCepLoading(true);
       try {
         const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
         const data = await res.json();
         if (!data.erro) {
-          let addressText = "";
-          if (data.logradouro) addressText += data.logradouro;
-          if (data.bairro) addressText += (addressText ? `, ${data.bairro}` : data.bairro);
-
           setSaleForm(prev => ({
             ...prev,
-            buyerAddress: addressText || prev.buyerAddress,
+            buyerRua: data.logradouro || prev.buyerRua,
+            buyerBairro: data.bairro || prev.buyerBairro,
             buyerCidadeUf: data.localidade && data.uf ? `${data.localidade} / ${data.uf}` : prev.buyerCidadeUf,
           }));
         }
@@ -315,20 +350,31 @@ export default function EstoqueTab() {
       buyerRg: "",
       buyerEstadoCivil: "Solteiro(a)",
       buyerPhone: "",
+      buyerRua: "",
+      buyerBairro: "",
       buyerAddress: "",
-      buyerCidadeUf: "Guarapari / ES",
+      buyerCidadeUf: "",
       buyerCep: "",
       salePrice: "R$ " + priceNum.toLocaleString("pt-BR"),
       salePriceExtenso: numeroParaExtenso(priceNum),
+      condicoesState: {
+        entrada: { checked: false, text: "" },
+        saldo: { checked: false, text: "" },
+        cartao: { checked: false, text: "" },
+        promissoria: { checked: false, text: "" },
+        observacoes: { checked: false, text: "" },
+      },
       entryTradeText: "",
       financedSaldoText: "",
+      selectedSeguros: [],
+      outroSeguroNome: "",
       segurosValue: "",
-      notes: "a transferência do veículo será paga pela loja.",
+      notes: "",
       saleDate: new Date().toISOString().split("T")[0],
-      combustivel: "FLEX",
+      combustivel: "",
       cor: "",
       quilometragem: "",
-      tipoVeiculo: "AUTOMÓVEL",
+      tipoVeiculo: "",
     });
     setSaleError("");
     setShowSaleModal(true);
@@ -343,6 +389,7 @@ export default function EstoqueTab() {
 
     const cleanPrice = saleForm.salePrice.replace(/\D/g, "");
     const valorVendaNum = parseFloat(cleanPrice) || 0;
+    const computedAddress = [saleForm.buyerRua, saleForm.buyerBairro].filter(Boolean).join(" - ") || saleForm.buyerAddress || "";
 
     try {
       const res = await fetch("/api/admin/erp/vendas", {
@@ -353,7 +400,7 @@ export default function EstoqueTab() {
           buyerName: saleForm.buyerName,
           buyerCpfCnpj: saleForm.buyerCpfCnpj,
           buyerPhone: saleForm.buyerPhone,
-          buyerAddress: saleForm.buyerAddress,
+          buyerAddress: computedAddress,
           valorVendaVeiculo: valorVendaNum,
           dataVenda: saleForm.saleDate,
         }),
@@ -361,6 +408,22 @@ export default function EstoqueTab() {
 
       const data = await res.json();
       if (res.ok) {
+        const finalSegurosList = [...(saleForm.selectedSeguros || []).filter((s) => s !== "OUTROS")];
+        if ((saleForm.selectedSeguros || []).includes("OUTROS") && saleForm.outroSeguroNome?.trim()) {
+          finalSegurosList.push(saleForm.outroSeguroNome.trim().toUpperCase());
+        }
+
+        const activeCondicoesList = [];
+        CONDICOES_OPCOES.forEach((opt) => {
+          const item = saleForm.condicoesState?.[opt.id];
+          if (item?.checked && item?.text?.trim()) {
+            activeCondicoesList.push({
+              label: opt.docLabel,
+              text: item.text.trim(),
+            });
+          }
+        });
+
         // Gerar o documento de Contrato DRI-CAR idêntico ao modelo Word original
         await generateSalePdf({
           veiculo: targetSaleVeiculo,
@@ -369,13 +432,13 @@ export default function EstoqueTab() {
           buyerRg: saleForm.buyerRg,
           buyerEstadoCivil: saleForm.buyerEstadoCivil,
           buyerPhone: saleForm.buyerPhone,
-          buyerAddress: saleForm.buyerAddress,
+          buyerAddress: computedAddress,
           buyerCidadeUf: saleForm.buyerCidadeUf,
           buyerCep: saleForm.buyerCep,
           salePrice: valorVendaNum,
           salePriceExtenso: saleForm.salePriceExtenso,
-          entryTradeText: saleForm.entryTradeText,
-          financedSaldoText: saleForm.financedSaldoText,
+          condicoesList: activeCondicoesList,
+          segurosLista: finalSegurosList,
           segurosValue: saleForm.segurosValue,
           notes: saleForm.notes,
           saleDate: saleForm.saleDate,
@@ -434,6 +497,37 @@ export default function EstoqueTab() {
     });
     setFormError("");
     setShowModal(true);
+  };
+
+  const handleStatusChange = async (veiculo, newStatus) => {
+    if (veiculo.status === newStatus) return;
+
+    if (veiculo.status === "Vendido" && newStatus !== "Vendido") {
+      if (!confirm(`Alterar o status de 'Vendido' para '${newStatus}' irá REVERTER a venda e remover o registro financeiro deste veículo. Deseja continuar?`)) {
+        return;
+      }
+    }
+
+    try {
+      const res = await fetch("/api/admin/erp/veiculos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updateStatus",
+          id: veiculo.id,
+          status: newStatus,
+        }),
+      });
+
+      if (res.ok) {
+        fetchVeiculos();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Erro ao atualizar status.");
+      }
+    } catch (err) {
+      alert("Erro ao conectar com o servidor.");
+    }
   };
 
   const calcularTotalDespesas = (veiculo) => {
@@ -636,22 +730,31 @@ export default function EstoqueTab() {
                           <div className="text-gray-400 font-medium text-[10px] mt-0.5">📦 Em Pátio</div>
                         )}
                       </td>
-                      <td className="p-4 text-xs">
-                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                          v.status === "Disponível" 
-                            ? "bg-green-100 text-green-800" 
-                            : v.status === "Vendido" 
-                              ? "bg-blue-100 text-blue-800" 
-                              : v.status === "Em processo de Transf."
-                                ? "bg-purple-100 text-purple-800"
-                                : v.status === "Transferido"
-                                  ? "bg-teal-100 text-teal-800"
-                                  : v.status === "Transferência em aberto"
-                                    ? "bg-rose-100 text-rose-800"
-                                    : "bg-amber-100 text-amber-800"
-                        }`}>
-                          {v.status}
-                        </span>
+                      <td className="p-4 text-xs" onClick={(e) => e.stopPropagation()}>
+                        <select
+                          value={v.status}
+                          onChange={(e) => handleStatusChange(v, e.target.value)}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase border cursor-pointer focus:outline-none transition-all ${
+                            v.status === "Disponível" 
+                              ? "bg-green-50 text-green-800 border-green-300 hover:bg-green-100" 
+                              : v.status === "Vendido" 
+                                ? "bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100" 
+                                : v.status === "Em processo de Transf."
+                                  ? "bg-purple-50 text-purple-800 border-purple-300 hover:bg-purple-100"
+                                  : v.status === "Transferido"
+                                    ? "bg-teal-50 text-teal-800 border-teal-300 hover:bg-teal-100"
+                                    : v.status === "Transferência em aberto"
+                                      ? "bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100"
+                                      : "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
+                          }`}
+                        >
+                          <option value="Disponível">Disponível</option>
+                          <option value="Vendido">Vendido</option>
+                          <option value="Em Preparação">Em Preparação</option>
+                          <option value="Em processo de Transf.">Em processo de Transf.</option>
+                          <option value="Transferido">Transferido</option>
+                          <option value="Transferência em aberto">Transferência em aberto</option>
+                        </select>
                       </td>
                       <td className="p-4 text-xs">
                         {v.documentoPendente ? (
@@ -963,10 +1066,9 @@ export default function EstoqueTab() {
                     <label className="block font-bold text-gray-700 uppercase mb-1">Placa</label>
                     <input
                       type="text"
-                      placeholder="Ex: ABC-1234"
                       value={formVeiculo.placa}
                       onChange={(e) => handlePlacaChange(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold uppercase font-mono text-xs focus:border-brand-blue placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold uppercase font-mono text-xs focus:border-brand-blue"
                       required
                       disabled={!!formVeiculo.id}
                     />
@@ -975,20 +1077,18 @@ export default function EstoqueTab() {
                     <label className="block font-bold text-gray-700 uppercase mb-1">Renavam</label>
                     <input
                       type="text"
-                      placeholder="Número Renavam..."
                       value={formVeiculo.renavam}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, renavam: e.target.value.replace(/\D/g, "") }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold font-mono text-xs focus:border-brand-blue placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold font-mono text-xs focus:border-brand-blue"
                     />
                   </div>
                   <div>
                     <label className="block font-bold text-gray-700 uppercase mb-1">Chassi</label>
                     <input
                       type="text"
-                      placeholder="Número do Chassi..."
                       value={formVeiculo.chassi}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, chassi: e.target.value.toUpperCase().trim() }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold font-mono text-xs focus:border-brand-blue placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold font-mono text-xs focus:border-brand-blue"
                     />
                   </div>
                 </div>
@@ -998,10 +1098,9 @@ export default function EstoqueTab() {
                     <label className="block font-bold text-gray-700 uppercase mb-1">Marca</label>
                     <input
                       type="text"
-                      placeholder="Ex: Chevrolet"
                       value={formVeiculo.marca}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, marca: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue"
                       required
                     />
                   </div>
@@ -1009,10 +1108,9 @@ export default function EstoqueTab() {
                     <label className="block font-bold text-gray-700 uppercase mb-1">Modelo</label>
                     <input
                       type="text"
-                      placeholder="Ex: Onix"
                       value={formVeiculo.modelo}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, modelo: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue"
                       required
                     />
                   </div>
@@ -1020,10 +1118,9 @@ export default function EstoqueTab() {
                     <label className="block font-bold text-gray-700 uppercase mb-1">Ano Fab.</label>
                     <input
                       type="number"
-                      placeholder="Ex: 2019"
                       value={formVeiculo.anoFab}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, anoFab: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue"
                       required
                     />
                   </div>
@@ -1031,10 +1128,9 @@ export default function EstoqueTab() {
                     <label className="block font-bold text-gray-700 uppercase mb-1">Ano Mod.</label>
                     <input
                       type="number"
-                      placeholder="Ex: 2020"
                       value={formVeiculo.anoMod}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, anoMod: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue"
                       required
                     />
                   </div>
@@ -1045,10 +1141,9 @@ export default function EstoqueTab() {
                     <label className="block font-bold text-gray-700 uppercase mb-1">Valor de Compra (R$)</label>
                     <input
                       type="text"
-                      placeholder="R$ 0"
                       value={formVeiculo.valorCompra}
                       onChange={(e) => handlePriceChange(e.target.value, "valorCompra")}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:border-brand-blue placeholder-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:border-brand-blue"
                       required
                     />
                   </div>
@@ -1070,6 +1165,7 @@ export default function EstoqueTab() {
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:border-brand-blue"
                     >
                       <option value="Disponível">Disponível</option>
+                      <option value="Vendido">Vendido</option>
                       <option value="Em Preparação">Em Preparação</option>
                       <option value="Em processo de Transf.">Em processo de Transf.</option>
                       <option value="Transferido">Transferido</option>
@@ -1161,10 +1257,9 @@ export default function EstoqueTab() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Ex: João da Silva Santos"
                     value={saleForm.buyerName}
                     onChange={(e) => setSaleForm(prev => ({ ...prev, buyerName: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     required
                   />
                 </div>
@@ -1174,20 +1269,18 @@ export default function EstoqueTab() {
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">CPF / CNPJ</label>
                     <input
                       type="text"
-                      placeholder="Ex: 123.456.789-00"
                       value={saleForm.buyerCpfCnpj}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCpfCnpj: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     />
                   </div>
                   <div>
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">RG / Inscrição</label>
                     <input
                       type="text"
-                      placeholder="Ex: 12.345.678-9"
                       value={saleForm.buyerRg}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerRg: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     />
                   </div>
                   <div>
@@ -1211,10 +1304,9 @@ export default function EstoqueTab() {
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">Telefone / WhatsApp</label>
                     <input
                       type="text"
-                      placeholder="Ex: (27) 99999-8888"
                       value={saleForm.buyerPhone}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerPhone: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     />
                   </div>
                   <div>
@@ -1224,23 +1316,30 @@ export default function EstoqueTab() {
                     </label>
                     <input
                       type="text"
-                      placeholder="Ex: 29230-000"
                       value={saleForm.buyerCep}
                       onChange={(e) => handleCepChange(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="sm:col-span-2">
-                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Endereço Completo</label>
+                  <div>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Rua / Logradouro</label>
                     <input
                       type="text"
-                      placeholder="Ex: Rua das Flores, 123 - Centro"
-                      value={saleForm.buyerAddress}
-                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerAddress: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
+                      value={saleForm.buyerRua || ""}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerRua: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Bairro</label>
+                    <input
+                      type="text"
+                      value={saleForm.buyerBairro || ""}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerBairro: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     />
                   </div>
                   <div>
@@ -1249,7 +1348,7 @@ export default function EstoqueTab() {
                       type="text"
                       value={saleForm.buyerCidadeUf}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerCidadeUf: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     />
                   </div>
                 </div>
@@ -1266,40 +1365,36 @@ export default function EstoqueTab() {
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">Combustível</label>
                     <input
                       type="text"
-                      placeholder="Ex: FLEX"
                       value={saleForm.combustivel}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, combustivel: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase"
                     />
                   </div>
                   <div>
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">Cor</label>
                     <input
                       type="text"
-                      placeholder="Ex: VERMELHA"
                       value={saleForm.cor}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, cor: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase"
                     />
                   </div>
                   <div>
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">KM Atual</label>
                     <input
                       type="text"
-                      placeholder="Ex: 109.821"
                       value={saleForm.quilometragem}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, quilometragem: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold"
                     />
                   </div>
                   <div>
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">Tipo</label>
                     <input
                       type="text"
-                      placeholder="AUTOMÓVEL"
                       value={saleForm.tipoVeiculo}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, tipoVeiculo: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase"
                     />
                   </div>
                 </div>
@@ -1353,55 +1448,149 @@ export default function EstoqueTab() {
                   <label className="block font-extrabold text-slate-900 uppercase mb-1">Valor por Extenso</label>
                   <input
                     type="text"
-                    placeholder="Ex: (cinquenta e quatro mil e novecentos reais)"
                     value={saleForm.salePriceExtenso}
                     onChange={(e) => setSaleForm(prev => ({ ...prev, salePriceExtenso: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
+                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold"
                   />
                 </div>
 
-                <div>
-                  <label className="block font-extrabold text-slate-900 uppercase mb-1">Entrada em Veículo / Troca (opcional)</label>
-                  <textarea
-                    rows="2"
-                    placeholder="Ex: GM MONTANA 2012/2013, cor BRANCA, placa ODN4G12, avaliado em R$ 28.000,00."
-                    value={saleForm.entryTradeText}
-                    onChange={(e) => setSaleForm(prev => ({ ...prev, entryTradeText: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
-                  ></textarea>
+                {/* Condições de Pagamento */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                  <label className="block font-black text-slate-900 uppercase text-xs tracking-wide">
+                    Condições de Pagamento
+                  </label>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Marque as condições aplicáveis a esta venda e preencha os detalhes:
+                  </p>
+
+                  <div className="space-y-2.5">
+                    {CONDICOES_OPCOES.map((opt) => {
+                      const state = saleForm.condicoesState?.[opt.id] || { checked: false, text: "" };
+                      return (
+                        <div key={opt.id} className="space-y-1.5">
+                          <label
+                            className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs font-bold cursor-pointer transition-all ${
+                              state.checked
+                                ? "border-blue-600 bg-blue-50/80 text-blue-950 shadow-sm"
+                                : "border-gray-200 bg-white text-slate-700 hover:border-gray-300 hover:bg-slate-100/60"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={state.checked}
+                              onChange={() => {
+                                setSaleForm((prev) => ({
+                                  ...prev,
+                                  condicoesState: {
+                                    ...prev.condicoesState,
+                                    [opt.id]: {
+                                      ...prev.condicoesState?.[opt.id],
+                                      checked: !state.checked,
+                                    },
+                                  },
+                                }));
+                              }}
+                              className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                            />
+                            <span>{opt.label}</span>
+                          </label>
+
+                          {state.checked && (
+                            <div className="pl-6">
+                              <input
+                                type="text"
+                                value={state.text || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setSaleForm((prev) => ({
+                                    ...prev,
+                                    condicoesState: {
+                                      ...prev.condicoesState,
+                                      [opt.id]: {
+                                        ...prev.condicoesState?.[opt.id],
+                                        text: val,
+                                      },
+                                    },
+                                  }));
+                                }}
+                                className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block font-extrabold text-slate-900 uppercase mb-1">Saldo Financiado / Banco (opcional)</label>
-                  <textarea
-                    rows="2"
-                    placeholder="Ex: R$ 26.900,00 financiados pelo BANCO ITAÚ em 48 parcelas de R$ 948,34."
-                    value={saleForm.financedSaldoText}
-                    onChange={(e) => setSaleForm(prev => ({ ...prev, financedSaldoText: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
-                  ></textarea>
-                </div>
+                {/* Seguros Vinculados */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                  <label className="block font-black text-slate-900 uppercase text-xs tracking-wide">
+                    Seguros Vinculados (Cláusula 8ª - Financiamento)
+                  </label>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Marque as opções de seguro contratadas:
+                  </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Valor dos Seguros (Cláusula 8ª - Financiamento)</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: R$ 1.817,35"
-                      value={saleForm.segurosValue}
-                      onChange={(e) => setSaleForm(prev => ({ ...prev, segurosValue: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {SEGURO_OPTIONS.map((seguro) => {
+                      const isChecked = (saleForm.selectedSeguros || []).includes(seguro);
+                      return (
+                        <label
+                          key={seguro}
+                          className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs font-bold cursor-pointer transition-all ${
+                            isChecked
+                              ? "border-blue-600 bg-blue-50/80 text-blue-950 shadow-sm"
+                              : "border-gray-200 bg-white text-slate-700 hover:border-gray-300 hover:bg-slate-100/60"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {
+                              setSaleForm((prev) => {
+                                const current = prev.selectedSeguros || [];
+                                const updated = current.includes(seguro)
+                                  ? current.filter((s) => s !== seguro)
+                                  : [...current, seguro];
+                                return { ...prev, selectedSeguros: updated };
+                              });
+                            }}
+                            className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                          />
+                          <span>{seguro}</span>
+                        </label>
+                      );
+                    })}
                   </div>
 
-                  <div>
-                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Observações de Transferência / Loja</label>
+                  {(saleForm.selectedSeguros || []).includes("OUTROS") && (
+                    <div className="pt-1">
+                      <label className="block font-extrabold text-xs text-slate-800 uppercase mb-1">
+                        Nome do Seguro (Outros)
+                      </label>
+                      <input
+                        type="text"
+                        value={saleForm.outroSeguroNome || ""}
+                        onChange={(e) =>
+                          setSaleForm((prev) => ({ ...prev, outroSeguroNome: e.target.value }))
+                        }
+                        className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  )}
+
+                  <div className="pt-2">
+                    <label className="block font-extrabold text-slate-900 uppercase text-xs mb-1">
+                      Valor dos Seguros (R$)
+                    </label>
                     <input
                       type="text"
-                      placeholder="Ex: a transferência do veículo será paga pela loja."
-                      value={saleForm.notes}
-                      onChange={(e) => setSaleForm(prev => ({ ...prev, notes: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold placeholder:text-gray-400"
+                      value={saleForm.segurosValue || ""}
+                      onChange={(e) =>
+                        setSaleForm((prev) => ({ ...prev, segurosValue: e.target.value }))
+                      }
+                      className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold"
                     />
                   </div>
                 </div>

@@ -52,6 +52,7 @@ export default function AdminPage() {
   });
 
   // Estado para cadastro/edição
+  const [paginaCatalogo, setPaginaCatalogo] = useState(1);
   const [editingCar, setEditingCar] = useState(null);
   const [formCar, setFormCar] = useState({
     title: "",
@@ -869,93 +870,135 @@ export default function AdminPage() {
         {activeTab === "erp_financeiro" && (isAdmin || user?.role?.toLowerCase() === "manager") && <FinanceiroTab />}
 
         {/* TAB 1: ESTOQUE ATIVO */}
-        {activeTab === "estoque" && (
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">ID</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">Veículo</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">Ano</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">KM</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">Categoria</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase">Preço</th>
-                    <th className="p-4 text-xs font-bold text-gray-500 uppercase text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 text-gray-800">
-                  {activeCars.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="p-8 text-center text-gray-400 text-sm">Nenhum veículo ativo em estoque.</td>
+        {activeTab === "estoque" && (() => {
+          const ITENS_POR_PAGINA_CATALOGO = 15;
+          const totalPaginasCatalogo = Math.ceil(activeCars.length / ITENS_POR_PAGINA_CATALOGO) || 1;
+          const inicioIndexCatalogo = (paginaCatalogo - 1) * ITENS_POR_PAGINA_CATALOGO;
+          const activeCarsPaginados = activeCars.slice(inicioIndexCatalogo, inicioIndexCatalogo + ITENS_POR_PAGINA_CATALOGO);
+
+          return (
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase">ID</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase">Veículo</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase">Ano</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase">KM</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase">Categoria</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase">Preço</th>
+                      <th className="p-4 text-xs font-bold text-gray-500 uppercase text-center">Ações</th>
                     </tr>
-                  ) : (
-                    activeCars.map((car) => (
-                      <tr key={car.id} className="hover:bg-gray-50/50">
-                        <td className="p-4 text-sm font-bold text-gray-600">{car.id.substring(0, 8)}...</td>
-                        <td className="p-4">
-                          <div className="font-bold text-brand-blue text-sm flex items-center gap-3">
-                            {car.imageUrl && (
-                              <img src={car.imageUrl} alt="" className="w-10 h-8 rounded object-cover bg-gray-100" />
-                            )}
-                            {car.title}
-                          </div>
-                          <div className="text-gray-400 text-xs">{car.subtitle}</div>
-                          {(!car.images || car.images.length === 0) && (
-                            <span className="inline-flex mt-1 items-center gap-1 bg-amber-50 text-amber-700 border border-amber-250 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">
-                              ⚠️ Pendente de Fotos (Fora do site)
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-4 text-sm text-gray-600">{car.year}</td>
-                        <td className="p-4 text-sm text-gray-600">{car.mileage}</td>
-                        <td className="p-4 text-sm"><span className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md font-medium">{car.category}</span></td>
-                        <td className="p-4 text-sm font-bold text-brand-blue">
-                          {car.isOffer && car.promoPrice ? (
-                            <div className="flex flex-col">
-                              <span className="text-[10px] text-gray-400 line-through font-normal">{car.price}</span>
-                              <span className="text-green-600">{car.promoPrice}</span>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 text-gray-800">
+                    {activeCars.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="p-8 text-center text-gray-400 text-sm">Nenhum veículo ativo em estoque.</td>
+                      </tr>
+                    ) : (
+                      activeCarsPaginados.map((car) => (
+                        <tr key={car.id} className="hover:bg-gray-50/50">
+                          <td className="p-4 text-sm font-bold text-gray-600">{car.id.substring(0, 8)}...</td>
+                          <td className="p-4">
+                            <div className="font-bold text-brand-blue text-sm flex items-center gap-3">
+                              {car.imageUrl && (
+                                <img src={car.imageUrl} alt="" className="w-10 h-8 rounded object-cover bg-gray-100" />
+                              )}
+                              {car.title}
                             </div>
-                          ) : (
-                            car.price
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <div className="flex flex-col items-center gap-1.5">
+                            <div className="text-gray-400 text-xs">{car.subtitle}</div>
                             {(!car.images || car.images.length === 0) && (
-                              <span className="text-[9px] text-amber-650 font-extrabold text-center uppercase tracking-wider max-w-[150px] bg-amber-50/50 px-2 py-1 rounded border border-amber-200 animate-pulse">
-                                📸 Tirar fotos e inserir dados do anúncio
+                              <span className="inline-flex mt-1 items-center gap-1 bg-amber-50 text-amber-700 border border-amber-250 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">
+                                ⚠️ Pendente de Fotos (Fora do site)
                               </span>
                             )}
-                            <div className="flex justify-center items-center gap-3">
-                              {!isVendedor && (
-                                <button 
-                                  onClick={() => startEditCar(car)}
-                                  className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                                >
-                                  Editar
-                                </button>
+                          </td>
+                          <td className="p-4 text-sm text-gray-600">{car.year}</td>
+                          <td className="p-4 text-sm text-gray-600">{car.mileage}</td>
+                          <td className="p-4 text-sm"><span className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md font-medium">{car.category}</span></td>
+                          <td className="p-4 text-sm font-bold text-brand-blue">
+                            {car.isOffer && car.promoPrice ? (
+                              <div className="flex flex-col">
+                                <span className="text-[10px] text-gray-400 line-through font-normal">{car.price}</span>
+                                <span className="text-green-600">{car.promoPrice}</span>
+                              </div>
+                            ) : (
+                              car.price
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex flex-col items-center gap-1.5">
+                              {(!car.images || car.images.length === 0) && (
+                                <span className="text-[9px] text-amber-650 font-extrabold text-center uppercase tracking-wider max-w-[150px] bg-amber-50/50 px-2 py-1 rounded border border-amber-200 animate-pulse">
+                                  📸 Tirar fotos e inserir dados do anúncio
+                                </span>
                               )}
-                              
-                              {isAdmin && (
-                                <button 
-                                  onClick={() => handleDeleteCar(car.id)}
-                                  className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                                >
-                                  Excluir
-                                </button>
-                              )}
+                              <div className="flex justify-center items-center gap-3">
+                                {!isVendedor && (
+                                  <button 
+                                    onClick={() => startEditCar(car)}
+                                    className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                  >
+                                    Editar
+                                  </button>
+                                )}
+                                
+                                {isAdmin && (
+                                  <button 
+                                    onClick={() => handleDeleteCar(car.id)}
+                                    className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                  >
+                                    Excluir
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Controles de Paginação */}
+              {activeCars.length > 0 && (
+                <div className="bg-gray-50 border-t border-gray-200 px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                  <div className="text-gray-500 font-medium text-center sm:text-left">
+                    Exibindo <span className="font-bold text-gray-800">{inicioIndexCatalogo + 1}</span> a{" "}
+                    <span className="font-bold text-gray-800">
+                      {Math.min(inicioIndexCatalogo + ITENS_POR_PAGINA_CATALOGO, activeCars.length)}
+                    </span>{" "}
+                    de <span className="font-bold text-gray-800">{activeCars.length}</span> veículos no catálogo ativo
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      disabled={paginaCatalogo === 1}
+                      onClick={() => setPaginaCatalogo((prev) => Math.max(prev - 1, 1))}
+                      className="px-3 py-1.5 rounded-lg border border-gray-300 font-bold bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                    >
+                      ◀ Anterior
+                    </button>
+
+                    <span className="px-3 py-1 font-bold text-gray-600 bg-white border border-gray-200 rounded-lg">
+                      Página {paginaCatalogo} de {totalPaginasCatalogo}
+                    </span>
+
+                    <button
+                      disabled={paginaCatalogo >= totalPaginasCatalogo}
+                      onClick={() => setPaginaCatalogo((prev) => Math.min(prev + 1, totalPaginasCatalogo))}
+                      className="px-3 py-1.5 rounded-lg border border-gray-300 font-bold bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                    >
+                      Próximo ▶
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
 
 

@@ -47,6 +47,16 @@ export function numeroParaExtenso(valor) {
   return `(${extenso} reais)`;
 }
 
+function escapeXml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 export async function generateSalePdf(saleData) {
   const {
     veiculo,
@@ -60,16 +70,70 @@ export async function generateSalePdf(saleData) {
     buyerCep,
     salePrice,
     salePriceExtenso,
+    condicoesList,
     entryTradeText,
     financedSaldoText,
     notes,
     segurosValue,
+    segurosLista,
     saleDate,
     combustivel,
     cor,
     quilometragem,
     tipoVeiculo,
   } = saleData;
+
+  // Build CONDICOES_XML
+  let activeCondicoes = [];
+  if (Array.isArray(condicoesList) && condicoesList.length > 0) {
+    activeCondicoes = condicoesList.filter(c => c.text && c.text.trim());
+  } else {
+    if (entryTradeText && entryTradeText.trim()) {
+      activeCondicoes.push({ label: "Entrada em veículo:", text: entryTradeText.trim() });
+    }
+    if (financedSaldoText && financedSaldoText.trim()) {
+      activeCondicoes.push({ label: "Saldo financiado:", text: financedSaldoText.trim() });
+    }
+    if (notes && notes.trim()) {
+      activeCondicoes.push({ label: "Observação:", text: notes.trim() });
+    }
+  }
+
+  let condicoesXml = "";
+  if (activeCondicoes.length > 0) {
+    condicoesXml += `<w:r><w:rPr><w:b/><w:bCs/><w:color w:val="000000"/><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">Condições: </w:t></w:r>`;
+
+    activeCondicoes.forEach((c, index) => {
+      let labelStr = c.label ? c.label.trim() : "";
+      if (labelStr && !labelStr.endsWith(":")) labelStr += ":";
+
+      const cleanLabel = escapeXml(labelStr);
+      const cleanText = escapeXml(c.text.trim());
+      const isLast = index === activeCondicoes.length - 1;
+      const sep = isLast ? "." : "; ";
+
+      condicoesXml += `<w:r><w:rPr><w:b/><w:bCs/><w:color w:val="000000"/><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">${cleanLabel} </w:t></w:r>`;
+      condicoesXml += `<w:r><w:rPr><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">${cleanText}${sep}</w:t></w:r>`;
+    });
+  } else {
+    condicoesXml += `<w:r><w:rPr><w:b/><w:bCs/><w:color w:val="000000"/><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">Condições: </w:t></w:r><w:r><w:rPr><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">À vista.</w:t></w:r>`;
+  }
+
+  let segurosListaText = "";
+  if (Array.isArray(segurosLista) && segurosLista.length > 0) {
+    if (segurosLista.length === 1) {
+      segurosListaText = segurosLista[0];
+    } else {
+      segurosListaText = segurosLista.slice(0, -1).join(", ") + " e " + segurosLista[segurosLista.length - 1];
+    }
+  } else if (typeof segurosLista === "string" && segurosLista.trim()) {
+    segurosListaText = segurosLista.trim();
+  } else {
+    segurosListaText = "NENHUM";
+  }
+
+  const rawSegurosVal = (segurosValue || "0,00").trim();
+  const segurosValorClean = rawSegurosVal ? rawSegurosVal.replace(/^R\$\s*/i, "") : "0,00";
 
   const numPrice = typeof salePrice === "number" ? salePrice : parseFloat(String(salePrice).replace(/\D/g, "")) || 0;
   const formattedPrice = numPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
@@ -117,10 +181,9 @@ export async function generateSalePdf(saleData) {
 
       VALOR_NUMERICO: formattedPrice,
       VALOR_EXTENSO: finalExtenso,
-      ENTRADA_TEXTO: entryTradeText || "Não houve.",
-      SALDO_TEXTO: financedSaldoText || "À vista.",
-      OBSERVACOES_LOJA: notes || "a transferência do veículo será paga pela loja.",
-      SEGUROS_VALOR: segurosValue || "R$ 0,00",
+      CONDICOES_XML: condicoesXml,
+      SEGUROS_LISTA: segurosListaText,
+      SEGUROS_VALOR: segurosValorClean,
       DATA_CONTRATO_EXTENSO: dataExtenso,
     });
 

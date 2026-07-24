@@ -47,7 +47,8 @@ export async function GET(request) {
 
 async function syncVeiculoToCar(veiculo, catalogData = null) {
   try {
-    const carStatus = veiculo.status === "Disponível" ? "active" : "sold";
+    const isSoldOrTransferred = veiculo.status === "Vendido" || veiculo.status === "Transferido";
+    const carStatus = isSoldOrTransferred ? "sold" : "active";
     const yearString = `${veiculo.anoFab}/${veiculo.anoMod}`;
     
     // Procura por carro já existente atrelado a este veículo do ERP
@@ -56,7 +57,6 @@ async function syncVeiculoToCar(veiculo, catalogData = null) {
     });
 
     if (existingCar) {
-      // Se já existe e catalogData não foi enviado (veio do fluxo do ERP), preservamos os campos de catálogo antigos!
       const updateData = {
         brand: veiculo.marca,
         model: veiculo.modelo,
@@ -64,23 +64,36 @@ async function syncVeiculoToCar(veiculo, catalogData = null) {
         status: carStatus,
       };
 
-      // Se catalogData foi passado (ex: edições que enviam tudo), nós mesclamos os dados
-      if (catalogData && Object.keys(catalogData).length > 0) {
-        const accessoriesString = Array.isArray(catalogData.accessories) 
-          ? catalogData.accessories.join(", ") 
-          : (catalogData.accessories || "");
-
-        Object.assign(updateData, {
-          description: catalogData.description !== undefined ? catalogData.description : existingCar.description,
-          mileage: catalogData.mileage !== undefined ? catalogData.mileage : existingCar.mileage,
-          transmission: catalogData.transmission !== undefined ? catalogData.transmission : existingCar.transmission,
-          price: catalogData.price !== undefined ? catalogData.price : existingCar.price,
-          category: catalogData.category !== undefined ? catalogData.category : existingCar.category,
-          accessories: accessoriesString !== "" ? accessoriesString : existingCar.accessories,
-          images: catalogData.images !== undefined ? catalogData.images : existingCar.images,
-          isOffer: catalogData.isOffer !== undefined ? !!catalogData.isOffer : existingCar.isOffer,
-          promoPrice: catalogData.promoPrice !== undefined ? catalogData.promoPrice : existingCar.promoPrice,
-        });
+      if (catalogData && typeof catalogData === "object") {
+        if (catalogData.description !== undefined && catalogData.description !== null) {
+          updateData.description = catalogData.description;
+        }
+        if (catalogData.mileage !== undefined && catalogData.mileage !== null) {
+          updateData.mileage = catalogData.mileage;
+        }
+        if (catalogData.transmission !== undefined && catalogData.transmission !== null) {
+          updateData.transmission = catalogData.transmission;
+        }
+        if (catalogData.price !== undefined && catalogData.price !== null) {
+          updateData.price = catalogData.price;
+        }
+        if (catalogData.category !== undefined && catalogData.category !== null) {
+          updateData.category = catalogData.category;
+        }
+        if (catalogData.accessories !== undefined && catalogData.accessories !== null) {
+          updateData.accessories = Array.isArray(catalogData.accessories) 
+            ? catalogData.accessories.join(", ") 
+            : catalogData.accessories;
+        }
+        if (catalogData.images !== undefined && catalogData.images !== null) {
+          updateData.images = catalogData.images;
+        }
+        if (catalogData.isOffer !== undefined && catalogData.isOffer !== null) {
+          updateData.isOffer = !!catalogData.isOffer;
+        }
+        if (catalogData.promoPrice !== undefined && catalogData.promoPrice !== null) {
+          updateData.promoPrice = catalogData.promoPrice;
+        }
       }
 
       await prisma.car.update({
@@ -131,7 +144,16 @@ export async function POST(request) {
       description, mileage, transmission, price, category, accessories, images, isOffer, promoPrice
     } = body;
 
-    const catalogData = { description, mileage, transmission, price, category, accessories, images, isOffer, promoPrice };
+    const catalogData = {};
+    if (description !== undefined) catalogData.description = description;
+    if (mileage !== undefined) catalogData.mileage = mileage;
+    if (transmission !== undefined) catalogData.transmission = transmission;
+    if (price !== undefined) catalogData.price = price;
+    if (category !== undefined) catalogData.category = category;
+    if (accessories !== undefined) catalogData.accessories = accessories;
+    if (images !== undefined) catalogData.images = images;
+    if (isOffer !== undefined) catalogData.isOffer = isOffer;
+    if (promoPrice !== undefined) catalogData.promoPrice = promoPrice;
 
     const role = session.user.role?.toLowerCase();
     if (role === "seller" && action !== "updateStatus") {
@@ -153,6 +175,17 @@ export async function POST(request) {
     }
 
     if (action === "updateStatus") {
+      const existingVeiculo = await prisma.veiculo.findUnique({
+        where: { id },
+        include: { vendas: true },
+      });
+
+      if (existingVeiculo && existingVeiculo.status === "Vendido" && status !== "Vendido") {
+        await prisma.venda.deleteMany({
+          where: { veiculoId: id },
+        });
+      }
+
       const updated = await prisma.veiculo.update({
         where: { id },
         data: { status },
@@ -162,6 +195,19 @@ export async function POST(request) {
     }
 
     if (id) {
+      const existingVeiculo = await prisma.veiculo.findUnique({
+        where: { id },
+        include: { vendas: true },
+      });
+
+      const newStatus = status || "Disponível";
+
+      if (existingVeiculo && existingVeiculo.status === "Vendido" && newStatus !== "Vendido") {
+        await prisma.venda.deleteMany({
+          where: { veiculoId: id },
+        });
+      }
+
       // Editar
       const updated = await prisma.veiculo.update({
         where: { id },
@@ -173,7 +219,7 @@ export async function POST(request) {
           anoMod: parseInt(anoMod),
           valorCompra: parseFloat(valorCompra),
           dataEntrada: new Date(dataEntrada),
-          status: status || "Disponível",
+          status: newStatus,
           documentoPendente: !!documentoPendente,
           renavam: renavam || null,
           chassi: chassi || null,
