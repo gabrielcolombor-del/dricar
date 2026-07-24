@@ -83,7 +83,7 @@ export async function generateSalePdf(saleData) {
     tipoVeiculo,
   } = saleData;
 
-  // Build CONDICOES_XML
+  // Build CONDICOES_TEXT
   let activeCondicoes = [];
   if (Array.isArray(condicoesList) && condicoesList.length > 0) {
     activeCondicoes = condicoesList.filter(c => c.text && c.text.trim());
@@ -99,24 +99,19 @@ export async function generateSalePdf(saleData) {
     }
   }
 
-  let condicoesXml = "";
+  let condicoesText = "";
   if (activeCondicoes.length > 0) {
-    condicoesXml += `<w:r><w:rPr><w:b/><w:bCs/><w:color w:val="000000"/><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">Condições: </w:t></w:r>`;
-
-    activeCondicoes.forEach((c, index) => {
-      let labelStr = c.label ? c.label.trim() : "";
-      if (labelStr && !labelStr.endsWith(":")) labelStr += ":";
-
-      const cleanLabel = escapeXml(labelStr);
-      const cleanText = escapeXml(c.text.trim());
-      const isLast = index === activeCondicoes.length - 1;
-      const sep = isLast ? "." : "; ";
-
-      condicoesXml += `<w:r><w:rPr><w:b/><w:bCs/><w:color w:val="000000"/><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">${cleanLabel} </w:t></w:r>`;
-      condicoesXml += `<w:r><w:rPr><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">${cleanText}${sep}</w:t></w:r>`;
-    });
+    condicoesText = activeCondicoes
+      .map((c, index) => {
+        let labelStr = c.label ? c.label.trim() : "";
+        if (labelStr && !labelStr.endsWith(":")) labelStr += ":";
+        const isLast = index === activeCondicoes.length - 1;
+        const sep = isLast ? "." : ";";
+        return `${labelStr} ${c.text.trim()}${sep}`;
+      })
+      .join(" ");
   } else {
-    condicoesXml += `<w:r><w:rPr><w:b/><w:bCs/><w:color w:val="000000"/><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">Condições: </w:t></w:r><w:r><w:rPr><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">À vista.</w:t></w:r>`;
+    condicoesText = "À vista.";
   }
 
   let segurosListaText = "";
@@ -181,7 +176,7 @@ export async function generateSalePdf(saleData) {
 
       VALOR_NUMERICO: formattedPrice,
       VALOR_EXTENSO: finalExtenso,
-      CONDICOES_XML: condicoesXml,
+      CONDICOES_TEXT: condicoesText,
       SEGUROS_LISTA: segurosListaText,
       SEGUROS_VALOR: segurosValorClean,
       DATA_CONTRATO_EXTENSO: dataExtenso,

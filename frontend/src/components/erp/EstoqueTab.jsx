@@ -15,6 +15,7 @@ const SEGURO_OPTIONS = [
 ];
 
 const CONDICOES_OPCOES = [
+  { id: "avista", label: "VALOR PAGO À VISTA", docLabel: "Valor pago à vista:" },
   { id: "entrada", label: "ENTRADA EM VEÍCULO", docLabel: "Entrada em veículo:" },
   { id: "saldo", label: "SALDO FINANCIADO", docLabel: "Saldo financiado:" },
   { id: "cartao", label: "VALOR PAGO ATRAVÉS DE CARTÃO DE CRÉDITO", docLabel: "Valor pago através de cartão de crédito:" },
@@ -81,6 +82,7 @@ export default function EstoqueTab() {
     salePrice: "",
     salePriceExtenso: "",
     condicoesState: {
+      avista: { checked: false, text: "" },
       entrada: { checked: false, text: "" },
       saldo: { checked: false, text: "" },
       cartao: { checked: false, text: "" },
@@ -358,6 +360,7 @@ export default function EstoqueTab() {
       salePrice: "R$ " + priceNum.toLocaleString("pt-BR"),
       salePriceExtenso: numeroParaExtenso(priceNum),
       condicoesState: {
+        avista: { checked: false, text: "" },
         entrada: { checked: false, text: "" },
         saldo: { checked: false, text: "" },
         cartao: { checked: false, text: "" },

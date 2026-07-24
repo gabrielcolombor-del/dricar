@@ -23,7 +23,7 @@ xml = xml.replace(/29\.210-390/g, "{CEP_COMPRADOR}");
 xml = xml.replace(/54\.900,00/g, "{VALOR_NUMERICO}");
 xml = xml.replace(/\(cinquenta e quatro mil e novecentos reais\)/g, "{VALOR_EXTENSO}");
 
-// Substituir o bloco de parágrafos de Entrada, Saldo e Observações por {@CONDICOES_XML}
+// Substituir o bloco de parágrafos de Entrada, Saldo e Observações por {CONDICOES_TEXT}
 const idxEntrada = xml.indexOf("Entrada em veículo");
 if (idxEntrada !== -1) {
   let idxStart = xml.lastIndexOf("<w:p ", idxEntrada);
@@ -32,7 +32,7 @@ if (idxEntrada !== -1) {
   const idxEnd = xml.indexOf("</w:p>", idxObs) + 6;
   if (idxStart !== -1 && idxObs !== -1 && idxEnd > idxStart) {
     const targetBlock = xml.substring(idxStart, idxEnd);
-    xml = xml.replace(targetBlock, '<w:p><w:pPr><w:spacing w:after="20" w:line="200" w:lineRule="exact"/><w:jc w:val="both"/><w:rPr><w:lang w:val="pt-BR"/></w:rPr></w:pPr>{@CONDICOES_XML}</w:p>');
+    xml = xml.replace(targetBlock, '<w:p><w:pPr><w:spacing w:after="20" w:line="200" w:lineRule="exact"/><w:jc w:val="both"/><w:rPr><w:lang w:val="pt-BR"/></w:rPr></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="000000"/><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">Condições: </w:t></w:r><w:r><w:rPr><w:lang w:val="pt-BR"/></w:rPr><w:t xml:space="preserve">{CONDICOES_TEXT}</w:t></w:r></w:p>');
   }
 }
 
