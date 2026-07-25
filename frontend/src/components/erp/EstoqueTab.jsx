@@ -852,9 +852,16 @@ export default function EstoqueTab() {
                           <span>R$ {Number(v.valorCompra).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                         </div>
                         {v.status === "Vendido" && v.vendas && v.vendas.length > 0 ? (
-                          <div className="text-emerald-700 font-extrabold text-[11px] mt-0.5 flex items-center gap-1">
-                            <span className="text-emerald-600 font-semibold text-[10px]">💰 Venda:</span>
-                            <span>R$ {Number(v.vendas[0].valorVendaVeiculo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                          <div className="mt-0.5">
+                            <div className="text-emerald-700 font-extrabold text-[11px] flex items-center gap-1">
+                              <span className="text-emerald-600 font-semibold text-[10px]">💰 Venda:</span>
+                              <span>R$ {Number(v.vendas[0].valorVendaVeiculo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            {(v.vendas[0].cliente?.nome || v.vendas[0].contratoPayload?.buyerName) && (
+                              <div className="text-[10px] text-gray-500 font-semibold truncate max-w-[140px]" title={v.vendas[0].cliente?.nome || v.vendas[0].contratoPayload?.buyerName}>
+                                👤 {v.vendas[0].cliente?.nome || v.vendas[0].contratoPayload?.buyerName}
+                              </div>
+                            )}
                           </div>
                         ) : v.status === "Vendido" ? (
                           <div className="text-emerald-700 font-bold text-[10px] mt-0.5">💰 Vendido</div>
@@ -1092,6 +1099,78 @@ export default function EstoqueTab() {
                 </span>
               </div>
             </div>
+
+            {/* INFORMAÇÕES DA VENDA REALIZADA */}
+            {selectedVeiculo.status === "Vendido" && (
+              <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 text-left">
+                <div className="flex items-center gap-1.5 mb-2.5 border-b border-emerald-200/60 pb-2">
+                  <span className="text-sm">🤝</span>
+                  <h5 className="text-[11px] font-extrabold text-emerald-800 uppercase tracking-wider">
+                    Informações da Venda Realizada
+                  </h5>
+                </div>
+                {selectedVeiculo.vendas && selectedVeiculo.vendas.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs text-emerald-950">
+                    <div>
+                      <span className="font-bold text-emerald-700 block text-[9px] uppercase">Comprador</span>
+                      <span className="font-extrabold text-slate-900 block truncate" title={selectedVeiculo.vendas[0].cliente?.nome || selectedVeiculo.vendas[0].contratoPayload?.buyerName || "Não registrado"}>
+                        {selectedVeiculo.vendas[0].cliente?.nome ||
+                          selectedVeiculo.vendas[0].contratoPayload?.buyerName ||
+                          "Não registrado"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-emerald-700 block text-[9px] uppercase">Data da Venda</span>
+                      <span className="font-semibold text-slate-800 block">
+                        {selectedVeiculo.vendas[0].dataVenda
+                          ? new Date(selectedVeiculo.vendas[0].dataVenda).toLocaleDateString("pt-BR", {
+                              timeZone: "UTC",
+                            })
+                          : "Não informada"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-emerald-700 block text-[9px] uppercase">Telefone / Contato</span>
+                      <span className="font-semibold text-slate-800 block">
+                        {selectedVeiculo.vendas[0].cliente?.telefone ||
+                          selectedVeiculo.vendas[0].contratoPayload?.buyerPhone ||
+                          "Não registrado"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-emerald-700 block text-[9px] uppercase">CPF / CNPJ</span>
+                      <span className="font-semibold text-slate-800 block">
+                        {selectedVeiculo.vendas[0].cliente?.cpfCnpj ||
+                          selectedVeiculo.vendas[0].contratoPayload?.buyerCpfCnpj ||
+                          "Não registrado"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-emerald-700 block text-[9px] uppercase">Valor da Venda</span>
+                      <span className="font-extrabold text-emerald-700 block">
+                        R$ {Number(selectedVeiculo.vendas[0].valorVendaVeiculo || 0).toLocaleString("pt-BR", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    {Number(selectedVeiculo.vendas[0].valorRetornoBancario || 0) > 0 && (
+                      <div>
+                        <span className="font-bold text-emerald-700 block text-[9px] uppercase">Retorno Bancário</span>
+                        <span className="font-semibold text-emerald-800 block">
+                          R$ {Number(selectedVeiculo.vendas[0].valorRetornoBancario).toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-emerald-800 italic">
+                    Veículo marcado como vendido, mas os detalhes adicionais do comprador não foram encontrados no histórico.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* List of Registered Expenses */}
             <div>

@@ -66,7 +66,7 @@ export default function ClientesTab() {
     setPage(1);
   };
 
-  // Lógica de Filtragem (Pessoa, CPF, Número ou Veículo)
+  // Lógica de Filtragem (Pessoa, CPF, Telefone ou Veículo)
   const clientesFiltrados = clientes.filter((c) => {
     if (!busca) return true;
     const q = busca.toLowerCase().trim();
@@ -75,16 +75,14 @@ export default function ClientesTab() {
     // Buscar por Nome (Pessoa)
     if (c.nome && c.nome.toLowerCase().includes(q)) return true;
 
-    // Buscar por ID
-    if (c.id && c.id.toLowerCase().includes(q)) return true;
-
     // Buscar por string direta em CPF/CNPJ e Telefone
     if (c.cpfCnpj && c.cpfCnpj.toLowerCase().includes(q)) return true;
     if (c.telefone && c.telefone.toLowerCase().includes(q)) return true;
 
-    // Buscar por apenas números (apenas se o usuário digitou ao menos 1 número)
+    // Buscar por apenas números (APENAS se a busca NÃO contiver letras e tiver pelo menos 4 dígitos)
+    const hasLetters = /[a-zA-Z]/.test(q);
     const qDigits = q.replace(/\D/g, "");
-    if (qDigits.length > 0) {
+    if (!hasLetters && qDigits.length >= 4) {
       if (c.cpfCnpj && c.cpfCnpj.replace(/\D/g, "").includes(qDigits)) return true;
       if (c.telefone && c.telefone.replace(/\D/g, "").includes(qDigits)) return true;
     }
@@ -97,7 +95,7 @@ export default function ClientesTab() {
         const marca = (veic.marca || car.brand || "").toLowerCase();
         const modelo = (veic.modelo || car.model || "").toLowerCase();
         const placa = (veic.placa || "").toLowerCase();
-        return placa.includes(q) || modelo.includes(q) || marca.includes(q);
+        return placa.includes(q) || modelo.includes(q) || marca.includes(q) || `${marca} ${modelo}`.includes(q);
       });
       if (matchVenda) return true;
     }
@@ -107,7 +105,7 @@ export default function ClientesTab() {
       const marca = (veic.marca || "").toLowerCase();
       const modelo = (veic.modelo || "").toLowerCase();
       const placa = (veic.placa || "").toLowerCase();
-      if (placa.includes(q) || modelo.includes(q) || marca.includes(q)) return true;
+      if (placa.includes(q) || modelo.includes(q) || marca.includes(q) || `${marca} ${modelo}`.includes(q)) return true;
     }
 
     return false;

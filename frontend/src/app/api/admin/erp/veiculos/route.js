@@ -22,7 +22,9 @@ export async function GET(request) {
           despesas: {
             orderBy: { dataDespesa: "desc" },
           },
-          vendas: true,
+          vendas: {
+            include: { cliente: true },
+          },
         },
       });
       return NextResponse.json(veiculo);
@@ -31,7 +33,9 @@ export async function GET(request) {
     const veiculos = await prisma.veiculo.findMany({
       include: {
         despesas: true,
-        vendas: true,
+        vendas: {
+          include: { cliente: true },
+        },
       },
       orderBy: {
         dataEntrada: "desc",

@@ -56,7 +56,10 @@ export async function GET(request) {
         cleanCpf !== "Não informado" &&
         cleanCpf !== "0";
 
-      return hasTelefone || hasCpf;
+      const hasVenda = c.vendas && c.vendas.length > 0;
+      const hasInteresse = c.veiculoInteresse !== null && c.veiculoInteresse !== undefined;
+
+      return hasTelefone || hasCpf || hasVenda || hasInteresse;
     });
 
     return NextResponse.json(clientesFiltrados);
