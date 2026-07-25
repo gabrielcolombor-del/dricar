@@ -23,6 +23,19 @@ const CONDICOES_OPCOES = [
   { id: "observacoes", label: "OBSERVAÇÕES", docLabel: "Observação:" },
 ];
 
+const formatPhone = (val) => {
+  if (!val) return "";
+  let clean = val.replace(/\D/g, "").slice(0, 11);
+  if (clean.length > 6) {
+    return `(${clean.slice(0, 2)}) ${clean.slice(2, 7)}-${clean.slice(7)}`;
+  } else if (clean.length > 2) {
+    return `(${clean.slice(0, 2)}) ${clean.slice(2)}`;
+  } else if (clean.length > 0) {
+    return `(${clean}`;
+  }
+  return clean;
+};
+
 export default function EstoqueTab() {
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +87,7 @@ export default function EstoqueTab() {
     buyerRg: "",
     buyerEstadoCivil: "Solteiro(a)",
     buyerPhone: "",
+    buyerPhone2: "",
     buyerRua: "",
     buyerBairro: "",
     buyerAddress: "",
@@ -99,7 +113,7 @@ export default function EstoqueTab() {
     combustivel: "",
     cor: "",
     quilometragem: "",
-    tipoVeiculo: "",
+    tipoVeiculo: "AUTOMÓVEL",
   });
 
   // Modal/Form Lançamento Despesa
@@ -352,6 +366,7 @@ export default function EstoqueTab() {
       buyerRg: "",
       buyerEstadoCivil: "Solteiro(a)",
       buyerPhone: "",
+      buyerPhone2: "",
       buyerRua: "",
       buyerBairro: "",
       buyerAddress: "",
@@ -377,7 +392,7 @@ export default function EstoqueTab() {
       combustivel: "",
       cor: "",
       quilometragem: "",
-      tipoVeiculo: "",
+      tipoVeiculo: "AUTOMÓVEL",
     });
     setSaleError("");
     setShowSaleModal(true);
@@ -410,6 +425,8 @@ export default function EstoqueTab() {
       }
     });
 
+    const combinedPhone = [saleForm.buyerPhone, saleForm.buyerPhone2].filter(Boolean).join(" / ");
+
     try {
       const res = await fetch("/api/admin/erp/vendas", {
         method: "POST",
@@ -423,7 +440,8 @@ export default function EstoqueTab() {
           buyerCpfCnpj: saleForm.buyerCpfCnpj,
           buyerRg: saleForm.buyerRg,
           buyerEstadoCivil: saleForm.buyerEstadoCivil,
-          buyerPhone: saleForm.buyerPhone,
+          buyerPhone: combinedPhone,
+          buyerPhone2: saleForm.buyerPhone2 || "",
           buyerAddress: computedAddress,
           buyerCidadeUf: saleForm.buyerCidadeUf,
           buyerCep: saleForm.buyerCep,
@@ -447,7 +465,7 @@ export default function EstoqueTab() {
           buyerCpfCnpj: saleForm.buyerCpfCnpj,
           buyerRg: saleForm.buyerRg,
           buyerEstadoCivil: saleForm.buyerEstadoCivil,
-          buyerPhone: saleForm.buyerPhone,
+          buyerPhone: combinedPhone,
           buyerAddress: computedAddress,
           buyerCidadeUf: saleForm.buyerCidadeUf,
           buyerCep: saleForm.buyerCep,
@@ -533,6 +551,7 @@ export default function EstoqueTab() {
       buyerRg: pick(randomRgs),
       buyerEstadoCivil: pick(randomStates),
       buyerPhone: pick(randomPhones),
+      buyerPhone2: "",
       buyerRua: pick(randomRuas),
       buyerBairro: pick(randomBairros),
       buyerAddress: `${pick(randomRuas)} - ${pick(randomBairros)}`,
@@ -1441,13 +1460,24 @@ export default function EstoqueTab() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Telefone / WhatsApp</label>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Telefone 1</label>
                     <input
                       type="text"
                       value={saleForm.buyerPhone}
-                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerPhone: e.target.value }))}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerPhone: formatPhone(e.target.value) }))}
+                      placeholder="(xx) xxxxx-xxxx"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Telefone 2 (Opcional)</label>
+                    <input
+                      type="text"
+                      value={saleForm.buyerPhone2 || ""}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerPhone2: formatPhone(e.target.value) }))}
+                      placeholder="(xx) xxxxx-xxxx (Opcional)"
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     />
                   </div>
@@ -1532,12 +1562,14 @@ export default function EstoqueTab() {
                   </div>
                   <div>
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">Tipo</label>
-                    <input
-                      type="text"
-                      value={saleForm.tipoVeiculo}
+                    <select
+                      value={saleForm.tipoVeiculo || "AUTOMÓVEL"}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, tipoVeiculo: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold uppercase"
-                    />
+                    >
+                      <option value="AUTOMÓVEL">AUTOMÓVEL</option>
+                      <option value="MOTO">MOTO</option>
+                    </select>
                   </div>
                 </div>
               </div>

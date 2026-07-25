@@ -100,36 +100,57 @@ export async function generateSalePdf(saleData) {
   }
 
   let condicoesText = "";
+  let condicoesListaFormatted = [];
+
   if (activeCondicoes.length > 0) {
-    const formatted = activeCondicoes
+    condicoesListaFormatted = activeCondicoes
       .map((c, index) => {
-        if (typeof c === "string") return c.trim();
-        let labelStr = c.label ? String(c.label).trim() : "";
-        let textStr = c.text ? String(c.text).trim() : "";
+        let labelStr = "";
+        let textStr = "";
+        if (typeof c === "string") {
+          textStr = c.trim();
+        } else {
+          labelStr = c.label ? String(c.label).trim() : "";
+          textStr = c.text ? String(c.text).trim() : "";
+        }
 
         if (!textStr && labelStr.endsWith(":")) {
           labelStr = labelStr.replace(/:$/, "");
+        }
+        if (labelStr && !labelStr.endsWith(":")) {
+          labelStr += ":";
         }
 
         const isLast = index === activeCondicoes.length - 1;
         const sep = isLast ? "." : ";";
 
-        if (labelStr && textStr) {
-          return `${labelStr} ${textStr}${sep}`;
-        } else if (labelStr) {
-          return `${labelStr}${sep}`;
-        } else if (textStr) {
-          return `${textStr}${sep}`;
-        }
-        return "";
+        return {
+          label: labelStr || "",
+          text: textStr || "",
+          sep: sep,
+        };
       })
-      .filter(Boolean);
+      .filter(item => item.label || item.text);
+
+    const formatted = condicoesListaFormatted.map(item => {
+      if (item.label && item.text) {
+        return `${item.label} ${item.text}${item.sep}`;
+      } else if (item.label) {
+        return `${item.label}${item.sep}`;
+      } else if (item.text) {
+        return `${item.text}${item.sep}`;
+      }
+      return "";
+    }).filter(Boolean);
 
     condicoesText = formatted.join(" ");
   }
 
   if (!condicoesText || condicoesText.includes("undefined")) {
     condicoesText = "À vista.";
+  }
+  if (condicoesListaFormatted.length === 0) {
+    condicoesListaFormatted.push({ label: "Valor pago à vista:", text: formattedPrice, sep: "." });
   }
 
   let segurosListaText = "";
@@ -144,6 +165,9 @@ export async function generateSalePdf(saleData) {
   } else {
     segurosListaText = "NENHUM";
   }
+
+  const hasSeguro = Array.isArray(segurosLista) && segurosLista.length > 0 && segurosLista.some(s => s && s.trim() !== "" && s.trim().toUpperCase() !== "NENHUM");
+  const clausulaDisposicoesNum = hasSeguro ? "Cláusula 9ª" : "Cláusula 8ª";
 
   const rawSegurosVal = (segurosValue || "0,00").trim();
   const segurosValorClean = rawSegurosVal ? rawSegurosVal.replace(/^R\$\s*/i, "") : "0,00";
@@ -195,6 +219,9 @@ export async function generateSalePdf(saleData) {
       VALOR_NUMERICO: formattedPrice,
       VALOR_EXTENSO: finalExtenso,
       CONDICOES_TEXT: condicoesText,
+      CONDICOES_LISTA: condicoesListaFormatted,
+      HAS_SEGURO: hasSeguro,
+      CLAUSULA_DISPOSICOES_NUM: clausulaDisposicoesNum,
       SEGUROS_LISTA: segurosListaText,
       SEGUROS_VALOR: segurosValorClean,
       DATA_CONTRATO_EXTENSO: dataExtenso,
