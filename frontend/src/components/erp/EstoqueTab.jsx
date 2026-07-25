@@ -36,6 +36,14 @@ const formatPhone = (val) => {
   return clean;
 };
 
+const formatCurrencyInput = (val) => {
+  if (!val && val !== 0) return "";
+  const clean = String(val).replace(/\D/g, "");
+  if (!clean) return "";
+  const num = Number(clean) / 100;
+  return "R$ " + num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 export default function EstoqueTab() {
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -368,11 +376,12 @@ export default function EstoqueTab() {
       buyerPhone: "",
       buyerPhone2: "",
       buyerRua: "",
+      buyerNumComp: "",
       buyerBairro: "",
       buyerAddress: "",
       buyerCidadeUf: "",
       buyerCep: "",
-      salePrice: "R$ " + priceNum.toLocaleString("pt-BR"),
+      salePrice: "R$ " + priceNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       salePriceExtenso: numeroParaExtenso(priceNum),
       condicoesState: {
         avista: { checked: false, text: "" },
@@ -406,8 +415,9 @@ export default function EstoqueTab() {
     setSaleError("");
 
     const cleanPrice = saleForm.salePrice.replace(/\D/g, "");
-    const valorVendaNum = parseFloat(cleanPrice) || 0;
-    const computedAddress = [saleForm.buyerRua, saleForm.buyerBairro].filter(Boolean).join(" - ") || saleForm.buyerAddress || "";
+    const valorVendaNum = (parseFloat(cleanPrice) || 0) / 100;
+    const ruaComNum = [saleForm.buyerRua, saleForm.buyerNumComp].filter(Boolean).join(", ");
+    const computedAddress = [ruaComNum, saleForm.buyerBairro].filter(Boolean).join(" — ") || saleForm.buyerAddress || "";
 
     const finalSegurosList = [...(saleForm.selectedSeguros || []).filter((s) => s !== "OUTROS")];
     if ((saleForm.selectedSeguros || []).includes("OUTROS") && saleForm.outroSeguroNome?.trim()) {
@@ -543,7 +553,7 @@ export default function EstoqueTab() {
 
     const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
     const priceNum = targetSaleVeiculo?.valorCompra ? Number(targetSaleVeiculo.valorCompra) : 32000;
-    const formattedPrice = "R$ " + priceNum.toLocaleString("pt-BR");
+    const formattedPrice = "R$ " + priceNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     setSaleForm({
       buyerName: pick(randomNames),
@@ -553,8 +563,9 @@ export default function EstoqueTab() {
       buyerPhone: pick(randomPhones),
       buyerPhone2: "",
       buyerRua: pick(randomRuas),
+      buyerNumComp: "100",
       buyerBairro: pick(randomBairros),
-      buyerAddress: `${pick(randomRuas)} - ${pick(randomBairros)}`,
+      buyerAddress: `${pick(randomRuas)}, 100 — ${pick(randomBairros)}`,
       buyerCidadeUf: "Guarapari / ES",
       buyerCep: "29200-000",
       salePrice: formattedPrice,
@@ -1495,13 +1506,23 @@ export default function EstoqueTab() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="sm:col-span-2">
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">Rua / Logradouro</label>
                     <input
                       type="text"
                       value={saleForm.buyerRua || ""}
                       onChange={(e) => setSaleForm(prev => ({ ...prev, buyerRua: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-slate-900 uppercase mb-1">Nº / Comp.</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: 10, Apto 201"
+                      value={saleForm.buyerNumComp || ""}
+                      onChange={(e) => setSaleForm(prev => ({ ...prev, buyerNumComp: e.target.value }))}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     />
                   </div>
@@ -1514,6 +1535,8 @@ export default function EstoqueTab() {
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
                     />
                   </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-1 gap-3 pt-3">
                   <div>
                     <label className="block font-extrabold text-slate-900 uppercase mb-1">Cidade / UF</label>
                     <input
@@ -1591,8 +1614,8 @@ export default function EstoqueTab() {
                       onChange={(e) => {
                         const clean = e.target.value.replace(/\D/g, "");
                         if (!clean) return setSaleForm(prev => ({ ...prev, salePrice: "", salePriceExtenso: "" }));
-                        const num = Number(clean);
-                        const formatted = "R$ " + num.toLocaleString("pt-BR");
+                        const num = Number(clean) / 100;
+                        const formatted = "R$ " + num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         setSaleForm(prev => ({
                           ...prev,
                           salePrice: formatted,
@@ -1653,13 +1676,16 @@ export default function EstoqueTab() {
                               type="checkbox"
                               checked={state.checked}
                               onChange={() => {
+                                const nextChecked = !state.checked;
+                                const defaultText = nextChecked && !state.text && opt.id === "avista" ? saleForm.salePrice : state.text || "";
                                 setSaleForm((prev) => ({
                                   ...prev,
                                   condicoesState: {
                                     ...prev.condicoesState,
                                     [opt.id]: {
                                       ...prev.condicoesState?.[opt.id],
-                                      checked: !state.checked,
+                                      checked: nextChecked,
+                                      text: defaultText,
                                     },
                                   },
                                 }));
@@ -1675,7 +1701,10 @@ export default function EstoqueTab() {
                                 type="text"
                                 value={state.text || ""}
                                 onChange={(e) => {
-                                  const val = e.target.value;
+                                  let val = e.target.value;
+                                  if (["avista", "saldo", "cartao", "promissoria"].includes(opt.id)) {
+                                    val = formatCurrencyInput(val);
+                                  }
                                   setSaleForm((prev) => ({
                                     ...prev,
                                     condicoesState: {
@@ -1761,9 +1790,10 @@ export default function EstoqueTab() {
                     <input
                       type="text"
                       value={saleForm.segurosValue || ""}
-                      onChange={(e) =>
-                        setSaleForm((prev) => ({ ...prev, segurosValue: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        const val = formatCurrencyInput(e.target.value);
+                        setSaleForm((prev) => ({ ...prev, segurosValue: val }));
+                      }}
                       className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold"
                     />
                   </div>

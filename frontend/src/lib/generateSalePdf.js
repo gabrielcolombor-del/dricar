@@ -83,6 +83,20 @@ export async function generateSalePdf(saleData) {
     tipoVeiculo,
   } = saleData;
 
+  let numPrice = 0;
+  if (typeof salePrice === "number") {
+    numPrice = salePrice;
+  } else if (typeof salePrice === "string") {
+    const cleanStr = salePrice.trim();
+    if (cleanStr.includes(",") && /,\d{2}$/.test(cleanStr)) {
+      numPrice = parseFloat(cleanStr.replace(/\./g, "").replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0;
+    } else {
+      numPrice = parseFloat(cleanStr.replace(/\D/g, "")) || 0;
+    }
+  }
+  const formattedPrice = "R$ " + numPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const finalExtenso = salePriceExtenso || numeroParaExtenso(numPrice);
+
   // Build CONDICOES_TEXT
   let activeCondicoes = [];
   if (Array.isArray(condicoesList) && condicoesList.length > 0) {
@@ -180,10 +194,6 @@ export async function generateSalePdf(saleData) {
 
   const rawSegurosVal = (segurosValue || "0,00").trim();
   const segurosValorClean = rawSegurosVal ? rawSegurosVal.replace(/^R\$\s*/i, "") : "0,00";
-
-  const numPrice = typeof salePrice === "number" ? salePrice : parseFloat(String(salePrice).replace(/\D/g, "")) || 0;
-  const formattedPrice = numPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
-  const finalExtenso = salePriceExtenso || numeroParaExtenso(numPrice);
 
   const dateObj = saleDate ? new Date(saleDate + "T12:00:00Z") : new Date();
   const dia = dateObj.getDate();
