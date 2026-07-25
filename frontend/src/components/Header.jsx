@@ -3,12 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "@/components/ThemeContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { theme, toggleTheme, mounted } = useTheme();
 
   return (
-    <header className="bg-brand-blue text-brand-white w-full py-4 px-6 sm:px-12 flex items-center justify-between sticky top-0 z-50 shadow-md">
+    <header className="bg-brand-blue dark:bg-[#050b1d] text-brand-white w-full py-4 px-6 sm:px-12 flex items-center justify-between sticky top-0 z-50 shadow-md dark:border-b dark:border-white/10 transition-colors duration-300">
       {/* Logo */}
       <div className="flex-1">
         <Link href="/" className="inline-block">
@@ -37,7 +39,27 @@ export default function Header() {
       </nav>
 
       {/* Action / Mobile Toggle */}
-      <div className="flex-1 flex justify-end items-center gap-4">
+      <div className="flex-1 flex justify-end items-center gap-3 sm:gap-4">
+        {/* Dark Mode Toggle Button */}
+        {mounted && (
+          <button
+            onClick={toggleTheme}
+            className="p-2 sm:px-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-300 flex items-center justify-center shadow-inner cursor-pointer"
+            aria-label="Alternar tema"
+            title={theme === "dark" ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
+          >
+            {theme === "dark" ? (
+              <span className="text-amber-300 text-lg sm:text-base flex items-center gap-1.5 font-bold px-0.5 animate-fade-in">
+                ☀️ <span className="text-xs font-sans hidden sm:inline">Claro</span>
+              </span>
+            ) : (
+              <span className="text-blue-200 text-lg sm:text-base flex items-center gap-1.5 font-bold px-0.5 animate-fade-in">
+                🌙 <span className="text-xs font-sans hidden sm:inline">Escuro</span>
+              </span>
+            )}
+          </button>
+        )}
+
         {/* Desktop Button */}
         <a 
           href="https://wa.me/5527999361212" 
@@ -54,7 +76,7 @@ export default function Header() {
         {/* Mobile Toggle Button */}
         <button 
           onClick={() => setIsMenuOpen(!isMenuOpen)} 
-          className="md:hidden text-white hover:text-gray-300 focus:outline-none p-1"
+          className="md:hidden text-white hover:text-gray-300 focus:outline-none p-1 cursor-pointer"
           aria-label="Alternar menu"
         >
           {isMenuOpen ? (
@@ -71,11 +93,11 @@ export default function Header() {
 
       {/* Mobile Menu Drawer */}
       <div 
-        className={`md:hidden fixed inset-x-0 top-[82px] bg-brand-blue border-t border-white/10 shadow-2xl transition-all duration-300 ease-in-out transform origin-top z-40 ${
+        className={`md:hidden fixed inset-x-0 top-[82px] bg-brand-blue dark:bg-[#050b1d] border-t border-white/10 shadow-2xl transition-all duration-300 ease-in-out transform origin-top z-40 ${
           isMenuOpen ? "opacity-100 scale-y-100 h-[calc(100vh-82px)]" : "opacity-0 scale-y-0 h-0 pointer-events-none"
         }`}
       >
-        <nav className="flex flex-col items-center gap-6 py-12 px-6 h-full bg-brand-blue">
+        <nav className="flex flex-col items-center gap-5 py-10 px-6 h-full bg-brand-blue dark:bg-[#050b1d] transition-colors duration-300">
           <Link 
             href="/quem-somos" 
             onClick={() => setIsMenuOpen(false)}
@@ -98,12 +120,33 @@ export default function Header() {
             Financiamento
           </Link>
 
+          {/* Mobile Theme Toggle in Drawer */}
+          {mounted && (
+            <button
+              onClick={() => {
+                toggleTheme();
+                setIsMenuOpen(false);
+              }}
+              className="mt-4 flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-[25px] py-3.5 px-8 text-[16px] font-semibold text-white transition-all w-full max-w-[280px] shadow-md cursor-pointer"
+            >
+              {theme === "dark" ? (
+                <>
+                  <span className="text-xl">☀️</span> Modo Claro
+                </>
+              ) : (
+                <>
+                  <span className="text-xl">🌙</span> Modo Escuro
+                </>
+              )}
+            </button>
+          )}
+
           <a 
             href="https://wa.me/5527999361212" 
             target="_blank" 
             rel="noopener noreferrer" 
             onClick={() => setIsMenuOpen(false)}
-            className="mt-8 flex items-center justify-center gap-2 border border-white rounded-[25px] py-3.5 px-8 text-[16px] font-semibold text-white hover:bg-white hover:text-brand-blue transition-colors w-full max-w-[280px] shadow-lg"
+            className="mt-2 flex items-center justify-center gap-2 border border-white rounded-[25px] py-3.5 px-8 text-[16px] font-semibold text-white hover:bg-white hover:text-brand-blue transition-colors w-full max-w-[280px] shadow-lg"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />

@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <>
       {/* Mobile Footer (Simplified layout) */}
-      <footer className="md:hidden bg-[#333333] text-white py-8 px-4 sm:px-6 border-t border-white/5">
+      <footer className="md:hidden bg-[#333333] dark:bg-[#040817] text-white py-8 px-4 sm:px-6 border-t border-white/5 dark:border-white/10 transition-colors duration-300">
         <div className="max-w-[900px] mx-auto flex flex-row items-center justify-between gap-3 sm:gap-6 w-full">
           
           {/* Left Column: Maps Section */}
@@ -64,7 +64,7 @@ export default function Footer() {
       </footer>
 
       {/* Desktop Footer (Original 5-column layout) */}
-      <footer className="hidden md:block bg-[#333333] text-white py-12 px-6 border-t border-white/5">
+      <footer className="hidden md:block bg-[#333333] dark:bg-[#040817] text-white py-12 px-6 border-t border-white/5 dark:border-white/10 transition-colors duration-300">
         <div className="max-w-[1200px] mx-auto flex flex-row items-center justify-between gap-4">
           
           {/* Maps Section */}

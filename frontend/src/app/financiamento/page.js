@@ -9,12 +9,12 @@ export const metadata = {
 
 export default function FinanciamentoPage() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070f26] flex flex-col justify-between font-sans transition-colors duration-300">
       <Header />
 
       <main className="flex-1">
         {/* Banner Hero */}
-        <section className="bg-brand-blue text-white py-14 md:py-20 px-6 relative overflow-hidden shadow-md">
+        <section className="bg-brand-blue dark:bg-[#040817] text-white py-14 md:py-20 px-6 relative overflow-hidden shadow-md dark:border-b dark:border-white/10">
           <div className="max-w-[1100px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
             <div className="max-w-[600px] text-center md:text-left">
               <span className="inline-block bg-white/15 text-white text-xs md:text-sm font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full mb-4 border border-white/20">
@@ -23,7 +23,7 @@ export default function FinanciamentoPage() {
               <h1 className="text-[32px] md:text-[46px] font-black uppercase leading-tight tracking-tight mb-4">
                 Financie seu Veículo na <span className="text-emerald-400">DRI-CAR</span>
               </h1>
-              <p className="text-gray-200 text-sm md:text-base leading-relaxed font-light mb-8">
+              <p className="text-gray-200 dark:text-gray-300 text-sm md:text-base leading-relaxed font-light mb-8">
                 Trabalhamos com os principais bancos e financeiras para garantir a menor taxa de juros e a aprovação mais rápida de Guarapari e região.
               </p>
 
@@ -55,51 +55,51 @@ export default function FinanciamentoPage() {
         {/* Vantagens */}
         <section className="max-w-[1100px] mx-auto py-14 px-6">
           <div className="text-center max-w-[700px] mx-auto mb-12">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 uppercase tracking-tight mb-3">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white uppercase tracking-tight mb-3">
               Por que Financiar Conosco?
             </h2>
-            <p className="text-slate-600 text-sm md:text-base">
+            <p className="text-slate-600 dark:text-gray-300 text-sm md:text-base">
               Aprovação facilitada, zero complicação e atendimento personalizado do início ao fim.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-blue-50 text-brand-blue rounded-xl flex items-center justify-center font-extrabold text-xl mb-4">
+            <div className="bg-white dark:bg-[#0e1b42] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/40 text-brand-blue dark:text-blue-400 rounded-xl flex items-center justify-center font-extrabold text-xl mb-4">
                 ⚡
               </div>
-              <h3 className="font-extrabold text-slate-900 text-base uppercase mb-2">Aprovação Rápida</h3>
-              <p className="text-slate-600 text-xs leading-relaxed">
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-base uppercase mb-2">Aprovação Rápida</h3>
+              <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
                 Análise de crédito em minutos com resposta imediata dos bancos parceiros.
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-extrabold text-xl mb-4">
+            <div className="bg-white dark:bg-[#0e1b42] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center font-extrabold text-xl mb-4">
                 💰
               </div>
-              <h3 className="font-extrabold text-slate-900 text-base uppercase mb-2">As Melhores Taxas</h3>
-              <p className="text-slate-600 text-xs leading-relaxed">
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-base uppercase mb-2">As Melhores Taxas</h3>
+              <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
                 Parcerias exclusivas com taxas de juros competitivas para caber na sua renda.
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center font-extrabold text-xl mb-4">
+            <div className="bg-white dark:bg-[#0e1b42] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center font-extrabold text-xl mb-4">
                 🚗
               </div>
-              <h3 className="font-extrabold text-slate-900 text-base uppercase mb-2">Usado como Entrada</h3>
-              <p className="text-slate-600 text-xs leading-relaxed">
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-base uppercase mb-2">Usado como Entrada</h3>
+              <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
                 Avaliamos seu veículo atual e usamos o valor como entrada no seu novo financiamento.
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center font-extrabold text-xl mb-4">
+            <div className="bg-white dark:bg-[#0e1b42] p-6 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs hover:shadow-md transition-all">
+              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center font-extrabold text-xl mb-4">
                 📅
               </div>
-              <h3 className="font-extrabold text-slate-900 text-base uppercase mb-2">Até 60 Meses</h3>
-              <p className="text-slate-600 text-xs leading-relaxed">
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-base uppercase mb-2">Até 60 Meses</h3>
+              <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
                 Planos flexíveis de parcelamento em até 60 vezes para sua conveniência.
               </p>
             </div>
@@ -107,12 +107,12 @@ export default function FinanciamentoPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="bg-slate-100 border-t border-b border-slate-200 py-12 px-6">
+        <section className="bg-slate-100 dark:bg-[#040817] border-t border-b border-slate-200 dark:border-white/10 py-12 px-6 transition-colors duration-300">
           <div className="max-w-[800px] mx-auto text-center space-y-4">
-            <h3 className="text-xl md:text-2xl font-black text-slate-900 uppercase">
+            <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white uppercase">
               Quer fazer uma simulação sem compromisso?
             </h3>
-            <p className="text-slate-600 text-sm max-w-[600px] mx-auto">
+            <p className="text-slate-600 dark:text-gray-300 text-sm max-w-[600px] mx-auto">
               Fale com um de nossos especialistas via WhatsApp e descubra as melhores opções de crédito disponíveis para o seu perfil.
             </p>
             <div className="pt-2">
@@ -120,7 +120,7 @@ export default function FinanciamentoPage() {
                 href="https://wa.me/5527999361212?text=Ol%C3%A1%2C%20gostaria%20de%20fazer%20uma%20simula%C3%A7%C3%A3o%20de%20financiamento!"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-brand-blue hover:bg-slate-900 text-white font-extrabold text-sm py-3.5 px-8 rounded-full shadow-md transition-all uppercase"
+                className="inline-flex items-center justify-center gap-2 bg-brand-blue dark:bg-blue-600 hover:bg-slate-900 dark:hover:bg-blue-500 text-white font-extrabold text-sm py-3.5 px-8 rounded-full shadow-md transition-all uppercase"
               >
                 Falar com Especialista em Financiamento
               </a>

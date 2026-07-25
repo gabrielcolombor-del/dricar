@@ -685,45 +685,45 @@ export default function AdminPage() {
   // TELA DE LOGIN (Sem Autenticação)
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#070f26] flex flex-col justify-between transition-colors duration-300">
         <Header />
         <main className="flex-grow flex items-center justify-center p-6">
-          <div className="bg-white border border-gray-200 rounded-[20px] p-8 w-full max-w-[450px] shadow-lg">
-            <h2 className="text-[28px] font-extrabold text-brand-blue uppercase mb-2 text-center">Painel Dri-Car</h2>
-            <p className="text-gray-500 text-sm text-center mb-6">Autenticação de Funcionários (NextAuth)</p>
+          <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-[20px] p-8 w-full max-w-[450px] shadow-lg transition-colors duration-300">
+            <h2 className="text-[28px] font-extrabold text-brand-blue dark:text-blue-400 uppercase mb-2 text-center">Painel Dri-Car</h2>
+            <p className="text-gray-500 dark:text-gray-300 text-sm text-center mb-6">Autenticação de Funcionários (NextAuth)</p>
             
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div>
-                <label className="block text-xs font-extrabold text-slate-900 uppercase mb-2">Login / Usuário</label>
+                <label className="block text-xs font-extrabold text-black dark:text-white uppercase mb-2">Login / Usuário</label>
                 <input 
                   type="text"
                   placeholder="Ex: admdricar"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm font-bold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue bg-white text-slate-900 placeholder:text-gray-400"
+                  className="w-full border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-sm font-bold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue dark:focus:ring-blue-400 bg-white dark:bg-slate-900 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-colors"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-extrabold text-slate-900 uppercase mb-2">Senha</label>
+                <label className="block text-xs font-extrabold text-black dark:text-white uppercase mb-2">Senha</label>
                 <input 
                   type="password"
                   placeholder="Digite sua senha..."
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm font-bold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue bg-white text-slate-900 placeholder:text-gray-400"
+                  className="w-full border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-sm font-bold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue dark:focus:ring-blue-400 bg-white dark:bg-slate-900 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-colors"
                   required
                 />
               </div>
 
               {error && (
-                <div className="text-red-600 text-xs font-semibold bg-red-50 p-3 rounded-lg border border-red-100">
+                <div className="text-red-600 dark:text-red-400 text-xs font-semibold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/50">
                   {error}
                 </div>
               )}
 
-              <button type="submit" className="w-full bg-brand-blue text-white rounded-lg py-3 font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer">
+              <button type="submit" className="w-full bg-brand-blue dark:bg-blue-600 text-white rounded-lg py-3 font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer">
                 Acessar Sistema
               </button>
             </form>
@@ -736,37 +736,37 @@ export default function AdminPage() {
 
   // PAINEL DE CONTROLE (Autenticado com RBAC)
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#070f26] flex flex-col justify-between transition-colors duration-300">
       <Header />
       
       <main className="flex-grow w-full max-w-[1200px] mx-auto py-5 sm:py-10 px-3 sm:px-6">
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-[26px] sm:text-[32px] font-extrabold text-brand-blue uppercase leading-tight">Painel de Controle</h1>
-            <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-2 flex flex-wrap items-center gap-1.5">
-              <span>Funcionário: <strong className="text-brand-blue">{user?.name}</strong></span>
-              <span className="bg-brand-blue/10 text-brand-blue px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase">{getRoleBadge(user?.role)}</span>
+            <h1 className="text-[26px] sm:text-[32px] font-extrabold text-brand-blue dark:text-blue-400 uppercase leading-tight">Painel de Controle</h1>
+            <p className="text-gray-500 dark:text-gray-300 text-xs sm:text-sm mt-1 sm:mt-2 flex flex-wrap items-center gap-1.5">
+              <span>Funcionário: <strong className="text-brand-blue dark:text-blue-400">{user?.name}</strong></span>
+              <span className="bg-brand-blue/10 dark:bg-blue-900/40 text-brand-blue dark:text-blue-300 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase">{getRoleBadge(user?.role)}</span>
             </p>
           </div>
           <button 
             onClick={handleLogout}
-            className="border border-red-200 text-red-600 hover:bg-red-50 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer self-start sm:self-auto"
+            className="border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer self-start sm:self-auto"
           >
             Sair do Painel
           </button>
         </div>
 
         {/* Tabs Menu */}
-        <div className="flex border-b border-gray-200 mb-6 sm:mb-8 gap-2.5 sm:gap-4 overflow-x-auto pb-2 scrollbar-none select-none items-center touch-pan-x w-full">
-          <span className="text-[10px] font-extrabold uppercase text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md shrink-0">
+        <div className="flex border-b border-gray-200 dark:border-white/10 mb-6 sm:mb-8 gap-2.5 sm:gap-4 overflow-x-auto pb-2 scrollbar-none select-none items-center touch-pan-x w-full">
+          <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
             📊 ERP & CRM
           </span>
           
           {isAdmin && (
             <button 
               onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
             >
               📈 Dashboard
             </button>
@@ -775,7 +775,7 @@ export default function AdminPage() {
           {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
             <button 
               onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
             >
               🚗 Estoque & Histórico
             </button>
@@ -783,14 +783,14 @@ export default function AdminPage() {
           
           <button 
             onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
-            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_crm" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_crm" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
           >
             🤝 CRM e Funil Vendas
           </button>
 
           <button 
             onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
-            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
           >
             👥 Clientes & Histórico
           </button>
@@ -798,7 +798,7 @@ export default function AdminPage() {
           {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
             <button 
               onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
             >
               🛠️ Pós Venda
             </button>
@@ -807,7 +807,7 @@ export default function AdminPage() {
           {(isAdmin || user?.role?.toLowerCase() === "manager") && (
             <button 
               onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
             >
               💸 Financeiro Geral
             </button>
@@ -815,15 +815,15 @@ export default function AdminPage() {
 
           {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor) && (
             <>
-              <span className="h-4 w-[1px] bg-gray-300 mx-2 shrink-0"></span>
+              <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-2 shrink-0"></span>
 
-              <span className="text-[10px] font-extrabold uppercase text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md shrink-0">
+              <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
                 🌐 Catálogo Site
               </span>
               
               <button 
                 onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
-                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
               >
                 📦 Catálogo Ativo ({activeCars.length})
               </button>
@@ -832,7 +832,7 @@ export default function AdminPage() {
 
           {activeTab === "cadastrar" && (
             <button 
-              className="pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors border-brand-blue text-brand-blue cursor-default"
+              className="pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400 cursor-default"
             >
               ✏️ Editando Anúncio do Site
             </button>
@@ -840,10 +840,10 @@ export default function AdminPage() {
 
           {isAdmin && (
             <>
-              <span className="h-4 w-[1px] bg-gray-300 mx-2 shrink-0"></span>
+              <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-2 shrink-0"></span>
               <button 
                 onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
-                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
               >
                 👥 Contas
               </button>
@@ -852,7 +852,7 @@ export default function AdminPage() {
 
           <button 
             onClick={handleLogout}
-            className="ml-auto pb-2 text-xs font-bold border-b-2 border-transparent text-red-600 hover:text-red-800 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+            className="ml-auto pb-2 text-xs font-bold border-b-2 border-transparent text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
           >
             🚪 Sair
           </button>

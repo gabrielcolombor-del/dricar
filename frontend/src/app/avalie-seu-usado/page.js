@@ -143,20 +143,20 @@ export default function AvalieSeuUsadoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070f26] flex flex-col justify-between font-sans transition-colors duration-300">
       <Header />
 
       <main className="flex-1 py-10 px-4 sm:px-6">
-        <div className="max-w-[850px] mx-auto bg-white rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden">
+        <div className="max-w-[850px] mx-auto bg-white dark:bg-[#0e1b42] rounded-3xl shadow-xl border border-slate-200/80 dark:border-white/10 overflow-hidden transition-colors duration-300">
           {/* Header do Card */}
-          <div className="bg-brand-blue text-white p-8 sm:p-10 text-center relative">
+          <div className="bg-brand-blue dark:bg-[#040817] text-white p-8 sm:p-10 text-center relative dark:border-b dark:border-white/10">
             <span className="inline-block bg-white/15 text-white text-xs font-extrabold uppercase tracking-wider px-3.5 py-1 rounded-full mb-3 border border-white/20">
               Melhor Avaliação de Guarapari
             </span>
             <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tight mb-2">
               Avalie Seu Usado
             </h1>
-            <p className="text-gray-200 text-xs sm:text-sm font-light max-w-[600px] mx-auto leading-relaxed">
+            <p className="text-gray-200 dark:text-gray-300 text-xs sm:text-sm font-light max-w-[600px] mx-auto leading-relaxed">
               Preencha os dados do seu veículo e envie fotos. Nossa equipe fará uma avaliação gratuita e responderá você direto no WhatsApp!
             </p>
           </div>
@@ -164,14 +164,14 @@ export default function AvalieSeuUsadoPage() {
           <form onSubmit={handleSubmit} className="p-6 sm:p-10 space-y-8">
             {/* Seção 1: Dados do Cliente */}
             <div className="space-y-4">
-              <h2 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-2 border-b pb-2 border-slate-100">
-                <span className="w-6 h-6 rounded-full bg-brand-blue text-white flex items-center justify-center text-xs">1</span>
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide flex items-center gap-2 border-b pb-2 border-slate-100 dark:border-white/10">
+                <span className="w-6 h-6 rounded-full bg-brand-blue dark:bg-blue-600 text-white flex items-center justify-center text-xs">1</span>
                 Seus Dados de Contato
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">
                     Nome Completo <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -180,12 +180,12 @@ export default function AvalieSeuUsadoPage() {
                     placeholder="Ex: João da Silva"
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">
                     WhatsApp <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -194,18 +194,18 @@ export default function AvalieSeuUsadoPage() {
                     placeholder="(27) 99999-9999"
                     value={formData.telefone}
                     onChange={(e) => setFormData({ ...formData, telefone: formatPhone(e.target.value) })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">Cidade / UF</label>
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">Cidade / UF</label>
                   <input
                     type="text"
                     placeholder="Ex: Guarapari / ES"
                     value={formData.cidade}
                     onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all"
                   />
                 </div>
               </div>
@@ -213,14 +213,14 @@ export default function AvalieSeuUsadoPage() {
 
             {/* Seção 2: Dados do Veículo */}
             <div className="space-y-4">
-              <h2 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-2 border-b pb-2 border-slate-100">
-                <span className="w-6 h-6 rounded-full bg-brand-blue text-white flex items-center justify-center text-xs">2</span>
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide flex items-center gap-2 border-b pb-2 border-slate-100 dark:border-white/10">
+                <span className="w-6 h-6 rounded-full bg-brand-blue dark:bg-blue-600 text-white flex items-center justify-center text-xs">2</span>
                 Informações do Veículo
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">
                     Marca / Fabricante <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -229,12 +229,12 @@ export default function AvalieSeuUsadoPage() {
                     placeholder="Ex: Chevrolet, Toyota..."
                     value={formData.marca}
                     onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">
                     Modelo <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -243,51 +243,51 @@ export default function AvalieSeuUsadoPage() {
                     placeholder="Ex: Onix 1.0 Turbo LT"
                     value={formData.modelo}
                     onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">Ano Fabricação / Mod.</label>
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">Ano Fabricação / Mod.</label>
                   <input
                     type="text"
                     placeholder="Ex: 2021/2022"
                     value={formData.ano}
                     onChange={(e) => setFormData({ ...formData, ano: e.target.value })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2">
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">Quilometragem (KM)</label>
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">Quilometragem (KM)</label>
                   <input
                     type="text"
                     placeholder="Ex: 45.000"
                     value={formData.quilometragem}
                     onChange={(e) => setFormData({ ...formData, quilometragem: e.target.value.replace(/\D/g, "") })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">Placa (Opcional)</label>
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">Placa (Opcional)</label>
                   <input
                     type="text"
                     placeholder="ABC1D23"
                     value={formData.placa}
                     onChange={(e) => setFormData({ ...formData, placa: e.target.value.toUpperCase() })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-bold uppercase focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all font-mono"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl p-3 text-sm text-slate-900 font-bold uppercase focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">Câmbio</label>
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">Câmbio</label>
                   <select
                     value={formData.cambio}
                     onChange={(e) => setFormData({ ...formData, cambio: e.target.value })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all bg-white"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all bg-white"
                   >
                     <option value="Manual">Manual</option>
                     <option value="Automático">Automático</option>
@@ -296,11 +296,11 @@ export default function AvalieSeuUsadoPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-xs text-slate-700 uppercase mb-1">Combustível</label>
+                  <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">Combustível</label>
                   <select
                     value={formData.combustivel}
                     onChange={(e) => setFormData({ ...formData, combustivel: e.target.value })}
-                    className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all bg-white"
+                    className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-xl p-3 text-sm text-slate-900 font-semibold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all bg-white"
                   >
                     <option value="Flex">Flex</option>
                     <option value="Gasolina">Gasolina</option>
@@ -312,41 +312,41 @@ export default function AvalieSeuUsadoPage() {
               </div>
 
               <div className="pt-2">
-                <label className="block font-bold text-xs text-slate-700 uppercase mb-1">Valor Pretendido (R$)</label>
+                <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">Valor Pretendido (R$)</label>
                 <input
                   type="text"
                   placeholder="Ex: R$ 45.000,00"
                   value={formData.valorPretendido}
                   onChange={(e) => setFormData({ ...formData, valorPretendido: formatCurrency(e.target.value) })}
-                  className="w-full border border-slate-300 rounded-xl p-3 text-sm text-emerald-700 font-extrabold focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                  className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 text-sm text-emerald-700 dark:text-emerald-400 font-extrabold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-xs text-slate-700 uppercase mb-1">Opcionais e Observações</label>
+                <label className="block font-bold text-xs text-slate-700 dark:text-gray-300 uppercase mb-1">Opcionais e Observações</label>
                 <textarea
                   rows={3}
                   placeholder="Conte-nos mais sobre seu carro (ex: Banco de couro, teto solar, único dono, revisões em concessionária...)"
                   value={formData.observacoes}
                   onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                  className="w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900 font-medium focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                  className="w-full border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 rounded-xl p-3 text-sm text-slate-900 font-medium focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue/20 transition-all"
                 />
               </div>
             </div>
 
             {/* Seção 3: Fotos do Veículo */}
             <div className="space-y-4">
-              <h2 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-2 border-b pb-2 border-slate-100">
-                <span className="w-6 h-6 rounded-full bg-brand-blue text-white flex items-center justify-center text-xs">3</span>
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide flex items-center gap-2 border-b pb-2 border-slate-100 dark:border-white/10">
+                <span className="w-6 h-6 rounded-full bg-brand-blue dark:bg-blue-600 text-white flex items-center justify-center text-xs">3</span>
                 Fotos do Veículo
               </h2>
 
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Adicione fotos do exterior, interior e painel para acelerar a avaliação da nossa equipe.
               </p>
 
               {/* Upload Box */}
-              <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 hover:bg-slate-100/80 transition-all cursor-pointer relative">
+              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition-all cursor-pointer relative">
                 <input
                   type="file"
                   multiple
@@ -355,13 +355,13 @@ export default function AvalieSeuUsadoPage() {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
                 <div className="flex flex-col items-center justify-center space-y-2">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xs border border-slate-200 text-2xl">
+                  <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center shadow-xs border border-slate-200 dark:border-slate-700 text-2xl">
                     📸
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-slate-800">
+                  <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white">
                     Clique aqui ou arraste para selecionar fotos do seu carro
                   </span>
-                  <span className="text-[11px] text-slate-500 font-medium">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                     Suporta imagens JPG, PNG ou WEBP
                   </span>
                 </div>
@@ -371,7 +371,7 @@ export default function AvalieSeuUsadoPage() {
               {photos.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                   {photos.map((photo) => (
-                    <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-xs aspect-square bg-slate-100">
+                    <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xs aspect-square bg-slate-100 dark:bg-slate-800">
                       <img src={photo.preview} alt="Preview do carro" className="w-full h-full object-cover" />
                       <button
                         type="button"
@@ -387,7 +387,7 @@ export default function AvalieSeuUsadoPage() {
             </div>
 
             {/* Botão de Envio */}
-            <div className="pt-4 border-t border-slate-100">
+            <div className="pt-4 border-t border-slate-100 dark:border-white/10">
               <button
                 type="submit"
                 disabled={isUploading}

@@ -113,7 +113,7 @@ export default function ProductPage() {
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
-                className="relative bg-gray-100 w-full aspect-[4/3] rounded-xl flex items-center justify-center text-gray-400 overflow-hidden shadow-md group"
+                className="relative bg-gray-100 dark:bg-slate-800/80 w-full aspect-[4/3] rounded-xl flex items-center justify-center text-gray-400 dark:text-gray-500 overflow-hidden shadow-md group border border-transparent dark:border-white/10"
               >
                 {carImages.length > 0 ? (
                   <img 
@@ -170,21 +170,21 @@ export default function ProductPage() {
             {/* Info */}
             <div className="w-full lg:w-[400px] flex flex-col justify-start lg:justify-between lg:py-1">
               <div>
-                <h1 className="text-[24px] md:text-[32px] font-bold text-gray-800 leading-tight">{car.title}</h1>
-                <h2 className="text-[24px] md:text-[32px] font-extrabold text-brand-blue uppercase mb-4 lg:mb-0">{car.subtitle}</h2>
+                <h1 className="text-[24px] md:text-[32px] font-bold text-gray-800 dark:text-white leading-tight">{car.title}</h1>
+                <h2 className="text-[24px] md:text-[32px] font-extrabold text-brand-blue dark:text-blue-400 uppercase mb-4 lg:mb-0">{car.subtitle}</h2>
               </div>
               
-              <div className="flex flex-col gap-3.5 my-6 lg:my-0 text-md text-gray-700">
+              <div className="flex flex-col gap-3.5 my-6 lg:my-0 text-md text-gray-700 dark:text-gray-300">
                 <div className="flex items-center gap-3">
-                  <Image src="/images/calendar icon.png" alt="Ano" width={20} height={20} className="opacity-70" unoptimized />
+                  <Image src="/images/calendar icon.png" alt="Ano" width={20} height={20} className="opacity-70 dark:invert dark:brightness-200" unoptimized />
                   <span className="font-medium">{car.year}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Image src="/images/velocimeter.png" alt="KM" width={20} height={20} className="opacity-70" unoptimized />
+                  <Image src="/images/velocimeter.png" alt="KM" width={20} height={20} className="opacity-70 dark:invert dark:brightness-200" unoptimized />
                   <span className="font-medium">{car.mileage}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Image src="/images/sticks.png" alt="Câmbio" width={20} height={20} className="opacity-70" unoptimized />
+                  <Image src="/images/sticks.png" alt="Câmbio" width={20} height={20} className="opacity-70 dark:invert dark:brightness-200" unoptimized />
                   <span className="font-medium">{car.transmission}</span>
                 </div>
               </div>
@@ -192,11 +192,11 @@ export default function ProductPage() {
               <div className="flex flex-col mb-6 lg:mb-0">
                 {car.isOffer && car.promoPrice ? (
                   <>
-                    <span className="text-sm md:text-md text-gray-400 line-through font-normal mb-1">{car.price}</span>
-                    <span className="text-[32px] md:text-[40px] font-extrabold text-green-600 leading-none">{car.promoPrice}</span>
+                    <span className="text-sm md:text-md text-gray-400 dark:text-gray-500 line-through font-normal mb-1">{car.price}</span>
+                    <span className="text-[32px] md:text-[40px] font-extrabold text-green-600 dark:text-emerald-400 leading-none">{car.promoPrice}</span>
                   </>
                 ) : (
-                  <span className="text-[32px] md:text-[40px] font-extrabold text-brand-blue leading-none">{car.price}</span>
+                  <span className="text-[32px] md:text-[40px] font-extrabold text-brand-blue dark:text-blue-400 leading-none">{car.price}</span>
                 )}
               </div>
 
@@ -205,11 +205,11 @@ export default function ProductPage() {
                   href={`https://wa.me/5527999361212?text=Olá! Gostaria de saber mais informações sobre o ${car.title} ${car.subtitle} (${car.year}) anunciado por ${car.isOffer && car.promoPrice ? car.promoPrice : car.price}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-brand-blue text-white rounded-[25px] w-full py-3 text-center font-bold text-lg hover:bg-blue-900 transition-colors shadow-md flex items-center justify-center"
+                  className="bg-brand-blue dark:bg-blue-600 text-white rounded-[25px] w-full py-3 text-center font-bold text-lg hover:bg-blue-900 dark:hover:bg-blue-500 transition-colors shadow-md flex items-center justify-center"
                 >
                   Fale conosco
                 </a>
-                <button className="border border-brand-blue text-brand-blue bg-white rounded-[25px] w-full py-3 text-center font-bold text-lg hover:bg-brand-blue hover:text-white transition-all shadow-sm">
+                <button className="border border-brand-blue dark:border-blue-400 text-brand-blue dark:text-blue-400 bg-white dark:bg-transparent rounded-[25px] w-full py-3 text-center font-bold text-lg hover:bg-brand-blue dark:hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                   Simular Financiamento
                 </button>
               </div>
@@ -218,13 +218,13 @@ export default function ProductPage() {
 
           {/* Lista de Miniaturas (Thumbnails) abaixo da foto principal e do bloco de Info */}
           {carImages.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto py-1 scrollbar-thin scrollbar-thumb-gray-300">
+            <div className="flex gap-3 overflow-x-auto py-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
               {carImages.map((imgUrl, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveImageIndex(index)}
-                  className={`relative w-20 sm:w-24 aspect-video rounded-lg overflow-hidden border-2 bg-white flex-shrink-0 transition-all cursor-pointer shadow-sm ${
-                    activeImageIndex === index ? "border-brand-blue scale-95" : "border-transparent hover:border-gray-300"
+                  className={`relative w-20 sm:w-24 aspect-video rounded-lg overflow-hidden border-2 bg-white dark:bg-slate-800 flex-shrink-0 transition-all cursor-pointer shadow-sm ${
+                    activeImageIndex === index ? "border-brand-blue dark:border-blue-400 scale-95" : "border-transparent hover:border-gray-300 dark:hover:border-slate-600"
                   }`}
                 >
                   <img 
@@ -241,8 +241,8 @@ export default function ProductPage() {
         {/* Acessórios e outros */}
         {car.accessories.length > 0 && (
           <section className="mb-16">
-            <h3 className="text-[24px] font-bold text-black mb-6">Acessórios e outros</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+            <h3 className="text-[24px] font-bold text-black dark:text-white mb-6">Acessórios e outros</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 dark:text-gray-300">
               <ul className="list-disc list-inside space-y-2">
                 {leftColAccessories.map((item, idx) => (
                   <li key={idx}>{item}</li>
@@ -260,7 +260,7 @@ export default function ProductPage() {
         {/* Você também pode gostar */}
         {recommendations.length > 0 && (
           <section className="mb-16">
-            <h3 className="text-[24px] font-bold text-black mb-6">Você também pode gostar:</h3>
+            <h3 className="text-[24px] font-bold text-black dark:text-white mb-6">Você também pode gostar:</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               {recommendations.map((car, index) => (
                 <CarCard key={index} {...car} />

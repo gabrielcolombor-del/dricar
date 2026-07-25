@@ -79,7 +79,7 @@ export default function Home() {
     <>
       <Header />
       
-      <main className="flex-1 w-full bg-white">
+      <main className="flex-1 w-full bg-white dark:bg-[#070f26] transition-colors duration-300">
         
         {/* Hero Section */}
         <section className="relative w-full h-[450px] md:h-[600px] flex items-center justify-center">
@@ -90,13 +90,13 @@ export default function Home() {
             className="object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 bg-black/10" /> 
+          <div className="absolute inset-0 bg-black/10 dark:bg-black/40" /> 
           
           {/* Search Box */}
-          <form onSubmit={handleSearchSubmit} className="relative z-10 bg-white p-7 rounded-[20px] w-[90%] max-w-[650px] shadow-[0_10px_40px_rgba(0,0,0,0.15)]">
-            <h3 className="font-bold text-[18px] mb-5 text-gray-800">Busque por um carro</h3>
+          <form onSubmit={handleSearchSubmit} className="relative z-10 bg-white dark:bg-[#0e1b42] dark:border dark:border-white/10 p-7 rounded-[20px] w-[90%] max-w-[650px] shadow-[0_10px_40px_rgba(0,0,0,0.15)] transition-colors duration-300">
+            <h3 className="font-bold text-[18px] mb-5 text-gray-800 dark:text-white">Busque por um carro</h3>
             <div className="relative">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
               <input 
@@ -104,21 +104,21 @@ export default function Home() {
                 placeholder="Pesquise por marca, modelo." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border border-gray-300 rounded-[25px] py-3.5 pl-12 pr-4 text-[15px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+                className="w-full border border-gray-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder-slate-400 rounded-[25px] py-3.5 pl-12 pr-4 text-[15px] focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-1 focus:ring-brand-blue dark:focus:ring-blue-400 transition-all"
               />
             </div>
           </form>
         </section>
 
         {/* Mais Buscados */}
-        <section className="bg-[#F8F8F8] py-20 border-t border-b border-gray-200">
+        <section className="bg-[#F8F8F8] dark:bg-[#040817] py-20 border-t border-b border-gray-200 dark:border-white/10 transition-colors duration-300">
           <div className="max-w-[1200px] mx-auto px-6">
             <div className="flex justify-between items-end mb-10">
               <div>
-                <h2 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none mb-1">Carros</h2>
-                <h4 className="text-[20px] font-bold text-gray-800 lowercase">mais buscados</h4>
+                <h2 className="text-[32px] font-extrabold text-brand-blue dark:text-blue-400 uppercase leading-none mb-1">Carros</h2>
+                <h4 className="text-[20px] font-bold text-gray-800 dark:text-gray-200 lowercase">mais buscados</h4>
               </div>
-              <Link href="/veiculos" className="font-bold text-[15px] text-gray-800 hover:text-brand-blue transition-colors">
+              <Link href="/veiculos" className="font-bold text-[15px] text-gray-800 dark:text-gray-300 hover:text-brand-blue dark:hover:text-white transition-colors">
                 ver todos
               </Link>
             </div>
@@ -142,7 +142,7 @@ export default function Home() {
         <section 
           onMouseEnter={handleHighlightInteract}
           onTouchStart={handleHighlightInteract}
-          className="md:hidden relative w-full h-[400px] overflow-hidden py-10 flex items-center justify-center bg-white border-b border-gray-100 px-8"
+          className="md:hidden relative w-full h-[400px] overflow-hidden py-10 flex items-center justify-center bg-white dark:bg-[#070f26] border-b border-gray-100 dark:border-white/10 px-8 transition-colors duration-300"
         >
           {/* Left Navigation Arrow */}
           <button 
@@ -252,8 +252,8 @@ export default function Home() {
 
         {/* Categorias */}
         <section className="max-w-[1200px] mx-auto py-16 px-6">
-          <h2 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none mb-1">Navegue</h2>
-          <h4 className="text-[20px] font-bold text-gray-800 lowercase mb-10">pelas nossas categorias</h4>
+          <h2 className="text-[32px] font-extrabold text-brand-blue dark:text-blue-400 uppercase leading-none mb-1">Navegue</h2>
+          <h4 className="text-[20px] font-bold text-gray-800 dark:text-gray-200 lowercase mb-10">pelas nossas categorias</h4>
           
           {/* Carousel Container */}
           <div className="relative w-full h-[260px] sm:h-[320px] overflow-hidden flex items-center justify-center px-8">
@@ -353,14 +353,14 @@ export default function Home() {
         </section>
 
         {/* Ofertas */}
-        <section className="bg-[#F8F8F8] py-20 border-t border-gray-200">
+        <section className="bg-[#F8F8F8] dark:bg-[#040817] py-20 border-t border-gray-200 dark:border-white/10 transition-colors duration-300">
           <div className="max-w-[1200px] mx-auto px-6">
             <div className="flex justify-between items-end mb-10">
               <div>
-                <h2 className="text-[32px] font-extrabold text-brand-blue uppercase leading-none mb-1">Confira</h2>
-                <h4 className="text-[20px] font-bold text-gray-800 lowercase">nossas ofertas</h4>
+                <h2 className="text-[32px] font-extrabold text-brand-blue dark:text-blue-400 uppercase leading-none mb-1">Confira</h2>
+                <h4 className="text-[20px] font-bold text-gray-800 dark:text-gray-200 lowercase">nossas ofertas</h4>
               </div>
-              <Link href="/veiculos" className="font-bold text-[15px] text-gray-800 hover:text-brand-blue transition-colors">
+              <Link href="/veiculos" className="font-bold text-[15px] text-gray-800 dark:text-gray-300 hover:text-brand-blue dark:hover:text-white transition-colors">
                 ver todos
               </Link>
             </div>

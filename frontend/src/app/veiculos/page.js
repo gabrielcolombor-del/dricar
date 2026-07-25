@@ -149,16 +149,16 @@ function VeiculosContent() {
   const anoPercent = getPercentage(ano, minYearLimit, maxYearLimit);
 
   return (
-    <main className="flex-1 w-full max-w-[1200px] mx-auto py-8 md:py-12 px-6 flex flex-col md:flex-row gap-8">
+    <main className="flex-1 w-full max-w-[1200px] mx-auto py-8 md:py-12 px-6 flex flex-col md:flex-row gap-8 transition-colors duration-300">
       {/* Mobile Filter Header Toggle */}
-      <div className="md:hidden flex justify-between items-center bg-brand-gray p-4 rounded-xl border border-gray-200">
+      <div className="md:hidden flex justify-between items-center bg-brand-gray dark:bg-[#0e1b42] p-4 rounded-xl border border-gray-200 dark:border-white/10 transition-colors duration-300">
         <div className="flex flex-col">
-          <span className="font-bold text-brand-blue text-md">Filtros</span>
-          <span className="text-[12px] text-gray-500">{filteredCars.length} veículos encontrados</span>
+          <span className="font-bold text-brand-blue dark:text-blue-400 text-md">Filtros</span>
+          <span className="text-[12px] text-gray-500 dark:text-gray-300">{filteredCars.length} veículos encontrados</span>
         </div>
         <button 
           onClick={() => setIsFiltersOpen(!isFiltersOpen)} 
-          className="bg-brand-blue text-white px-5 py-2.5 rounded-[25px] text-sm font-semibold flex items-center gap-2 transition-all hover:bg-opacity-95 shadow-sm active:scale-95 cursor-pointer"
+          className="bg-brand-blue dark:bg-blue-600 text-white px-5 py-2.5 rounded-[25px] text-sm font-semibold flex items-center gap-2 transition-all hover:bg-opacity-95 shadow-sm active:scale-95 cursor-pointer"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" className="w-4 h-4">
             {isFiltersOpen ? (
@@ -173,12 +173,12 @@ function VeiculosContent() {
 
       {/* Sidebar Filters */}
       <aside className={`w-full md:w-[300px] flex-shrink-0 transition-all duration-300 ${isFiltersOpen ? "block" : "hidden md:block"}`}>
-        <div className="bg-brand-gray p-6 rounded-xl border border-gray-100 shadow-sm">
+        <div className="bg-brand-gray dark:bg-[#0e1b42] p-6 rounded-xl border border-gray-100 dark:border-white/10 shadow-sm transition-colors duration-300">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-lg text-brand-blue">Filtre sua busca</h3>
+            <h3 className="font-bold text-lg text-brand-blue dark:text-blue-400">Filtre sua busca</h3>
             <button 
               onClick={handleClearFilters} 
-              className="text-sm underline text-gray-500 hover:text-brand-blue transition-colors cursor-pointer"
+              className="text-sm underline text-gray-500 dark:text-gray-300 hover:text-brand-blue dark:hover:text-white transition-colors cursor-pointer"
             >
               limpar filtros
             </button>
@@ -187,7 +187,7 @@ function VeiculosContent() {
           {/* Text Search Input */}
           <div className="mb-6">
             <div className="relative">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
               <input 
@@ -195,7 +195,7 @@ function VeiculosContent() {
                 placeholder="Pesquise por marca, modelo..." 
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
-                className="w-full border border-gray-300 rounded-md py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-brand-blue bg-white text-gray-800"
+                className="w-full border border-gray-300 dark:border-slate-700 rounded-md py-2 pl-9 pr-3 text-sm focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 bg-white dark:bg-slate-900 text-gray-800 dark:text-white dark:placeholder-slate-400"
               />
             </div>
           </div>
@@ -203,7 +203,7 @@ function VeiculosContent() {
           <div className="flex flex-col gap-6">
             {/* Brand & Model */}
             <div>
-              <h4 className="font-bold text-sm text-brand-blue mb-3">Marca e Modelo</h4>
+              <h4 className="font-bold text-sm text-brand-blue dark:text-blue-400 mb-3">Marca e Modelo</h4>
               <div className="flex flex-col gap-3">
                 <select 
                   value={selectedBrand} 
@@ -211,7 +211,7 @@ function VeiculosContent() {
                     setSelectedBrand(e.target.value);
                     setSelectedModel("");
                   }}
-                  className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm bg-white text-gray-700 focus:outline-none focus:border-brand-blue"
+                  className="w-full border border-gray-300 dark:border-slate-700 rounded-md py-2 px-3 text-sm bg-white dark:bg-slate-900 text-gray-700 dark:text-white focus:outline-none focus:border-brand-blue dark:focus:border-blue-400"
                 >
                   <option value="">Marca (Todas)</option>
                   {brands.map(brand => (
@@ -221,7 +221,7 @@ function VeiculosContent() {
                 <select 
                   value={selectedModel} 
                   onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md py-2 px-3 text-sm bg-white text-gray-700 focus:outline-none focus:border-brand-blue disabled:bg-gray-100 disabled:text-gray-400"
+                  className="w-full border border-gray-300 dark:border-slate-700 rounded-md py-2 px-3 text-sm bg-white dark:bg-slate-900 text-gray-700 dark:text-white focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 disabled:bg-gray-100 dark:disabled:bg-slate-800 disabled:text-gray-400 dark:disabled:text-slate-500"
                   disabled={!selectedBrand}
                 >
                   <option value="">Modelo (Todos)</option>
@@ -233,8 +233,8 @@ function VeiculosContent() {
             </div>
 
             {/* Preço Filter */}
-            <div className="border-t border-gray-200 pt-6">
-              <h4 className="font-bold text-sm text-brand-blue mb-6">Preço Máximo</h4>
+            <div className="border-t border-gray-200 dark:border-white/10 pt-6">
+              <h4 className="font-bold text-sm text-brand-blue dark:text-blue-400 mb-6">Preço Máximo</h4>
               <div className="px-2 relative pb-2 pt-6">
                 <div 
                   className="absolute bg-brand-blue text-white text-[11px] font-bold py-1 px-2.5 rounded shadow-sm -translate-x-1/2 top-0 whitespace-nowrap mb-2 transition-all duration-75"
@@ -253,7 +253,7 @@ function VeiculosContent() {
                   onChange={(e) => setPreco(Number(e.target.value))}
                   className="w-full accent-brand-blue cursor-pointer" 
                 />
-                <div className="flex justify-between text-[11px] mt-2 text-gray-500">
+                <div className="flex justify-between text-[11px] mt-2 text-gray-500 dark:text-gray-400">
                   <span>{formatPrice(minPriceLimit)}</span>
                   <span>{formatPrice(maxPriceLimit)}</span>
                 </div>
@@ -261,8 +261,8 @@ function VeiculosContent() {
             </div>
 
             {/* Ano Filter */}
-            <div className="border-t border-gray-200 pt-6">
-              <h4 className="font-bold text-sm text-brand-blue mb-6">Ano Mínimo</h4>
+            <div className="border-t border-gray-200 dark:border-white/10 pt-6">
+              <h4 className="font-bold text-sm text-brand-blue dark:text-blue-400 mb-6">Ano Mínimo</h4>
               <div className="px-2 relative pb-2 pt-6">
                 <div 
                   className="absolute bg-brand-blue text-white text-[11px] font-bold py-1 px-2.5 rounded shadow-sm -translate-x-1/2 top-0 whitespace-nowrap mb-2 transition-all duration-75"
@@ -281,7 +281,7 @@ function VeiculosContent() {
                   onChange={(e) => setAno(Number(e.target.value))}
                   className="w-full accent-brand-blue cursor-pointer" 
                 />
-                <div className="flex justify-between text-[11px] mt-2 text-gray-500">
+                <div className="flex justify-between text-[11px] mt-2 text-gray-500 dark:text-gray-400">
                   <span>{minYearLimit}</span>
                   <span>{maxYearLimit}</span>
                 </div>
@@ -289,15 +289,15 @@ function VeiculosContent() {
             </div>
 
             {/* Category & Transmission */}
-            <div className="border-t border-gray-200 pt-6">
-              <h4 className="font-bold text-sm text-brand-blue mb-3">Categoria e Câmbio</h4>
+            <div className="border-t border-gray-200 dark:border-white/10 pt-6">
+              <h4 className="font-bold text-sm text-brand-blue dark:text-blue-400 mb-3">Categoria e Câmbio</h4>
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-700">Categoria</span>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Categoria</span>
                   <select 
                     value={selectedCategory} 
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="border border-gray-300 rounded-md py-1 px-2 text-sm bg-white w-36 text-gray-700 focus:outline-none focus:border-brand-blue"
+                    className="border border-gray-300 dark:border-slate-700 rounded-md py-1 px-2 text-sm bg-white dark:bg-slate-900 w-36 text-gray-700 dark:text-white focus:outline-none focus:border-brand-blue dark:focus:border-blue-400"
                   >
                     <option value="">Todas</option>
                     {categories.map(cat => (
@@ -306,11 +306,11 @@ function VeiculosContent() {
                   </select>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-700">Câmbio</span>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Câmbio</span>
                   <select 
                     value={selectedTransmission} 
                     onChange={(e) => setSelectedTransmission(e.target.value)}
-                    className="border border-gray-300 rounded-md py-1 px-2 text-sm bg-white w-36 text-gray-700 focus:outline-none focus:border-brand-blue"
+                    className="border border-gray-300 dark:border-slate-700 rounded-md py-1 px-2 text-sm bg-white dark:bg-slate-900 w-36 text-gray-700 dark:text-white focus:outline-none focus:border-brand-blue dark:focus:border-blue-400"
                   >
                     <option value="">Todos</option>
                     {transmissions.map(trans => (
@@ -340,13 +340,13 @@ function VeiculosContent() {
 
         {/* Pagination */}
         <div className="mt-12 flex flex-col items-center justify-center gap-4">
-          <div className="flex items-center gap-4 text-xl font-bold text-gray-400">
-            <span className="text-brand-blue border-b-2 border-brand-blue px-2">1</span>
-            <span className="cursor-pointer hover:text-brand-blue transition-colors">2</span>
-            <span className="cursor-pointer hover:text-brand-blue transition-colors">3</span>
-            <span className="cursor-pointer hover:text-brand-blue transition-colors">{">"}</span>
+          <div className="flex items-center gap-4 text-xl font-bold text-gray-400 dark:text-slate-500">
+            <span className="text-brand-blue dark:text-blue-400 border-b-2 border-brand-blue dark:border-blue-400 px-2">1</span>
+            <span className="cursor-pointer hover:text-brand-blue dark:hover:text-blue-400 transition-colors">2</span>
+            <span className="cursor-pointer hover:text-brand-blue dark:hover:text-blue-400 transition-colors">3</span>
+            <span className="cursor-pointer hover:text-brand-blue dark:hover:text-blue-400 transition-colors">{">"}</span>
           </div>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             Mostrando {filteredCars.length} de {cars.length} veículos
           </span>
         </div>

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-brand-blue: #0B1D56;
@@ -16,8 +17,73 @@
   
   body {
     background-color: var(--color-brand-white);
-    color: var(--color-brand-blue);
+    color: #000000;
     font-family: var(--font-sans), sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  html.dark body {
+    background-color: #070f26;
+    color: #f1f5f9;
+  }
+
+  /* Default text colors and form input contrast */
+  :root:not(.dark) input,
+  :root:not(.dark) select,
+  :root:not(.dark) textarea {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+
+  :root:not(.dark) label {
+    color: #000000 !important;
+  }
+
+  :root:not(.dark) input::placeholder,
+  :root:not(.dark) textarea::placeholder {
+    color: #666666 !important;
+    opacity: 1;
+  }
+
+  :root:not(.dark) .text-gray-500,
+  :root:not(.dark) .text-slate-500,
+  :root:not(.dark) .text-gray-600,
+  :root:not(.dark) .text-slate-600 {
+    color: #111827;
+  }
+
+  html.dark input, 
+  html.dark select, 
+  html.dark textarea {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  /* Autofill contrast fixes */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: #000000 !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  html.dark input:-webkit-autofill,
+  html.dark input:-webkit-autofill:hover, 
+  html.dark input:-webkit-autofill:focus,
+  html.dark textarea:-webkit-autofill,
+  html.dark textarea:-webkit-autofill:hover,
+  html.dark textarea:-webkit-autofill:focus,
+  html.dark select:-webkit-autofill,
+  html.dark select:-webkit-autofill:hover,
+  html.dark select:-webkit-autofill:focus {
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important;
   }
 
   h1 {
