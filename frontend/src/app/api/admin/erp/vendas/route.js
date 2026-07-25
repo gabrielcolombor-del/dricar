@@ -12,6 +12,13 @@ export async function POST(request) {
 
     const body = await request.json();
     const {
+      action,
+      id,
+      marca,
+      modelo,
+      placa,
+      anoMod,
+      anoFab,
       veiculoId,
       clienteId,
       buyerName,
@@ -34,6 +41,60 @@ export async function POST(request) {
       valorRetornoBancario,
       dataVenda,
     } = body;
+
+    if (action === "update") {
+      const updatedVenda = await prisma.venda.update({
+        where: { id },
+        data: {
+          valorVendaVeiculo: valorVendaVeiculo !== undefined ? parseFloat(valorVendaVeiculo) : undefined,
+          dataVenda: dataVenda ? new Date(dataVenda) : undefined,
+        },
+      });
+
+      if (veiculoId) {
+        await prisma.veiculo.update({
+          where: { id: veiculoId },
+          data: {
+            marca: marca ? marca.trim() : undefined,
+            modelo: modelo ? modelo.trim() : undefined,
+            placa: placa ? placa.toUpperCase().trim() : undefined,
+            anoMod: anoMod ? parseInt(anoMod) : undefined,
+            anoFab: anoFab ? parseInt(anoFab) : undefined,
+          },
+        });
+        await prisma.car.updateMany({
+          where: { veiculoId },
+          data: {
+            brand: marca ? marca.trim() : undefined,
+            model: modelo ? modelo.trim() : undefined,
+            year: anoMod ? parseInt(anoMod) : undefined,
+          },
+        });
+      }
+
+      return NextResponse.json({ success: true, venda: updatedVenda });
+    }
+
+    if (action === "delete") {
+      if (!id) return NextResponse.json({ error: "ID da venda é obrigatório." }, { status: 400 });
+
+      await prisma.venda.delete({
+        where: { id },
+      });
+
+      if (veiculoId) {
+        await prisma.veiculo.updateMany({
+          where: { id: veiculoId },
+          data: { status: "Disponível" },
+        });
+        await prisma.car.updateMany({
+          where: { veiculoId },
+          data: { status: "available" },
+        });
+      }
+
+      return NextResponse.json({ success: true });
+    }
 
     const contratoPayload = {
       buyerName,

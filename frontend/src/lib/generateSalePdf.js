@@ -109,10 +109,15 @@ export async function generateSalePdf(saleData) {
         let textStr = "";
         if (typeof c === "string") {
           textStr = c.trim();
-        } else {
-          labelStr = c.label ? String(c.label).trim() : "";
-          textStr = c.text ? String(c.text).trim() : "";
+        } else if (c && typeof c === "object") {
+          labelStr = (c.label || c.docLabel || c.nome || c.title || "").toString().trim();
+          textStr = (c.text || c.value || c.valor || c.descricao || "").toString().trim();
         }
+
+        if (labelStr === "undefined") labelStr = "";
+        if (textStr === "undefined") textStr = "";
+
+        if (!labelStr && !textStr) return null;
 
         if (!textStr && labelStr.endsWith(":")) {
           labelStr = labelStr.replace(/:$/, "");
@@ -130,7 +135,7 @@ export async function generateSalePdf(saleData) {
           sep: sep,
         };
       })
-      .filter(item => item.label || item.text);
+      .filter(Boolean);
 
     const formatted = condicoesListaFormatted.map(item => {
       if (item.label && item.text) {
@@ -150,7 +155,11 @@ export async function generateSalePdf(saleData) {
     condicoesText = "À vista.";
   }
   if (condicoesListaFormatted.length === 0) {
-    condicoesListaFormatted.push({ label: "Valor pago à vista:", text: formattedPrice, sep: "." });
+    condicoesListaFormatted.push({
+      label: "Valor pago à vista:",
+      text: formattedPrice || "R$ 0,00",
+      sep: ".",
+    });
   }
 
   let segurosListaText = "";

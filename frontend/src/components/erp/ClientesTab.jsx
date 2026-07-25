@@ -24,6 +24,20 @@ export default function ClientesTab() {
     statusFunil: "",
   });
 
+  // Edição de Veículo / Venda no Modal
+  const [editingVendaId, setEditingVendaId] = useState(null);
+  const [vendaFormData, setVendaFormData] = useState({
+    id: "",
+    veiculoId: "",
+    marca: "",
+    modelo: "",
+    placa: "",
+    anoMod: "",
+    valorVendaVeiculo: "",
+    dataVenda: "",
+  });
+  const [vendaLoading, setVendaLoading] = useState(false);
+
   async function fetchClientes() {
     setLoading(true);
     setError("");
@@ -56,43 +70,44 @@ export default function ClientesTab() {
   const clientesFiltrados = clientes.filter((c) => {
     if (!busca) return true;
     const q = busca.toLowerCase().trim();
+    if (!q) return true;
 
     // Buscar por Nome (Pessoa)
     if (c.nome && c.nome.toLowerCase().includes(q)) return true;
 
-    // Buscar por CPF / CNPJ
-    if (c.cpfCnpj && c.cpfCnpj.toLowerCase().replace(/\D/g, "").includes(q.replace(/\D/g, ""))) return true;
-    if (c.cpfCnpj && c.cpfCnpj.toLowerCase().includes(q)) return true;
+    // Buscar por ID
+    if (c.id && c.id.toLowerCase().includes(q)) return true;
 
-    // Buscar por Telefone (Número)
-    if (c.telefone && c.telefone.toLowerCase().replace(/\D/g, "").includes(q.replace(/\D/g, ""))) return true;
+    // Buscar por string direta em CPF/CNPJ e Telefone
+    if (c.cpfCnpj && c.cpfCnpj.toLowerCase().includes(q)) return true;
     if (c.telefone && c.telefone.toLowerCase().includes(q)) return true;
+
+    // Buscar por apenas números (apenas se o usuário digitou ao menos 1 número)
+    const qDigits = q.replace(/\D/g, "");
+    if (qDigits.length > 0) {
+      if (c.cpfCnpj && c.cpfCnpj.replace(/\D/g, "").includes(qDigits)) return true;
+      if (c.telefone && c.telefone.replace(/\D/g, "").includes(qDigits)) return true;
+    }
 
     // Buscar por Veículo Comprado ou Interesse (Placa, Modelo, Marca)
     if (c.vendas && c.vendas.length > 0) {
       const matchVenda = c.vendas.some((v) => {
         const veic = v.veiculo || {};
         const car = veic.car || {};
-        return (
-          (veic.placa && veic.placa.toLowerCase().includes(q)) ||
-          (veic.modelo && veic.modelo.toLowerCase().includes(q)) ||
-          (veic.marca && veic.marca.toLowerCase().includes(q)) ||
-          (car.model && car.model.toLowerCase().includes(q)) ||
-          (car.brand && car.brand.toLowerCase().includes(q))
-        );
+        const marca = (veic.marca || car.brand || "").toLowerCase();
+        const modelo = (veic.modelo || car.model || "").toLowerCase();
+        const placa = (veic.placa || "").toLowerCase();
+        return placa.includes(q) || modelo.includes(q) || marca.includes(q);
       });
       if (matchVenda) return true;
     }
 
     if (c.veiculoInteresse) {
       const veic = c.veiculoInteresse;
-      if (
-        (veic.placa && veic.placa.toLowerCase().includes(q)) ||
-        (veic.modelo && veic.modelo.toLowerCase().includes(q)) ||
-        (veic.marca && veic.marca.toLowerCase().includes(q))
-      ) {
-        return true;
-      }
+      const marca = (veic.marca || "").toLowerCase();
+      const modelo = (veic.modelo || "").toLowerCase();
+      const placa = (veic.placa || "").toLowerCase();
+      if (placa.includes(q) || modelo.includes(q) || marca.includes(q)) return true;
     }
 
     return false;
@@ -106,8 +121,6 @@ export default function ClientesTab() {
 
   // KPIs
   const totalQualificados = clientes.length;
-  const clientesComCompra = clientes.filter((c) => c.vendas && c.vendas.length > 0).length;
-  const totalCarrosVendidos = clientes.reduce((acc, c) => acc + (c.vendas ? c.vendas.length : 0), 0);
 
   // Abrir Modal de Edição / Detalhes
   const handleOpenModal = (cliente) => {
@@ -157,6 +170,125 @@ export default function ClientesTab() {
     }
   };
 
+  // Excluir Cliente
+  const handleDeleteCliente = async (clienteId, nome) => {
+    if (!window.confirm(`Tem certeza que deseja excluir definitivamente o cliente "${nome || 'Selecionado'}" e todo o seu histórico de compras?`)) {
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/erp/clientes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id: clienteId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (selectedCliente && selectedCliente.id === clienteId) {
+          setShowModal(false);
+        }
+        fetchClientes();
+      } else {
+        alert(data.error || "Erro ao excluir cliente.");
+      }
+    } catch (err) {
+      alert("Erro ao conectar com o servidor para excluir cliente.");
+    }
+  };
+
+  // Iniciar Edição de Veículo / Venda
+  const handleStartEditVenda = (v) => {
+    const veic = v.veiculo || {};
+    const car = veic.car || {};
+    setEditingVendaId(v.id);
+    setVendaFormData({
+      id: v.id,
+      veiculoId: veic.id || "",
+      marca: veic.marca || car.brand || "",
+      modelo: veic.modelo || car.model || "",
+      placa: veic.placa || "",
+      anoMod: veic.anoMod || car.year || "",
+      valorVendaVeiculo: v.valorVendaVeiculo ? Number(v.valorVendaVeiculo).toString() : "0",
+      dataVenda: v.dataVenda ? new Date(v.dataVenda).toISOString().split("T")[0] : "",
+    });
+  };
+
+  // Salvar Edição do Veículo / Venda
+  const handleSaveVenda = async (e) => {
+    e.preventDefault();
+    setVendaLoading(true);
+    try {
+      const res = await fetch("/api/admin/erp/vendas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update",
+          ...vendaFormData,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEditingVendaId(null);
+        await fetchClientes();
+        setSelectedCliente((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            vendas: prev.vendas.map((item) => {
+              if (item.id === vendaFormData.id) {
+                return {
+                  ...item,
+                  valorVendaVeiculo: vendaFormData.valorVendaVeiculo,
+                  dataVenda: vendaFormData.dataVenda ? new Date(vendaFormData.dataVenda).toISOString() : item.dataVenda,
+                  veiculo: {
+                    ...item.veiculo,
+                    marca: vendaFormData.marca,
+                    modelo: vendaFormData.modelo,
+                    placa: vendaFormData.placa.toUpperCase(),
+                    anoMod: vendaFormData.anoMod,
+                  },
+                };
+              }
+              return item;
+            }),
+          };
+        });
+      } else {
+        alert(data.error || "Erro ao atualizar veículo/venda.");
+      }
+    } catch (err) {
+      alert("Erro ao conectar com o servidor.");
+    } finally {
+      setVendaLoading(false);
+    }
+  };
+
+  // Desvincular / Excluir Veículo
+  const handleDeleteVenda = async (v) => {
+    if (!window.confirm("Tem certeza que deseja desvincular/excluir este veículo do histórico do cliente?")) return;
+    try {
+      const res = await fetch("/api/admin/erp/vendas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id: v.id, veiculoId: v.veiculo?.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        await fetchClientes();
+        setSelectedCliente((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            vendas: prev.vendas.filter((item) => item.id !== v.id),
+          };
+        });
+      } else {
+        alert(data.error || "Erro ao desvincular veículo.");
+      }
+    } catch (err) {
+      alert("Erro ao comunicar com o servidor.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center shadow-sm animate-pulse">
@@ -170,42 +302,18 @@ export default function ClientesTab() {
 
   return (
     <div className="space-y-6 text-gray-800 animate-fade-in">
-      {/* Cards de Métricas / KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Card de Métrica / KPI */}
+      <div className="max-w-sm">
         <div className="bg-gradient-to-br from-blue-900 to-slate-900 text-white rounded-2xl p-5 shadow-lg border border-blue-800/40 relative overflow-hidden group hover:shadow-xl transition-all">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all"></div>
           <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block mb-1">
-            👥 Clientes Cadastrados (2+ Campos)
+            👥 Clientes Cadastrados
           </span>
           <p className="text-3xl font-extrabold text-white mt-1">
             {totalQualificados}
           </p>
           <span className="text-[10px] text-blue-200/80 mt-2 block flex items-center gap-1">
             <span>✅ Nome + Telefone e/ou CPF validados</span>
-          </span>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-            🚗 Clientes Com Carros Comprados
-          </span>
-          <p className="text-3xl font-extrabold text-emerald-600 mt-1">
-            {clientesComCompra}
-          </p>
-          <span className="text-[10px] text-gray-400 mt-2 block flex items-center gap-1">
-            <span>🔥 Vinculados ao estoque e histórico Dricar</span>
-          </span>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-            🏁 Total de Vendas Associadas
-          </span>
-          <p className="text-3xl font-extrabold text-brand-blue mt-1">
-            {totalCarrosVendidos}
-          </p>
-          <span className="text-[10px] text-gray-400 mt-2 block">
-            Veículos com proprietário identificado
           </span>
         </div>
       </div>
@@ -375,12 +483,21 @@ export default function ClientesTab() {
 
                       {/* Ações */}
                       <td className="p-4 align-middle text-center">
-                        <button
-                          onClick={() => handleOpenModal(cliente)}
-                          className="bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-700 font-bold px-3 py-1.5 rounded-lg text-xs transition-all shadow-2xs border border-slate-200 cursor-pointer"
-                        >
-                          👁️ Ver / Editar
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleOpenModal(cliente)}
+                            className="bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-700 font-bold px-3 py-1.5 rounded-lg text-xs transition-all shadow-2xs border border-slate-200 cursor-pointer"
+                          >
+                            👁️ Ver / Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCliente(cliente.id, cliente.nome)}
+                            className="bg-red-50 hover:bg-red-600 hover:text-white text-red-600 font-bold px-2.5 py-1.5 rounded-lg text-xs transition-all shadow-2xs border border-red-200 cursor-pointer"
+                            title="Excluir Cliente"
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -486,21 +603,143 @@ export default function ClientesTab() {
                       const dataVenda = v.dataVenda ? new Date(v.dataVenda).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "";
 
                       return (
-                        <div key={v.id} className="bg-white border border-gray-200 rounded-xl p-3 shadow-2xs">
-                          <div className="flex justify-between items-center">
-                            <span className="font-extrabold text-slate-900 text-xs">
-                              {marca} {modelo} {ano ? `(${ano})` : ""}
-                            </span>
-                            {placa && (
-                              <span className="bg-slate-900 text-white font-mono font-bold text-[10px] px-2 py-0.5 rounded">
-                                {placa}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] text-gray-600 mt-1 flex justify-between">
-                            <span>Valor de Venda: <strong className="text-emerald-700 font-bold">R$ {valorVenda}</strong></span>
-                            {dataVenda && <span>Data: <strong>{dataVenda}</strong></span>}
-                          </div>
+                        <div key={v.id} className="bg-white border border-gray-200 rounded-xl p-3 shadow-2xs hover:border-gray-300 transition-all">
+                          {editingVendaId === v.id ? (
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center pb-2 border-b border-gray-200">
+                                <span className="text-xs font-extrabold text-brand-blue uppercase">✏️ Editar Veículo / Venda</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingVendaId(null)}
+                                  className="text-gray-400 hover:text-gray-600 text-xs font-bold cursor-pointer"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2.5">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">Marca</label>
+                                  <input
+                                    type="text"
+                                    value={vendaFormData.marca}
+                                    onChange={(e) => setVendaFormData({ ...vendaFormData, marca: e.target.value })}
+                                    className="w-full bg-white border border-gray-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800"
+                                    placeholder="Ex: FORD"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">Modelo</label>
+                                  <input
+                                    type="text"
+                                    value={vendaFormData.modelo}
+                                    onChange={(e) => setVendaFormData({ ...vendaFormData, modelo: e.target.value })}
+                                    className="w-full bg-white border border-gray-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800"
+                                    placeholder="Ex: KA SE 1.0"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">Placa</label>
+                                  <input
+                                    type="text"
+                                    value={vendaFormData.placa}
+                                    onChange={(e) => setVendaFormData({ ...vendaFormData, placa: e.target.value.toUpperCase() })}
+                                    className="w-full bg-white border border-gray-300 rounded-lg p-1.5 text-xs font-bold font-mono text-slate-800"
+                                    placeholder="ABC1D23"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">Ano (Mod/Fab)</label>
+                                  <input
+                                    type="text"
+                                    value={vendaFormData.anoMod}
+                                    onChange={(e) => setVendaFormData({ ...vendaFormData, anoMod: e.target.value })}
+                                    className="w-full bg-white border border-gray-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800"
+                                    placeholder="2020"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">Valor de Venda (R$)</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={vendaFormData.valorVendaVeiculo}
+                                    onChange={(e) => setVendaFormData({ ...vendaFormData, valorVendaVeiculo: e.target.value })}
+                                    className="w-full bg-white border border-gray-300 rounded-lg p-1.5 text-xs font-bold text-emerald-700"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">Data da Venda</label>
+                                  <input
+                                    type="date"
+                                    value={vendaFormData.dataVenda}
+                                    onChange={(e) => setVendaFormData({ ...vendaFormData, dataVenda: e.target.value })}
+                                    className="w-full bg-white border border-gray-300 rounded-lg p-1.5 text-xs font-semibold text-slate-800"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteVenda(v)}
+                                  className="text-red-600 hover:bg-red-100 bg-red-50 border border-red-200 font-bold px-2.5 py-1 rounded-lg text-[11px] transition-all cursor-pointer"
+                                >
+                                  🗑️ Excluir Venda / Veículo
+                                </button>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingVendaId(null)}
+                                    className="px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 text-[11px] font-bold hover:bg-gray-100 transition-all cursor-pointer"
+                                  >
+                                    Cancelar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleSaveVenda}
+                                    disabled={vendaLoading}
+                                    className="px-3.5 py-1 rounded-lg bg-brand-blue text-white text-[11px] font-extrabold hover:opacity-90 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                                  >
+                                    {vendaLoading ? "Salvando..." : "💾 Salvar"}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-center">
+                                <span className="font-extrabold text-slate-900 text-xs">
+                                  {marca} {modelo} {ano ? `(${ano})` : ""}
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  {placa && (
+                                    <span className="bg-slate-900 text-white font-mono font-bold text-[10px] px-2 py-0.5 rounded">
+                                      {placa}
+                                    </span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditVenda(v)}
+                                    className="bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-700 px-2 py-1 rounded-lg text-[11px] font-bold transition-all border border-slate-200 cursor-pointer"
+                                    title="Editar Veículo"
+                                  >
+                                    ✏️ Editar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteVenda(v)}
+                                    className="bg-red-50 hover:bg-red-600 hover:text-white text-red-600 px-2 py-1 rounded-lg text-[11px] font-bold transition-all border border-red-200 cursor-pointer"
+                                    title="Excluir / Desvincular Veículo"
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="text-[11px] text-gray-600 mt-1 flex justify-between">
+                                <span>Valor de Venda: <strong className="text-emerald-700 font-bold">R$ {valorVenda}</strong></span>
+                                {dataVenda && <span>Data: <strong>{dataVenda}</strong></span>}
+                              </div>
+                            </>
+                          )}
                         </div>
                       );
                     })}
@@ -573,22 +812,31 @@ export default function ClientesTab() {
             </div>
 
             {/* Rodapé Modal */}
-            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3 shrink-0">
+            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center shrink-0">
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs transition-all cursor-pointer"
+                onClick={() => handleDeleteCliente(selectedCliente.id, selectedCliente.nome)}
+                className="px-3.5 py-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 font-bold text-xs transition-all cursor-pointer flex items-center gap-1"
               >
-                Cancelar
+                🗑️ Excluir Cliente
               </button>
-              <button
-                type="submit"
-                form="form-edit-cliente"
-                disabled={formLoading}
-                className="px-6 py-2 rounded-xl bg-brand-blue hover:opacity-90 text-white font-extrabold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50"
-              >
-                {formLoading ? "Salvando..." : "💾 Salvar Alterações"}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 font-bold text-xs transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  form="form-edit-cliente"
+                  disabled={formLoading}
+                  className="px-6 py-2 rounded-xl bg-brand-blue hover:opacity-90 text-white font-extrabold text-xs transition-all shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {formLoading ? "Salvando..." : "💾 Salvar Alterações"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
