@@ -78,19 +78,55 @@ export async function POST(request) {
     if (action === "delete") {
       if (!id) return NextResponse.json({ error: "ID da venda é obrigatório." }, { status: 400 });
 
+      const vendaToDelete = await prisma.venda.findUnique({
+        where: { id },
+      });
+      const targetVeiculoId = veiculoId || vendaToDelete?.veiculoId;
+
       await prisma.venda.delete({
         where: { id },
       });
 
-      if (veiculoId) {
+      if (targetVeiculoId) {
         await prisma.veiculo.updateMany({
-          where: { id: veiculoId },
+          where: { id: targetVeiculoId },
           data: { status: "Disponível" },
         });
         await prisma.car.updateMany({
-          where: { veiculoId },
-          data: { status: "available" },
+          where: { veiculoId: targetVeiculoId },
+          data: { status: "active", buyerName: null, soldPrice: null, soldDate: null },
         });
+
+        const clientes = await prisma.clienteCrm.findMany({
+          where: {
+            OR: [
+              { veiculoInteresseId: targetVeiculoId },
+              { vendas: { some: { veiculoId: targetVeiculoId } } },
+            ],
+          },
+          include: {
+            vendas: { include: { veiculo: true } },
+          },
+        });
+
+        for (const c of clientes) {
+          const outrasVendasValidas = c.vendas.filter(
+            (v) => v.veiculoId !== targetVeiculoId && v.veiculo && v.veiculo.status === "Vendido"
+          );
+          let updateData = {};
+          if (c.veiculoInteresseId === targetVeiculoId) {
+            updateData.veiculoInteresseId = outrasVendasValidas.length > 0 ? outrasVendasValidas[0].veiculoId : null;
+          }
+          if (c.statusFunil === "Fechado" && outrasVendasValidas.length === 0) {
+            updateData.statusFunil = "Contatado";
+          }
+          if (Object.keys(updateData).length > 0) {
+            await prisma.clienteCrm.update({
+              where: { id: c.id },
+              data: updateData,
+            });
+          }
+        }
       }
 
       return NextResponse.json({ success: true });

@@ -49,6 +49,54 @@ export async function GET(request) {
   }
 }
 
+async function revertSaleInCrm(veiculoId) {
+  try {
+    const clientes = await prisma.clienteCrm.findMany({
+      where: {
+        OR: [
+          { veiculoInteresseId: veiculoId },
+          { vendas: { some: { veiculoId } } },
+        ],
+      },
+      include: {
+        vendas: { include: { veiculo: true } },
+      },
+    });
+
+    await prisma.venda.deleteMany({
+      where: { veiculoId },
+    });
+
+    for (const c of clientes) {
+      const outrasVendasValidas = c.vendas.filter(
+        (v) => v.veiculoId !== veiculoId && v.veiculo && v.veiculo.status === "Vendido"
+      );
+      let updateData = {};
+
+      if (c.veiculoInteresseId === veiculoId) {
+        if (outrasVendasValidas.length > 0) {
+          updateData.veiculoInteresseId = outrasVendasValidas[0].veiculoId;
+        } else {
+          updateData.veiculoInteresseId = null;
+        }
+      }
+
+      if (c.statusFunil === "Fechado" && outrasVendasValidas.length === 0) {
+        updateData.statusFunil = "Contatado";
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await prisma.clienteCrm.update({
+          where: { id: c.id },
+          data: updateData,
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Erro ao reverter venda no CRM:", err);
+  }
+}
+
 async function syncVeiculoToCar(veiculo, catalogData = null) {
   try {
     const isSoldOrTransferred = veiculo.status === "Vendido" || veiculo.status === "Transferido";
@@ -67,6 +115,12 @@ async function syncVeiculoToCar(veiculo, catalogData = null) {
         year: yearString,
         status: carStatus,
       };
+
+      if (!isSoldOrTransferred) {
+        updateData.buyerName = null;
+        updateData.soldPrice = null;
+        updateData.soldDate = null;
+      }
 
       if (catalogData && typeof catalogData === "object") {
         if (catalogData.description !== undefined && catalogData.description !== null) {
@@ -185,9 +239,7 @@ export async function POST(request) {
       });
 
       if (existingVeiculo && existingVeiculo.status === "Vendido" && status !== "Vendido") {
-        await prisma.venda.deleteMany({
-          where: { veiculoId: id },
-        });
+        await revertSaleInCrm(id);
       }
 
       const updated = await prisma.veiculo.update({
@@ -207,9 +259,7 @@ export async function POST(request) {
       const newStatus = status || "Disponível";
 
       if (existingVeiculo && existingVeiculo.status === "Vendido" && newStatus !== "Vendido") {
-        await prisma.venda.deleteMany({
-          where: { veiculoId: id },
-        });
+        await revertSaleInCrm(id);
       }
 
       // Editar
