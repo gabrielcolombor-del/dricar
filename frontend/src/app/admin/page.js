@@ -9,6 +9,7 @@ import EstoqueTab from "@/components/erp/EstoqueTab";
 import CrmTab from "@/components/erp/CrmTab";
 import PosVendaTab from "@/components/erp/PosVendaTab";
 import FinanceiroTab from "@/components/erp/FinanceiroTab";
+import ClientesTab from "@/components/erp/ClientesTab";
 
 const PREDEFINED_ACCESSORIES = [
   "Ar-condicionado",
@@ -104,11 +105,11 @@ export default function AdminPage() {
   useEffect(() => {
     if (!user) return;
     const role = user.role?.toLowerCase();
-    if (role === "seller" && !["erp_crm", "estoque"].includes(activeTab)) {
+    if (role === "seller" && !["erp_crm", "erp_clientes", "estoque"].includes(activeTab)) {
       setActiveTab("erp_crm");
-    } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
+    } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_clientes", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
       setActiveTab("erp_estoque");
-    } else if (role === "posvenda" && !["erp_posvenda", "erp_estoque", "erp_crm"].includes(activeTab)) {
+    } else if (role === "posvenda" && !["erp_posvenda", "erp_estoque", "erp_crm", "erp_clientes"].includes(activeTab)) {
       setActiveTab("erp_posvenda");
     }
   }, [user, activeTab]);
@@ -787,6 +788,13 @@ export default function AdminPage() {
             🤝 CRM e Funil Vendas
           </button>
 
+          <button 
+            onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
+            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+          >
+            👥 Clientes & Histórico
+          </button>
+
           {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
             <button 
               onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
@@ -866,6 +874,7 @@ export default function AdminPage() {
         {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
         {activeTab === "erp_estoque" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <EstoqueTab />}
         {activeTab === "erp_crm" && <CrmTab />}
+        {activeTab === "erp_clientes" && <ClientesTab />}
         {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab />}
         {activeTab === "erp_financeiro" && (isAdmin || user?.role?.toLowerCase() === "manager") && <FinanceiroTab />}
 
