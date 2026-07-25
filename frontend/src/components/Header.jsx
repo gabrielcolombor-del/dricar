@@ -31,10 +31,7 @@ export default function Header() {
         <Link href="/veiculos" className="text-[15px] font-medium hover:text-gray-300 transition-colors">
           Compre
         </Link>
-        <Link href="/veiculos" className="text-[15px] font-medium hover:text-gray-300 transition-colors">
-          Venda
-        </Link>
-        <Link href="/veiculos" className="text-[15px] font-medium hover:text-gray-300 transition-colors">
+        <Link href="/financiamento" className="text-[15px] font-medium hover:text-gray-300 transition-colors">
           Financiamento
         </Link>
       </nav>
@@ -94,14 +91,7 @@ export default function Header() {
             Compre
           </Link>
           <Link 
-            href="/veiculos" 
-            onClick={() => setIsMenuOpen(false)}
-            className="text-[18px] font-semibold text-white hover:text-gray-300 transition-colors w-full text-center py-3 border-b border-white/5"
-          >
-            Venda
-          </Link>
-          <Link 
-            href="/veiculos" 
+            href="/financiamento" 
             onClick={() => setIsMenuOpen(false)}
             className="text-[18px] font-semibold text-white hover:text-gray-300 transition-colors w-full text-center py-3 border-b border-white/5"
           >

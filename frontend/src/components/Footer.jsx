@@ -86,12 +86,12 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Links: Vender */}
+          {/* Links: Vender / Avaliar */}
           <div className="flex flex-col items-center text-center">
-            <h4 className="font-bold text-lg mb-4 text-white uppercase tracking-wider">Vender</h4>
+            <h4 className="font-bold text-lg mb-4 text-white uppercase tracking-wider">Avaliação</h4>
             <ul className="space-y-2 text-sm text-gray-300 text-center flex flex-col items-center">
-              <li><Link href="/veiculos" className="hover:text-white transition-colors">Venda seu Veículo</Link></li>
-              <li><Link href="/veiculos" className="hover:text-white transition-colors">Financie seu Veículo</Link></li>
+              <li><Link href="/avalie-seu-usado" className="hover:text-white transition-colors">Avalie seu Usado</Link></li>
+              <li><Link href="/financiamento" className="hover:text-white transition-colors">Financie seu Veículo</Link></li>
             </ul>
           </div>
 

@@ -157,7 +157,7 @@ export default function Home() {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
           </button>
 
-          {/* Card 0: Troque seu carro */}
+          {/* Card 0: Avalie seu usado */}
           <div 
             onClick={() => {
               handleHighlightInteract();
@@ -170,14 +170,14 @@ export default function Home() {
             }`}
           >
             <h3 className="text-[20px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
-              Troque seu carro
+              Avalie seu usado
             </h3>
             <p className="text-[13px] text-gray-200 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
-              Quer trocar de carro? Avaliamos seu usado na hora e facilitamos a troca pelo modelo ideal para você!
+              Quer vender ou trocar de carro? Avaliamos seu usado na hora com a melhor avaliação do mercado!
             </p>
-            <Link href="/veiculos" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
+            <Link href="/avalie-seu-usado" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
             <div className="absolute bottom-4 right-4 w-[90px] h-[90px] flex items-center justify-center">
-              <Image src="/images/troca.png" alt="Troque seu carro" width={140} height={140} className="w-full h-full object-contain" />
+              <Image src="/images/troca.png" alt="Avalie seu usado" width={140} height={140} className="w-full h-full object-contain" />
             </div>
           </div>
 
@@ -199,7 +199,7 @@ export default function Home() {
             <p className="text-[13px] text-gray-600 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
               Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
             </p>
-            <Link href="/veiculos" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
+            <Link href="/financiamento" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
             <div className="absolute bottom-4 right-4 w-[80px] h-[80px] flex items-center justify-center">
               <Image src="/images/financia.png" alt="Financiamento" width={120} height={120} className="w-full h-full object-contain" />
             </div>
@@ -221,17 +221,17 @@ export default function Home() {
 
         {/* Desktop View: Side-by-side Cards */}
         <section className="hidden md:flex max-w-[1100px] mx-auto py-12 md:py-20 px-6 flex-row gap-8 justify-center items-center">
-          {/* Card 0: Troque seu carro */}
+          {/* Card 0: Avalie seu usado */}
           <div className="bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-xl hover:-translate-y-1 transition-transform">
             <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8 h-[72px]">
-              Troque seu carro
+              Avalie seu usado
             </h3>
             <p className="text-[14px] md:text-[15px] text-gray-200 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
-              Quer trocar de carro? Avaliamos seu usado na hora e facilitamos a troca pelo modelo ideal para você!
+              Quer vender ou trocar de carro? Avaliamos seu usado na hora com a melhor avaliação do mercado!
             </p>
-            <Link href="/veiculos" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
+            <Link href="/avalie-seu-usado" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
             <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[100px] h-[100px] md:w-[150px] md:h-[150px] flex items-center justify-center">
-              <Image src="/images/troca.png" alt="Troque seu carro" width={150} height={150} className="w-full h-full object-contain" />
+              <Image src="/images/troca.png" alt="Avalie seu usado" width={150} height={150} className="w-full h-full object-contain" />
             </div>
           </div>
 
@@ -243,7 +243,7 @@ export default function Home() {
             <p className="text-[14px] md:text-[15px] text-gray-600 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
               Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
             </p>
-            <Link href="/veiculos" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
+            <Link href="/financiamento" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
             <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[90px] h-[90px] md:w-[130px] md:h-[130px] flex items-center justify-center">
               <Image src="/images/financia.png" alt="Financiamento" width={130} height={130} className="w-full h-full object-contain" />
             </div>
