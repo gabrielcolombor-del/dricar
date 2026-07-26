@@ -3,11 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useTheme } from "@/components/ThemeContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { theme, toggleTheme, mounted } = useTheme();
 
   return (
     <header className="bg-brand-blue dark:bg-[#050b1d] text-brand-white w-full py-4 px-6 sm:px-12 flex items-center justify-between sticky top-0 z-50 shadow-md dark:border-b dark:border-white/10 transition-colors duration-300">
@@ -40,25 +38,6 @@ export default function Header() {
 
       {/* Action / Mobile Toggle */}
       <div className="flex-1 flex justify-end items-center gap-3 sm:gap-4">
-        {/* Dark Mode Toggle Button */}
-        {mounted && (
-          <button
-            onClick={toggleTheme}
-            className="p-2 sm:px-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all duration-300 flex items-center justify-center shadow-inner cursor-pointer"
-            aria-label="Alternar tema"
-            title={theme === "dark" ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
-          >
-            {theme === "dark" ? (
-              <span className="text-amber-300 text-lg sm:text-base flex items-center gap-1.5 font-bold px-0.5 animate-fade-in">
-                ☀️ <span className="text-xs font-sans hidden sm:inline">Claro</span>
-              </span>
-            ) : (
-              <span className="text-blue-200 text-lg sm:text-base flex items-center gap-1.5 font-bold px-0.5 animate-fade-in">
-                🌙 <span className="text-xs font-sans hidden sm:inline">Escuro</span>
-              </span>
-            )}
-          </button>
-        )}
 
         {/* Desktop Button */}
         <a 
