@@ -99,27 +99,6 @@ export default function Header() {
             Financiamento
           </Link>
 
-          {/* Mobile Theme Toggle in Drawer */}
-          {mounted && (
-            <button
-              onClick={() => {
-                toggleTheme();
-                setIsMenuOpen(false);
-              }}
-              className="mt-4 flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-[25px] py-3.5 px-8 text-[16px] font-semibold text-white transition-all w-full max-w-[280px] shadow-md cursor-pointer"
-            >
-              {theme === "dark" ? (
-                <>
-                  <span className="text-xl">☀️</span> Modo Claro
-                </>
-              ) : (
-                <>
-                  <span className="text-xl">🌙</span> Modo Escuro
-                </>
-              )}
-            </button>
-          )}
-
           <a 
             href="https://wa.me/5527999361212" 
             target="_blank" 
