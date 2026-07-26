@@ -670,25 +670,25 @@ export default function EstoqueTab() {
   return (
     <div className="space-y-6 text-gray-800 animate-fade-in">
       {/* Top Filter and Actions */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center flex-grow max-w-3xl">
           {/* Campo de Busca Geral */}
           <div className="flex-grow min-w-full sm:min-w-[220px]">
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">🔍 Pesquisar Veículo / Peças / Placa</label>
+            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">🔍 Pesquisar Veículo / Peças / Placa</label>
             <div className="relative">
               <input
                 type="text"
                 placeholder="Buscar por placa, modelo, renavam, chassi, peças..."
                 value={buscaGeral}
                 onChange={(e) => setBuscaGeral(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg py-2 pl-8 pr-7 text-xs bg-white text-slate-900 font-medium placeholder-gray-400 focus:outline-none focus:border-brand-blue"
+                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 pl-8 pr-7 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-brand-blue"
               />
-              <span className="absolute left-2.5 top-2 text-gray-400 text-xs">🔍</span>
+              <span className="absolute left-2.5 top-2 text-gray-400 dark:text-gray-400 text-xs">🔍</span>
               {buscaGeral && (
                 <button
                   onClick={() => setBuscaGeral("")}
-                  className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 text-xs font-bold"
+                  className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-white text-xs font-bold"
                 >
                   ✕
                 </button>
@@ -698,11 +698,11 @@ export default function EstoqueTab() {
 
           <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3">
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Status</label>
+              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">Status</label>
               <select
                 value={filtroStatus}
                 onChange={(e) => setFiltroStatus(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
               >
                 <option value="">Todos</option>
                 <option value="Disponível">Disponível</option>
@@ -715,11 +715,11 @@ export default function EstoqueTab() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Marca</label>
+              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">Marca</label>
               <select
                 value={filtroMarca}
                 onChange={(e) => setFiltroMarca(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
               >
                 <option value="">Todas</option>
                 {marcasUnicas.map(m => (
@@ -729,11 +729,11 @@ export default function EstoqueTab() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Ano</label>
+              <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">Ano</label>
               <select
                 value={filtroAno}
                 onChange={(e) => setFiltroAno(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
               >
                 <option value="">Todos</option>
                 {anosUnicos.map(a => (
@@ -744,28 +744,28 @@ export default function EstoqueTab() {
           </div>
 
           {/* Filtro por Período de Datas */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-150 w-full text-xs">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-150 dark:border-slate-700 w-full text-xs">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1">
               📅 Período:
             </span>
 
             <div className="flex items-center gap-1">
-              <span className="text-[10px] text-gray-400 font-medium">De:</span>
+              <span className="text-[10px] text-gray-400 dark:text-gray-300 font-medium">De:</span>
               <input
                 type="date"
                 value={dataInicio}
                 onChange={(e) => setDataInicio(e.target.value)}
-                className="border border-gray-300 rounded-lg py-1 px-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                className="border border-gray-300 dark:border-slate-700 rounded-lg py-1 px-2 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
               />
             </div>
 
             <div className="flex items-center gap-1">
-              <span className="text-[10px] text-gray-400 font-medium">Até:</span>
+              <span className="text-[10px] text-gray-400 dark:text-gray-300 font-medium">Até:</span>
               <input
                 type="date"
                 value={dataFim}
                 onChange={(e) => setDataFim(e.target.value)}
-                className="border border-gray-300 rounded-lg py-1 px-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                className="border border-gray-300 dark:border-slate-700 rounded-lg py-1 px-2 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
               />
             </div>
 
@@ -809,11 +809,11 @@ export default function EstoqueTab() {
       {/* Main Grid: Table & Center of Cost */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Vehicles Table */}
-        <div className={`bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden ${selectedVeiculo ? "lg:col-span-2" : "lg:col-span-3"}`}>
+        <div className={`bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden transition-colors ${selectedVeiculo ? "lg:col-span-2" : "lg:col-span-3"}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
+                <tr className="bg-gray-50 dark:bg-slate-800/80 border-b border-gray-200 dark:border-slate-700 text-gray-500 dark:text-gray-300">
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Placa</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Veículo</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Ano</th>
@@ -823,50 +823,50 @@ export default function EstoqueTab() {
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-center">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 text-gray-700">
+              <tbody className="divide-y divide-gray-200 dark:divide-slate-700/60 text-gray-700 dark:text-gray-300">
                 {veiculosFiltrados.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-8 text-center text-gray-400 text-xs">Nenhum veículo encontrado.</td>
+                    <td colSpan="7" className="p-8 text-center text-gray-400 dark:text-gray-400 text-xs">Nenhum veículo encontrado.</td>
                   </tr>
                 ) : (
                   veiculosPaginados.map(v => (
                     <tr
                       key={v.id}
                       onClick={() => setSelectedVeiculo(v)}
-                      className={`hover:bg-gray-50/70 transition-colors cursor-pointer ${
-                        selectedVeiculo && selectedVeiculo.id === v.id ? "bg-blue-50/30 font-semibold" : ""
+                      className={`hover:bg-gray-50/70 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${
+                        selectedVeiculo && selectedVeiculo.id === v.id ? "bg-blue-50/30 dark:bg-blue-900/30 font-semibold" : ""
                       }`}
                     >
-                      <td className="p-4 font-mono text-xs font-bold text-brand-blue uppercase">
+                      <td className="p-4 font-mono text-xs font-bold text-brand-blue dark:text-blue-400 uppercase">
                         {v.placa}
                       </td>
                       <td className="p-4 text-xs font-bold">
                         {v.marca} {v.modelo}
                       </td>
-                      <td className="p-4 text-xs text-gray-500">
+                      <td className="p-4 text-xs text-gray-500 dark:text-gray-400">
                         {v.anoFab}/{v.anoMod}
                       </td>
                       <td className="p-4 text-xs font-bold">
-                        <div className="text-slate-900 font-extrabold text-[11px] flex items-center gap-1">
-                          <span className="text-gray-400 font-semibold text-[10px]">🛒 Compra:</span>
+                        <div className="text-slate-900 dark:text-gray-100 font-extrabold text-[11px] flex items-center gap-1">
+                          <span className="text-gray-400 dark:text-gray-500 font-semibold text-[10px]">🛒 Compra:</span>
                           <span>R$ {Number(v.valorCompra).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                         </div>
                         {v.status === "Vendido" && v.vendas && v.vendas.length > 0 ? (
                           <div className="mt-0.5">
-                            <div className="text-emerald-700 font-extrabold text-[11px] flex items-center gap-1">
-                              <span className="text-emerald-600 font-semibold text-[10px]">💰 Venda:</span>
+                            <div className="text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px] flex items-center gap-1">
+                              <span className="text-emerald-600 dark:text-emerald-500 font-semibold text-[10px]">💰 Venda:</span>
                               <span>R$ {Number(v.vendas[0].valorVendaVeiculo).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                             </div>
                             {(v.vendas[0].cliente?.nome || v.vendas[0].contratoPayload?.buyerName) && (
-                              <div className="text-[10px] text-gray-500 font-semibold truncate max-w-[140px]" title={v.vendas[0].cliente?.nome || v.vendas[0].contratoPayload?.buyerName}>
+                              <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold truncate max-w-[140px]" title={v.vendas[0].cliente?.nome || v.vendas[0].contratoPayload?.buyerName}>
                                 👤 {v.vendas[0].cliente?.nome || v.vendas[0].contratoPayload?.buyerName}
                               </div>
                             )}
                           </div>
                         ) : v.status === "Vendido" ? (
-                          <div className="text-emerald-700 font-bold text-[10px] mt-0.5">💰 Vendido</div>
+                          <div className="text-emerald-700 dark:text-emerald-400 font-bold text-[10px] mt-0.5">💰 Vendido</div>
                         ) : (
-                          <div className="text-gray-400 font-medium text-[10px] mt-0.5">📦 Em Pátio</div>
+                          <div className="text-gray-400 dark:text-gray-500 font-medium text-[10px] mt-0.5">📦 Em Pátio</div>
                         )}
                       </td>
                       <td className="p-4 text-xs" onClick={(e) => e.stopPropagation()}>
@@ -875,16 +875,16 @@ export default function EstoqueTab() {
                           onChange={(e) => handleStatusChange(v, e.target.value)}
                           className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase border cursor-pointer focus:outline-none transition-all ${
                             v.status === "Disponível" 
-                              ? "bg-green-50 text-green-800 border-green-300 hover:bg-green-100" 
+                              ? "bg-green-50 text-green-800 dark:bg-emerald-950 dark:text-emerald-200 border-green-300 dark:border-emerald-700 hover:bg-green-100" 
                               : v.status === "Vendido" 
-                                ? "bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100" 
+                                ? "bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200 border-blue-300 dark:border-blue-700 hover:bg-blue-100" 
                                 : v.status === "Em processo de Transf."
-                                  ? "bg-purple-50 text-purple-800 border-purple-300 hover:bg-purple-100"
+                                  ? "bg-purple-50 text-purple-800 dark:bg-purple-950 dark:text-purple-200 border-purple-300 dark:border-purple-700 hover:bg-purple-100"
                                   : v.status === "Transferido"
-                                    ? "bg-teal-50 text-teal-800 border-teal-300 hover:bg-teal-100"
+                                    ? "bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-200 border-teal-300 dark:border-teal-700 hover:bg-teal-100"
                                     : v.status === "Transferência em aberto"
-                                      ? "bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100"
-                                      : "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
+                                      ? "bg-rose-50 text-rose-800 dark:bg-rose-950 dark:text-rose-200 border-rose-300 dark:border-rose-700 hover:bg-rose-100"
+                                      : "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-700 hover:bg-amber-100"
                           }`}
                         >
                           <option value="Disponível">Disponível</option>

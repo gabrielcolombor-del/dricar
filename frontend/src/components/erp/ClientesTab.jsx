@@ -317,10 +317,10 @@ export default function ClientesTab() {
       </div>
 
       {/* Barra de Busca e Filtros */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 transition-colors">
         <div className="flex flex-col sm:flex-row gap-3 flex-grow max-w-2xl">
           <div className="flex-grow">
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">
               🔍 Buscar por Pessoa, CPF, Número (Telefone) ou Veículo
             </label>
             <div className="relative">
@@ -329,13 +329,13 @@ export default function ClientesTab() {
                 placeholder="Digite nome do cliente, CPF, telefone, placa ou modelo do carro..."
                 value={busca}
                 onChange={handleSearchChange}
-                className="w-full border border-gray-300 rounded-xl p-3 pl-10 text-xs bg-slate-50 text-slate-900 font-semibold placeholder-gray-400 focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-inner"
+                className="w-full border border-gray-300 dark:border-slate-700 rounded-xl p-3 pl-10 text-xs bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white font-semibold placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all shadow-inner"
               />
-              <span className="absolute left-3 top-3 text-gray-400 text-sm">🔎</span>
+              <span className="absolute left-3 top-3 text-gray-400 dark:text-gray-400 text-sm">🔎</span>
               {busca && (
                 <button
                   onClick={() => { setBusca(""); setPage(1); }}
-                  className="absolute right-3 top-2.5 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-all"
+                  className="absolute right-3 top-2.5 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-600 dark:text-gray-300 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-all"
                 >
                   ✕
                 </button>
@@ -344,18 +344,18 @@ export default function ClientesTab() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-gray-500 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200 shrink-0">
+        <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-gray-500 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 shrink-0">
           <span className="font-bold">Total Encontrado:</span>
-          <span className="bg-brand-blue text-white px-2.5 py-0.5 rounded-full font-extrabold text-xs">
+          <span className="bg-brand-blue dark:bg-blue-600 text-white px-2.5 py-0.5 rounded-full font-extrabold text-xs">
             {totalItems}
           </span>
         </div>
       </div>
 
       {/* Tabela de Clientes */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-slate-50/70">
-          <h4 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
+      <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm transition-colors">
+        <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-slate-50/70 dark:bg-slate-800/50">
+          <h4 className="text-xs font-bold text-brand-blue dark:text-blue-400 uppercase tracking-wider flex items-center gap-2">
             <span>📋 Base de Clientes & Vínculo de Estoque</span>
           </h4>
           <span className="text-[11px] text-gray-500 font-medium">

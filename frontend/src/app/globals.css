@@ -27,36 +27,72 @@
     color: #f1f5f9;
   }
 
-  /* Default text colors and form input contrast */
-  :root:not(.dark) input,
-  :root:not(.dark) select,
-  :root:not(.dark) textarea {
+  /* Form input & select text color rules */
+  input, select, textarea {
+    color: #000000;
+  }
+
+  /* Inputs on light backgrounds ALWAYS get crisp black text */
+  input.bg-white,
+  select.bg-white,
+  textarea.bg-white,
+  .bg-white input,
+  .bg-white select,
+  .bg-white textarea {
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
   }
 
-  :root:not(.dark) label {
-    color: #000000 !important;
-  }
-
-  :root:not(.dark) input::placeholder,
-  :root:not(.dark) textarea::placeholder {
-    color: #666666 !important;
+  input.bg-white::placeholder,
+  textarea.bg-white::placeholder,
+  .bg-white input::placeholder,
+  .bg-white textarea::placeholder {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
     opacity: 1;
   }
 
-  :root:not(.dark) .text-gray-500,
-  :root:not(.dark) .text-slate-500,
-  :root:not(.dark) .text-gray-600,
-  :root:not(.dark) .text-slate-600 {
-    color: #111827;
-  }
-
-  html.dark input, 
-  html.dark select, 
-  html.dark textarea {
+  /* Inputs with dark background classes specifically get white text */
+  .dark input[class*="dark:bg-"],
+  .dark select[class*="dark:bg-"],
+  .dark textarea[class*="dark:bg-"] {
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
+  }
+
+  .dark input[class*="dark:bg-"]::placeholder,
+  .dark textarea[class*="dark:bg-"]::placeholder {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+  }
+
+  /* Ensure options inside select dropdowns have matching contrast */
+  option {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  html.dark option {
+    background-color: #0f172a;
+    color: #ffffff;
+  }
+
+  /* Text contrast on white cards in Dark Mode */
+  html.dark .bg-white .text-gray-400,
+  html.dark .bg-white .text-gray-500,
+  html.dark .bg-white .text-slate-400,
+  html.dark .bg-white .text-slate-500 {
+    color: #334155 !important;
+  }
+
+  html.dark .bg-white .text-gray-600,
+  html.dark .bg-white .text-gray-700,
+  html.dark .bg-white .text-gray-800,
+  html.dark .bg-white .text-slate-600,
+  html.dark .bg-white .text-slate-700,
+  html.dark .bg-white .text-slate-800,
+  html.dark .bg-white .text-slate-900 {
+    color: #0f172a !important;
   }
 
   /* Autofill contrast fixes */
@@ -73,15 +109,8 @@
     transition: background-color 5000s ease-in-out 0s;
   }
 
-  html.dark input:-webkit-autofill,
-  html.dark input:-webkit-autofill:hover, 
-  html.dark input:-webkit-autofill:focus,
-  html.dark textarea:-webkit-autofill,
-  html.dark textarea:-webkit-autofill:hover,
-  html.dark textarea:-webkit-autofill:focus,
-  html.dark select:-webkit-autofill,
-  html.dark select:-webkit-autofill:hover,
-  html.dark select:-webkit-autofill:focus {
+  html.dark input.dark\:bg-slate-900:-webkit-autofill,
+  html.dark input.dark\:bg-slate-800:-webkit-autofill {
     -webkit-text-fill-color: #ffffff !important;
     -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important;
   }
