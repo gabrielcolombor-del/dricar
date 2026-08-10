@@ -133,11 +133,14 @@ export async function generateSalePdf(saleData) {
 
         if (!labelStr && !textStr) return null;
 
-        if (!textStr && labelStr.endsWith(":")) {
-          labelStr = labelStr.replace(/:$/, "");
-        }
-        if (labelStr && !labelStr.endsWith(":")) {
-          labelStr += ":";
+        if (!textStr) {
+          if (labelStr.endsWith(":")) {
+            labelStr = labelStr.replace(/:$/, "");
+          }
+        } else {
+          if (labelStr && !labelStr.endsWith(":")) {
+            labelStr += ":";
+          }
         }
 
         const isLast = index === activeCondicoes.length - 1;

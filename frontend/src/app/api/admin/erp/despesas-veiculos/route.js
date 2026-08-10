@@ -53,7 +53,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { action, id, veiculoId, categoria, valor, dataDespesa } = body;
+    const { action, id, veiculoId, categoria, descricao, valor, dataDespesa } = body;
 
     const role = session.user.role?.toLowerCase();
     if (role === "seller") {
@@ -82,10 +82,12 @@ export async function POST(request) {
       return NextResponse.json({ error: "Veículo não encontrado." }, { status: 404 });
     }
 
+    const descAdicional = descricao && descricao.trim() ? ` - ${descricao.trim()}` : "";
+
     // Criar registro correspondente no Financeiro Geral (custos_fixos)
     const newCusto = await prisma.custoFixo.create({
       data: {
-        descricao: `Despesa Placa: ${veiculo.placa} (${veiculo.marca} ${veiculo.modelo}) - ${categoria.trim()}`,
+        descricao: `Despesa Placa: ${veiculo.placa} (${veiculo.marca} ${veiculo.modelo}) - ${categoria.trim()}${descAdicional}`,
         valor: parseFloat(valor),
         dataVencimento: new Date(dataDespesa),
         statusPagamento: "Pago",
@@ -97,6 +99,7 @@ export async function POST(request) {
       data: {
         veiculoId,
         categoria: categoria.trim(),
+        descricao: descricao ? descricao.trim() : null,
         valor: parseFloat(valor),
         dataDespesa: new Date(dataDespesa),
         custoFixoId: newCusto.id,

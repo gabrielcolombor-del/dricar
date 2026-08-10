@@ -29,7 +29,15 @@
 
   /* Form input & select text color rules */
   input, select, textarea {
-    color: #000000;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+  }
+
+  /* Password field rules: ensure asterisks render clearly with system font */
+  input[type="password"] {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+    -webkit-text-security: asterisk !important;
+    letter-spacing: 0.15em;
   }
 
   /* Inputs on light backgrounds ALWAYS get crisp black text */
@@ -47,9 +55,22 @@
   textarea.bg-white::placeholder,
   .bg-white input::placeholder,
   .bg-white textarea::placeholder {
-    color: #64748b !important;
-    -webkit-text-fill-color: #64748b !important;
+    color: #475569 !important;
+    -webkit-text-fill-color: #475569 !important;
     opacity: 1;
+  }
+
+  /* Ensure uniform text color across light mode so no text appears light gray in the middle of black */
+  :root:not(.dark) .text-slate-400,
+  :root:not(.dark) .text-slate-500,
+  :root:not(.dark) .text-slate-600,
+  :root:not(.dark) .text-slate-700,
+  :root:not(.dark) .text-gray-400,
+  :root:not(.dark) .text-gray-500,
+  :root:not(.dark) .text-gray-600,
+  :root:not(.dark) .text-gray-650,
+  :root:not(.dark) .text-gray-700 {
+    color: #000000 !important;
   }
 
   /* Inputs with dark background classes specifically get white text */
@@ -81,10 +102,7 @@
   html.dark .bg-white .text-gray-400,
   html.dark .bg-white .text-gray-500,
   html.dark .bg-white .text-slate-400,
-  html.dark .bg-white .text-slate-500 {
-    color: #334155 !important;
-  }
-
+  html.dark .bg-white .text-slate-500,
   html.dark .bg-white .text-gray-600,
   html.dark .bg-white .text-gray-700,
   html.dark .bg-white .text-gray-800,

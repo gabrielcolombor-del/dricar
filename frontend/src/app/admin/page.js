@@ -34,6 +34,7 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState(null); // Armazena dados do funcionário logado
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -707,14 +708,25 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-xs font-extrabold text-black dark:text-white uppercase mb-2">Senha</label>
-                <input 
-                  type="password"
-                  placeholder="Digite sua senha..."
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 dark:border-slate-700 rounded-lg p-3 text-sm font-bold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue dark:focus:ring-blue-400 bg-white dark:bg-slate-900 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-colors"
-                  required
-                />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Digite sua senha..."
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full border border-gray-300 dark:border-slate-700 rounded-lg p-3 pr-10 text-sm font-bold focus:outline-none focus:border-brand-blue dark:focus:border-blue-400 focus:ring-2 focus:ring-brand-blue dark:focus:ring-blue-400 bg-white dark:bg-slate-900 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-colors"
+                    style={{ WebkitTextSecurity: showPassword ? "none" : "asterisk" }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-slate-800 dark:hover:text-white text-xs font-bold p-1 cursor-pointer select-none"
+                    title={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  >
+                    {showPassword ? "🙈" : "👁️"}
+                  </button>
+                </div>
               </div>
 
               {error && (

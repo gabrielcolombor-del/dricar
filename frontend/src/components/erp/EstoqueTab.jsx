@@ -130,6 +130,7 @@ export default function EstoqueTab() {
   const [expenseError, setExpenseError] = useState("");
   const [formExpense, setFormExpense] = useState({
     categoria: "Mecânica",
+    descricao: "",
     valor: "",
     dataDespesa: new Date().toISOString().split("T")[0],
   });
@@ -285,6 +286,7 @@ export default function EstoqueTab() {
         body: JSON.stringify({
           veiculoId: selectedVeiculo.id,
           categoria: formExpense.categoria,
+          descricao: formExpense.descricao,
           valor: valorNum,
           dataDespesa: formExpense.dataDespesa,
         }),
@@ -294,6 +296,7 @@ export default function EstoqueTab() {
       if (res.ok && data.success) {
         setFormExpense({
           categoria: "Mecânica",
+          descricao: "",
           valor: "",
           dataDespesa: new Date().toISOString().split("T")[0],
         });
@@ -1201,6 +1204,8 @@ export default function EstoqueTab() {
                         <option value="Funilaria">Funilaria</option>
                         <option value="Lavagem">Lavagem</option>
                         <option value="IPVA">IPVA</option>
+                        <option value="Documento">Documento</option>
+                        <option value="Licenciamento">Licenciamento</option>
                         <option value="Detalhamento">Detalhamento</option>
                         <option value="Outros">Outros</option>
                       </select>
@@ -1216,6 +1221,17 @@ export default function EstoqueTab() {
                         required
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Descrição / Observação</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Troca de óleo, Licenciamento 2026..."
+                      value={formExpense.descricao}
+                      onChange={(e) => setFormExpense(prev => ({ ...prev, descricao: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white text-slate-900 font-medium placeholder-gray-400 focus:outline-none focus:border-brand-blue"
+                    />
                   </div>
 
                   <div>
@@ -1260,6 +1276,7 @@ export default function EstoqueTab() {
                     <div key={d.id} className="flex justify-between items-center bg-gray-50 hover:bg-gray-100/70 p-2.5 rounded-lg text-xs transition-colors">
                       <div>
                         <span className="font-semibold text-gray-700 block">{d.categoria}</span>
+                        {d.descricao && <span className="text-[11px] text-gray-600 block">{d.descricao}</span>}
                         <span className="text-[9px] text-gray-400">{new Date(d.dataDespesa).toLocaleDateString("pt-BR", {timeZone: 'UTC'})}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1701,7 +1718,7 @@ export default function EstoqueTab() {
                           salePriceExtenso: numeroParaExtenso(num),
                         }));
                       }}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-emerald-700 font-extrabold text-sm focus:outline-none focus:border-brand-blue"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold text-sm focus:outline-none focus:border-brand-blue"
                       required
                     />
                   </div>
@@ -1735,7 +1752,7 @@ export default function EstoqueTab() {
                   <label className="block font-black text-slate-900 uppercase text-xs tracking-wide">
                     Condições de Pagamento
                   </label>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-xs text-slate-900 font-bold">
                     Marque as condições aplicáveis a esta venda e preencha os detalhes:
                   </p>
 
@@ -1747,8 +1764,8 @@ export default function EstoqueTab() {
                           <label
                             className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs font-bold cursor-pointer transition-all ${
                               state.checked
-                                ? "border-blue-600 bg-blue-50/80 text-blue-950 shadow-sm"
-                                : "border-gray-200 bg-white text-slate-700 hover:border-gray-300 hover:bg-slate-100/60"
+                                ? "border-blue-600 bg-blue-50/80 text-slate-900 shadow-sm"
+                                : "border-gray-200 bg-white text-slate-900 hover:border-gray-300 hover:bg-slate-100/60"
                             }`}
                           >
                             <input
@@ -1779,11 +1796,9 @@ export default function EstoqueTab() {
                               <input
                                 type="text"
                                 value={state.text || ""}
+                                placeholder={opt.id === "observacoes" ? "Digite observações..." : "Digite o valor ou detalhes (ex: R$ 20.000 ou 36x R$ 800)"}
                                 onChange={(e) => {
-                                  let val = e.target.value;
-                                  if (["avista", "saldo", "cartao", "promissoria"].includes(opt.id)) {
-                                    val = formatCurrencyInput(val);
-                                  }
+                                  const val = e.target.value;
                                   setSaleForm((prev) => ({
                                     ...prev,
                                     condicoesState: {
@@ -1810,7 +1825,7 @@ export default function EstoqueTab() {
                   <label className="block font-black text-slate-900 uppercase text-xs tracking-wide">
                     Seguros Vinculados (Cláusula 8ª - Financiamento)
                   </label>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <p className="text-xs text-slate-900 font-bold">
                     Marque as opções de seguro contratadas:
                   </p>
 
@@ -1822,8 +1837,8 @@ export default function EstoqueTab() {
                           key={seguro}
                           className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs font-bold cursor-pointer transition-all ${
                             isChecked
-                              ? "border-blue-600 bg-blue-50/80 text-blue-950 shadow-sm"
-                              : "border-gray-200 bg-white text-slate-700 hover:border-gray-300 hover:bg-slate-100/60"
+                              ? "border-blue-600 bg-blue-50/80 text-slate-900 shadow-sm"
+                              : "border-gray-200 bg-white text-slate-900 hover:border-gray-300 hover:bg-slate-100/60"
                           }`}
                         >
                           <input
@@ -1848,7 +1863,7 @@ export default function EstoqueTab() {
 
                   {(saleForm.selectedSeguros || []).includes("OUTROS") && (
                     <div className="pt-1">
-                      <label className="block font-extrabold text-xs text-slate-800 uppercase mb-1">
+                      <label className="block font-extrabold text-xs text-slate-900 uppercase mb-1">
                         Nome do Seguro (Outros)
                       </label>
                       <input
@@ -1870,8 +1885,7 @@ export default function EstoqueTab() {
                       type="text"
                       value={saleForm.segurosValue || ""}
                       onChange={(e) => {
-                        const val = formatCurrencyInput(e.target.value);
-                        setSaleForm((prev) => ({ ...prev, segurosValue: val }));
+                        setSaleForm((prev) => ({ ...prev, segurosValue: e.target.value }));
                       }}
                       className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold"
                     />

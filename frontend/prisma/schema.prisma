@@ -81,6 +81,7 @@ model DespesaVeiculo {
   veiculoId   String   @map("veiculo_id") @db.Uuid
   veiculo     Veiculo  @relation(fields: [veiculoId], references: [id], onDelete: Cascade)
   categoria   String
+  descricao   String?
   valor       Decimal  @db.Decimal(12, 2)
   dataDespesa DateTime @map("data_despesa") @db.Date
   custoFixoId String?   @unique @map("custo_fixo_id") @db.Uuid

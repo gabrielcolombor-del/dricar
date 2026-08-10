@@ -16,9 +16,11 @@ export default function PosVendaTab() {
   const [showModal, setShowModal] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const [buscaPlacaModal, setBuscaPlacaModal] = useState("");
   const [formExpense, setFormExpense] = useState({
     veiculoId: "",
     categoria: "Mecânica",
+    descricao: "",
     valor: "",
     dataDespesa: new Date().toISOString().split("T")[0],
   });
@@ -83,6 +85,7 @@ export default function PosVendaTab() {
         body: JSON.stringify({
           veiculoId: formExpense.veiculoId,
           categoria: formExpense.categoria,
+          descricao: formExpense.descricao,
           valor: valorNum,
           dataDespesa: formExpense.dataDespesa,
         }),
@@ -94,9 +97,11 @@ export default function PosVendaTab() {
         setFormExpense({
           veiculoId: "",
           categoria: "Mecânica",
+          descricao: "",
           valor: "",
           dataDespesa: new Date().toISOString().split("T")[0],
         });
+        setBuscaPlacaModal("");
         fetchPosVendaData();
       } else {
         setFormError(data.error || "Erro ao registrar custo de pós venda.");
@@ -131,18 +136,30 @@ export default function PosVendaTab() {
     }
   };
 
-  // Filtragem de despesas
+  // Filtragem de despesas na tabela
   const despesasFiltradas = despesas.filter(d => {
     const termo = busca.toLowerCase().trim();
     const matchBusca = !termo || 
       (d.veiculo?.placa && d.veiculo.placa.toLowerCase().includes(termo)) ||
       (d.veiculo?.modelo && d.veiculo.modelo.toLowerCase().includes(termo)) ||
       (d.veiculo?.marca && d.veiculo.marca.toLowerCase().includes(termo)) ||
-      (d.categoria && d.categoria.toLowerCase().includes(termo));
+      (d.categoria && d.categoria.toLowerCase().includes(termo)) ||
+      (d.descricao && d.descricao.toLowerCase().includes(termo));
 
     const matchCategoria = !filtroCategoria || d.categoria === filtroCategoria;
 
     return matchBusca && matchCategoria;
+  });
+
+  // Veículos filtrados na busca do Modal de lançamento
+  const veiculosFiltradosModal = veiculos.filter(v => {
+    const term = buscaPlacaModal.toLowerCase().trim();
+    if (!term) return true;
+    return (
+      (v.placa && v.placa.toLowerCase().includes(term)) ||
+      (v.marca && v.marca.toLowerCase().includes(term)) ||
+      (v.modelo && v.modelo.toLowerCase().includes(term))
+    );
   });
 
   // Métricas
@@ -171,7 +188,7 @@ export default function PosVendaTab() {
           <p className="text-2xl font-extrabold text-brand-blue">
             {totalLancamentos}
           </p>
-          <span className="text-[10px] text-gray-400 mt-1 block">Registros de peças, revisões e serviços</span>
+          <span className="text-[10px] text-gray-400 mt-1 block">Registros de peças, revisões, IPVA e documentos</span>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
@@ -191,11 +208,11 @@ export default function PosVendaTab() {
           {/* Busca */}
           <div className="flex-grow">
             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-              🔍 Buscar por Placa / Veículo / Categoria
+              🔍 Buscar por Placa / Veículo / Categoria / Descrição
             </label>
             <input
               type="text"
-              placeholder="Digite a placa, modelo ou serviço..."
+              placeholder="Digite a placa, modelo ou descrição do serviço..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               className="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-white text-slate-900 font-semibold placeholder-gray-400 focus:outline-none focus:border-brand-blue"
@@ -216,6 +233,10 @@ export default function PosVendaTab() {
               <option value="Mecânica">Mecânica</option>
               <option value="Funilaria">Funilaria</option>
               <option value="Lavagem">Lavagem</option>
+              <option value="IPVA">IPVA</option>
+              <option value="Documento">Documento</option>
+              <option value="Licenciamento">Licenciamento</option>
+              <option value="Detalhamento">Detalhamento</option>
               <option value="Outros">Outros</option>
             </select>
           </div>
@@ -226,9 +247,11 @@ export default function PosVendaTab() {
             setFormExpense({
               veiculoId: "",
               categoria: "Mecânica",
+              descricao: "",
               valor: "",
               dataDespesa: new Date().toISOString().split("T")[0],
             });
+            setBuscaPlacaModal("");
             setFormError("");
             setShowModal(true);
           }}
@@ -266,7 +289,8 @@ export default function PosVendaTab() {
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Placa / Veículo</th>
-                  <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Categoria de Custo</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Categoria</th>
+                  <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Descrição / Observação</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Data Lançamento</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider">Valor (R$)</th>
                   <th className="p-4 text-[10px] font-bold uppercase tracking-wider text-center">Ações</th>
@@ -289,6 +313,13 @@ export default function PosVendaTab() {
                         <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-[10px] font-bold">
                           {d.categoria}
                         </span>
+                      </td>
+                      <td className="p-4 text-xs text-gray-600 font-medium max-w-xs truncate" title={d.descricao || ""}>
+                        {d.descricao ? (
+                          <span>{d.descricao}</span>
+                        ) : (
+                          <span className="text-gray-300 italic">Sem descrição</span>
+                        )}
                       </td>
                       <td className="p-4 text-xs text-gray-500 font-medium">
                         📅 {dataFmt}
@@ -317,7 +348,7 @@ export default function PosVendaTab() {
       {/* Modal Novo Custo Pós Venda */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/55 animate-fade-in">
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 w-[95%] sm:w-full max-w-[480px] max-h-[90vh] overflow-y-auto shadow-2xl relative">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 w-[95%] sm:w-full max-w-[500px] max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-sm font-extrabold text-brand-blue uppercase">
                 🛠️ Registrar Custo por Veículo (Pós Venda)
@@ -328,9 +359,23 @@ export default function PosVendaTab() {
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
+              {/* Pesquisa rápida por placa */}
               <div>
                 <label className="block font-bold text-gray-700 uppercase mb-1">
-                  Veículo Vendido (Pós Venda)
+                  🔎 Procurar Veículo pela Placa / Modelo
+                </label>
+                <input
+                  type="text"
+                  placeholder="Digite a placa (ex: ABC1D23) ou modelo..."
+                  value={buscaPlacaModal}
+                  onChange={(e) => setBuscaPlacaModal(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-slate-900 font-semibold focus:outline-none focus:border-brand-blue mb-2"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 uppercase mb-1">
+                  Veículo Selecionado *
                 </label>
                 <select
                   value={formExpense.veiculoId}
@@ -338,36 +383,30 @@ export default function PosVendaTab() {
                   className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
                   required
                 >
-                  <option value="">Selecione o veículo (vendido até 3 meses)...</option>
+                  <option value="">Selecione o veículo...</option>
                   
-                  {veiculos.filter(v => {
+                  {veiculosFiltradosModal.map(v => {
                     const isVendido = v.status === "Vendido" || (v.vendas && v.vendas.length > 0);
-                    if (!isVendido) return false;
-
-                    const limite90Dias = new Date();
-                    limite90Dias.setDate(limite90Dias.getDate() - 90);
-
-                    const dataRef = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda)
-                      ? new Date(v.vendas[0].dataVenda)
-                      : new Date(v.dataEntrada);
-
-                    return dataRef >= limite90Dias;
-                  }).map(v => {
                     const dataVendaStr = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda)
                       ? new Date(v.vendas[0].dataVenda).toLocaleDateString("pt-BR", { timeZone: "UTC" })
                       : null;
                     return (
                       <option key={v.id} value={v.id}>
-                        {v.marca} {v.modelo} - Placa: {v.placa} (Vendido{dataVendaStr ? ` em ${dataVendaStr}` : ""})
+                        [{v.placa || "SEM PLACA"}] {v.marca} {v.modelo} ({isVendido ? `Vendido${dataVendaStr ? ` em ${dataVendaStr}` : ""}` : `Em Estoque`})
                       </option>
                     );
                   })}
                 </select>
+                {veiculosFiltradosModal.length === 0 && (
+                  <p className="text-[10px] text-amber-600 font-medium mt-1">
+                    Nenhum veículo encontrado com o termo "{buscaPlacaModal}".
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="block font-bold text-gray-700 uppercase mb-1">
-                  Categoria de Custo
+                  Categoria de Custo *
                 </label>
                 <select
                   value={formExpense.categoria}
@@ -378,14 +417,31 @@ export default function PosVendaTab() {
                   <option value="Mecânica">Mecânica</option>
                   <option value="Funilaria">Funilaria</option>
                   <option value="Lavagem">Lavagem</option>
+                  <option value="IPVA">IPVA</option>
+                  <option value="Documento">Documento</option>
+                  <option value="Licenciamento">Licenciamento</option>
+                  <option value="Detalhamento">Detalhamento</option>
                   <option value="Outros">Outros</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 uppercase mb-1">
+                  📝 Descrição / Observação do Custo
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Troca de óleo, reparo no para-choque, IPVA 2026 parcela 1..."
+                  value={formExpense.descricao}
+                  onChange={(e) => setFormExpense(prev => ({ ...prev, descricao: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-medium placeholder-gray-400 focus:outline-none focus:border-brand-blue"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-gray-700 uppercase mb-1">
-                    Valor (R$)
+                    Valor (R$) *
                   </label>
                   <input
                     type="text"
@@ -399,7 +455,7 @@ export default function PosVendaTab() {
 
                 <div>
                   <label className="block font-bold text-gray-700 uppercase mb-1">
-                    Data Despesa
+                    Data Despesa *
                   </label>
                   <input
                     type="date"
