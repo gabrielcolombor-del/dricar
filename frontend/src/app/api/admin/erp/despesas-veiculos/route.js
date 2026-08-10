@@ -53,7 +53,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { action, id, veiculoId, categoria, descricao, valor, dataDespesa } = body;
+    const { action, id, veiculoId, categoria, descricao, valor, dataDespesa, origem } = body;
 
     const role = session.user.role?.toLowerCase();
     if (role === "seller") {
@@ -83,6 +83,7 @@ export async function POST(request) {
     }
 
     const descAdicional = descricao && descricao.trim() ? ` - ${descricao.trim()}` : "";
+    const origemFinal = origem || "Pós Venda";
 
     // Criar registro correspondente no Financeiro Geral (custos_fixos)
     const newCusto = await prisma.custoFixo.create({
@@ -92,6 +93,8 @@ export async function POST(request) {
         dataVencimento: new Date(dataDespesa),
         statusPagamento: "Pago",
         tipo: "Variável",
+        categoria: categoria.trim(),
+        origem: origemFinal,
       }
     });
 

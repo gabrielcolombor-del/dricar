@@ -13,9 +13,25 @@ export async function GET(request) {
     }
 
     const custos = await prisma.custoFixo.findMany({
-      orderBy: {
-        dataVencimento: "desc",
+      include: {
+        despesaVeiculo: {
+          include: {
+            veiculo: {
+              select: {
+                id: true,
+                placa: true,
+                marca: true,
+                modelo: true,
+                status: true,
+              },
+            },
+          },
+        },
       },
+      orderBy: [
+        { createdAt: "desc" },
+        { dataVencimento: "desc" },
+      ],
     });
 
     return NextResponse.json(custos);
@@ -33,7 +49,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { action, id, descricao, valor, dataVencimento, statusPagamento, tipo } = body;
+    const { action, id, descricao, valor, dataVencimento, statusPagamento, tipo, categoria, origem } = body;
 
     const role = session.user.role?.toLowerCase();
     if (role === "seller" || role === "posvenda") {
@@ -61,6 +77,8 @@ export async function POST(request) {
           dataVencimento: new Date(dataVencimento),
           statusPagamento,
           tipo: tipo || "Fixo",
+          categoria: categoria ? categoria.trim() : "Geral",
+          origem: origem ? origem.trim() : "Financeiro",
         },
       });
       return NextResponse.json({ success: true, custo: updated });
@@ -73,6 +91,8 @@ export async function POST(request) {
           dataVencimento: new Date(dataVencimento),
           statusPagamento,
           tipo: tipo || "Fixo",
+          categoria: categoria ? categoria.trim() : "Geral",
+          origem: origem ? origem.trim() : "Operacional",
         },
       });
       return NextResponse.json({ success: true, custo: newCusto });
