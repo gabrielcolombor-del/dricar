@@ -156,9 +156,15 @@ export default function DashboardTab() {
             value={selectedYear}
             onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
             className="bg-slate-900 text-amber-400 font-extrabold text-sm border border-amber-500/50 rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer"
+            style={{ color: "#fbbf24", WebkitTextFillColor: "#fbbf24", backgroundColor: "#0f172a" }}
           >
             {meta.anosDisponiveis && meta.anosDisponiveis.map((y) => (
-              <option key={y} value={y}>
+              <option 
+                key={y} 
+                value={y} 
+                className="bg-slate-900 text-amber-400 font-bold"
+                style={{ color: "#fbbf24", backgroundColor: "#0f172a" }}
+              >
                 {y} {y === new Date().getFullYear() ? "(Atual)" : ""}
               </option>
             ))}

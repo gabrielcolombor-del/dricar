@@ -75,6 +75,16 @@ export default function AdminPage() {
   const [uploadedImages, setUploadedImages] = useState([]); // Array de objetos { base64, name }
   const [imageUrlInput, setImageUrlInput] = useState(""); // Input local para adicionar imagem via URL
   const fileInputRef = useRef(null);
+  const navTabsRef = useRef(null);
+
+  const scrollNav = (direction) => {
+    if (navTabsRef.current) {
+      navTabsRef.current.scrollBy({
+        left: direction === "left" ? -250 : 250,
+        behavior: "smooth"
+      });
+    }
+  };
 
   // Estado para modal de CRM (Venda)
   const [showCrmModal, setShowCrmModal] = useState(false);
@@ -770,103 +780,128 @@ export default function AdminPage() {
         </div>
 
         {/* Tabs Menu */}
-        <div className="flex border-b border-gray-200 dark:border-white/10 mb-6 sm:mb-8 gap-2.5 sm:gap-4 overflow-x-auto pb-2 scrollbar-none select-none items-center touch-pan-x w-full">
-          <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
-            📊 ERP & CRM
-          </span>
-          
-          {isAdmin && (
-            <button 
-              onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-            >
-              📈 Dashboard
-            </button>
-          )}
-          
-          {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
-            <button 
-              onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-            >
-              🚗 Estoque & Histórico
-            </button>
-          )}
-          
-          <button 
-            onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
-            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_crm" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+        <div className="relative mb-6 sm:mb-8 flex items-center group">
+          <button
+            type="button"
+            onClick={() => scrollNav("left")}
+            className="flex items-center justify-center w-7 h-7 mr-1.5 text-gray-600 dark:text-gray-300 hover:text-brand-blue hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full shrink-0 transition-colors cursor-pointer border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold shadow-xs"
+            title="Rolar menu para a esquerda"
+            aria-label="Rolar menu para a esquerda"
           >
-            🤝 CRM e Funil Vendas
+            ◀
           </button>
 
-          <button 
-            onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
-            className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+          <div 
+            ref={navTabsRef}
+            className="flex border-b border-gray-200 dark:border-white/10 gap-2.5 sm:gap-4 overflow-x-auto pb-3 select-none items-center touch-pan-x w-full custom-tab-scrollbar"
           >
-            👥 Clientes & Histórico
-          </button>
-
-          {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
-            <button 
-              onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-            >
-              🛠️ Pós Venda
-            </button>
-          )}
-          
-          {(isAdmin || user?.role?.toLowerCase() === "manager") && (
-            <button 
-              onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-            >
-              💸 Financeiro Geral
-            </button>
-          )}
-
-          {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor) && (
-            <>
-              <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-2 shrink-0"></span>
-
-              <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
-                🌐 Catálogo Site
-              </span>
-              
+            <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
+              📊 ERP & CRM
+            </span>
+            
+            {isAdmin && (
               <button 
-                onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
-                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
+                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
               >
-                📦 Catálogo Ativo ({activeCars.length})
+                📈 Dashboard
               </button>
-            </>
-          )}
-
-          {activeTab === "cadastrar" && (
-            <button 
-              className="pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400 cursor-default"
-            >
-              ✏️ Editando Anúncio do Site
-            </button>
-          )}
-
-          {isAdmin && (
-            <>
-              <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-2 shrink-0"></span>
+            )}
+            
+            {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
               <button 
-                onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
-                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
+                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
               >
-                👥 Contas
+                🚗 Estoque & Histórico
               </button>
-            </>
-          )}
+            )}
+            
+            <button 
+              onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_crm" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+            >
+              🤝 CRM e Funil Vendas
+            </button>
 
-          <button 
-            onClick={handleLogout}
-            className="ml-auto pb-2 text-xs font-bold border-b-2 border-transparent text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+            <button 
+              onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
+              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+            >
+              👥 Clientes & Histórico
+            </button>
+
+            {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
+              <button 
+                onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
+                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+              >
+                🛠️ Pós Venda
+              </button>
+            )}
+            
+            {(isAdmin || user?.role?.toLowerCase() === "manager") && (
+              <button 
+                onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
+                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+              >
+                💸 Financeiro Geral
+              </button>
+            )}
+
+            {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor) && (
+              <>
+                <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-2 shrink-0"></span>
+
+                <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
+                  🌐 Catálogo Site
+                </span>
+                
+                <button 
+                  onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
+                  className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                >
+                  📦 Catálogo Ativo ({activeCars.length})
+                </button>
+              </>
+            )}
+
+            {activeTab === "cadastrar" && (
+              <button 
+                className="pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400 cursor-default"
+              >
+                ✏️ Editando Anúncio do Site
+              </button>
+            )}
+
+            {isAdmin && (
+              <>
+                <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-2 shrink-0"></span>
+                <button 
+                  onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
+                  className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                >
+                  👥 Contas
+                </button>
+              </>
+            )}
+
+            <button 
+              onClick={handleLogout}
+              className="ml-auto pb-2 text-xs font-bold border-b-2 border-transparent text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+            >
+              🚪 Sair
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => scrollNav("right")}
+            className="flex items-center justify-center w-7 h-7 ml-1.5 text-gray-600 dark:text-gray-300 hover:text-brand-blue hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full shrink-0 transition-colors cursor-pointer border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold shadow-xs"
+            title="Rolar menu para a direita"
+            aria-label="Rolar menu para a direita"
           >
-            🚪 Sair
+            ▶
           </button>
         </div>
 

@@ -29,8 +29,7 @@
 
   /* Form input & select text color rules */
   input, select, textarea {
-    color: #000000 !important;
-    -webkit-text-fill-color: #000000 !important;
+    color: #000000;
   }
 
   /* Password field rules: ensure asterisks render clearly with system font */
@@ -49,6 +48,19 @@
   .bg-white textarea {
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
+  }
+
+  /* Inputs/selects with custom text colors or dark background classes specifically keep their intended text color */
+  select[class*="text-amber-"],
+  input[class*="text-amber-"],
+  select[class*="bg-slate-"],
+  input[class*="bg-slate-"],
+  select[class*="text-white"],
+  input[class*="text-white"],
+  select[class*="text-yellow-"],
+  input[class*="text-yellow-"] {
+    color: inherit !important;
+    -webkit-text-fill-color: currentcolor !important;
   }
 
   input.bg-white::placeholder,
@@ -96,6 +108,48 @@
   html.dark option {
     background-color: #0f172a;
     color: #ffffff;
+  }
+
+  /* Custom visible horizontal scrollbar for navigation tabs */
+  .custom-tab-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 #e2e8f0;
+  }
+
+  html.dark .custom-tab-scrollbar {
+    scrollbar-color: #475569 #1e293b;
+  }
+
+  .custom-tab-scrollbar::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .custom-tab-scrollbar::-webkit-scrollbar-track {
+    background: #e2e8f0;
+    border-radius: 9999px;
+  }
+
+  .custom-tab-scrollbar::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 9999px;
+  }
+
+  .custom-tab-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+
+  html.dark .custom-tab-scrollbar::-webkit-scrollbar-track {
+    background: #1e293b;
+    border-radius: 9999px;
+  }
+
+  html.dark .custom-tab-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 9999px;
+  }
+
+  html.dark .custom-tab-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
   }
 
   /* Text contrast on white cards in Dark Mode */
