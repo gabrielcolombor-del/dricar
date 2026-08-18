@@ -1583,24 +1583,24 @@ export default function AdminPage() {
                   <div className="py-8 text-center text-gray-400 font-medium">Nenhum funcionário cadastrado no momento.</div>
                 ) : (
                   <div className="min-w-full overflow-hidden border border-gray-200 rounded-xl">
-                    <table className="min-w-full divide-y divide-gray-200">
+                    <table className="w-full divide-y divide-gray-200 text-left border-collapse">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nome</th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Login</th>
-                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cargo</th>
-                          <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Ações</th>
+                          <th className="px-3.5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nome</th>
+                          <th className="px-3.5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Login</th>
+                          <th className="px-3.5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cargo</th>
+                          <th className="px-3.5 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Ações</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200 text-gray-700">
                         {usersList.map((u) => {
                           const isSelf = u.id === user?.id || u.email === user?.email;
                           return (
-                            <tr key={u.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span className={`inline-flex px-2 py-1 text-xs font-bold rounded-full uppercase ${
+                            <tr key={u.id} className="hover:bg-gray-50/80 transition-colors">
+                              <td className="px-3.5 py-3 text-xs font-bold text-gray-900 truncate max-w-[150px]" title={u.name}>{u.name}</td>
+                              <td className="px-3.5 py-3 text-xs text-gray-500 truncate max-w-[120px]" title={u.email}>{u.email}</td>
+                              <td className="px-3.5 py-3 text-xs text-gray-500">
+                                <span className={`inline-flex px-2 py-0.5 text-[10px] font-black rounded-full uppercase ${
                                   u.role?.toLowerCase() === "admin" 
                                     ? "bg-purple-100 text-purple-800" 
                                     : u.role?.toLowerCase() === "manager" 
@@ -1610,29 +1610,35 @@ export default function AdminPage() {
                                   {getRoleBadge(u.role)}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex items-center justify-end gap-2">
-                                <button 
-                                  onClick={() => startEditUser(u)}
-                                  disabled={actionLoading}
-                                  className="text-brand-blue hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-xs font-bold flex items-center gap-1"
-                                  title="Editar login e senha desta conta"
-                                >
-                                  ✏️ Editar
-                                </button>
-
-                                {isSelf ? (
-                                  <span className="text-[10px] bg-purple-50 text-purple-700 font-bold px-2 py-1 rounded border border-purple-200">
-                                    Sua Conta
-                                  </span>
-                                ) : (
+                              <td className="px-3.5 py-3 text-center text-xs">
+                                <div className="flex items-center justify-center gap-1.5">
                                   <button 
-                                    onClick={() => handleDeleteUser(u.id)}
+                                    onClick={() => startEditUser(u)}
                                     disabled={actionLoading}
-                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-xs font-bold"
+                                    className="p-1.5 rounded-lg border border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white transition-all cursor-pointer text-xs font-bold flex items-center justify-center shadow-2xs"
+                                    title="Editar login e senha desta conta"
                                   >
-                                    Excluir
+                                    ✏️
                                   </button>
-                                )}
+
+                                  {isSelf ? (
+                                    <span 
+                                      className="p-1.5 text-[10px] bg-purple-50 text-purple-700 font-bold rounded-lg border border-purple-200 flex items-center justify-center"
+                                      title="Sua conta atual (Logado)"
+                                    >
+                                      👤
+                                    </span>
+                                  ) : (
+                                    <button 
+                                      onClick={() => handleDeleteUser(u.id)}
+                                      disabled={actionLoading}
+                                      className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-all cursor-pointer text-xs font-bold flex items-center justify-center shadow-2xs"
+                                      title="Excluir esta conta"
+                                    >
+                                      🗑️
+                                    </button>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           );
