@@ -197,7 +197,7 @@ export async function POST(request) {
 
     const body = await request.json();
     const { 
-      action, id, placa, marca, modelo, anoFab, anoMod, valorCompra, dataEntrada, status, documentoPendente, renavam, chassi,
+      action, id, placa, marca, modelo, anoFab, anoMod, valorCompra, dataEntrada, status, documentoPendente, renavam, chassi, ondeFoiComprado,
       // catalog fields
       description, mileage, transmission, price, category, accessories, images, isOffer, promoPrice
     } = body;
@@ -277,6 +277,7 @@ export async function POST(request) {
           documentoPendente: !!documentoPendente,
           renavam: renavam || null,
           chassi: chassi || null,
+          ondeFoiComprado: ondeFoiComprado ? ondeFoiComprado.trim() : null,
         },
       });
       await syncVeiculoToCar(updated, catalogData);
@@ -311,6 +312,7 @@ export async function POST(request) {
           documentoPendente: !!documentoPendente,
           renavam: renavam || null,
           chassi: chassi || null,
+          ondeFoiComprado: ondeFoiComprado ? ondeFoiComprado.trim() : null,
         },
       });
       await syncVeiculoToCar(newVeiculo, catalogData);

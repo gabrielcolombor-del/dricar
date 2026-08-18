@@ -81,6 +81,7 @@ export default function EstoqueTab() {
     documentoPendente: false,
     renavam: "",
     chassi: "",
+    ondeFoiComprado: "",
   });
 
   // Modal de Venda de Veículo (Baixa + Geração de PDF Oficial DRI-CAR)
@@ -177,6 +178,7 @@ export default function EstoqueTab() {
       (v.modelo && v.modelo.toLowerCase().includes(term)) ||
       (v.renavam && v.renavam.toLowerCase().includes(term)) ||
       (v.chassi && v.chassi.toLowerCase().includes(term)) ||
+      (v.ondeFoiComprado && v.ondeFoiComprado.toLowerCase().includes(term)) ||
       (v.status && v.status.toLowerCase().includes(term)) ||
       (`${v.anoFab}/${v.anoMod}`.includes(term)) ||
       (v.despesas && v.despesas.some(d => d.categoria && d.categoria.toLowerCase().includes(term)))
@@ -629,6 +631,7 @@ export default function EstoqueTab() {
       documentoPendente: v.documentoPendente,
       renavam: v.renavam || "",
       chassi: v.chassi || "",
+      ondeFoiComprado: v.ondeFoiComprado || "",
     });
     setFormError("");
     setShowModal(true);
@@ -799,6 +802,7 @@ export default function EstoqueTab() {
               documentoPendente: false,
               renavam: "",
               chassi: "",
+              ondeFoiComprado: "",
             });
             setFormError("");
             setShowModal(true);
@@ -1039,8 +1043,8 @@ export default function EstoqueTab() {
               </button>
             )}
 
-            {/* Datas de Entrada e Saída do Estoque */}
-            <div className="grid grid-cols-2 gap-3 bg-gray-50/80 p-3.5 rounded-xl border border-gray-200/80">
+            {/* Datas de Entrada e Saída do Estoque + Origem da Compra */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50/80 p-3.5 rounded-xl border border-gray-200/80">
               <div>
                 <span className="text-[9px] text-gray-500 uppercase font-bold block flex items-center gap-1">
                   📅 Data Entrada (Estoque)
@@ -1061,6 +1065,14 @@ export default function EstoqueTab() {
                     : selectedVeiculo.status === "Vendido"
                       ? "Vendido (Data não reg.)"
                       : "Em Pátio (Em aberto)"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[9px] text-gray-500 uppercase font-bold block flex items-center gap-1">
+                  🏪 Onde foi Comprado:
+                </span>
+                <span className="text-xs font-extrabold text-slate-900 block mt-1 truncate" title={selectedVeiculo.ondeFoiComprado || "Não informado"}>
+                  {selectedVeiculo.ondeFoiComprado || "Não informado"}
                 </span>
               </div>
             </div>
@@ -1319,7 +1331,7 @@ export default function EstoqueTab() {
                   📝 Dados Fiscais & Entrada
                 </h4>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block font-bold text-gray-700 uppercase mb-1">Placa</label>
                     <input
@@ -1347,6 +1359,16 @@ export default function EstoqueTab() {
                       value={formVeiculo.chassi}
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, chassi: e.target.value.toUpperCase().trim() }))}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold font-mono text-xs focus:border-brand-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 uppercase mb-1">Onde foi Comprado:</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Leilão, Particular, Troca..."
+                      value={formVeiculo.ondeFoiComprado}
+                      onChange={(e) => setFormVeiculo(prev => ({ ...prev, ondeFoiComprado: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold text-xs focus:border-brand-blue"
                     />
                   </div>
                 </div>

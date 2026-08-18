@@ -69,6 +69,7 @@ model Veiculo {
   documentoPendente  Boolean          @default(false) @map("documento_pendente")
   renavam            String?
   chassi             String?
+  ondeFoiComprado    String?          @map("onde_foi_comprado")
   despesas           DespesaVeiculo[]
   clientes           ClienteCrm[]
   vendas             Venda[]
