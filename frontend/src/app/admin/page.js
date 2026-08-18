@@ -761,169 +761,317 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#070f26] flex flex-col justify-between transition-colors duration-300">
       <Header />
       
-      <main className="flex-grow w-full max-w-[1200px] mx-auto py-5 sm:py-10 px-3 sm:px-6">
+      <main className="flex-grow w-full max-w-[1400px] mx-auto py-5 sm:py-8 px-3 sm:px-6">
         {/* Top Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8 bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xs">
           <div>
-            <h1 className="text-[26px] sm:text-[32px] font-extrabold text-brand-blue dark:text-blue-400 uppercase leading-tight">Painel de Controle</h1>
-            <p className="text-gray-500 dark:text-gray-300 text-xs sm:text-sm mt-1 sm:mt-2 flex flex-wrap items-center gap-1.5">
+            <h1 className="text-[24px] sm:text-[28px] font-extrabold text-brand-blue dark:text-blue-400 uppercase leading-tight">Painel de Controle</h1>
+            <p className="text-gray-500 dark:text-gray-300 text-xs sm:text-sm mt-1 flex flex-wrap items-center gap-2">
               <span>Funcionário: <strong className="text-brand-blue dark:text-blue-400">{user?.name}</strong></span>
               <span className="bg-brand-blue/10 dark:bg-blue-900/40 text-brand-blue dark:text-blue-300 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase">{getRoleBadge(user?.role)}</span>
             </p>
           </div>
           <button 
             onClick={handleLogout}
-            className="border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer self-start sm:self-auto"
+            className="border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer self-start sm:self-auto flex items-center gap-1.5"
           >
-            Sair do Painel
+            🚪 Sair do Painel
           </button>
         </div>
 
-        {/* Tabs Menu */}
-        <div className="relative mb-6 sm:mb-8 flex items-center group">
-          <button
-            type="button"
-            onClick={() => scrollNav("left")}
-            className="flex items-center justify-center w-7 h-7 mr-1.5 text-gray-600 dark:text-gray-300 hover:text-brand-blue hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full shrink-0 transition-colors cursor-pointer border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold shadow-xs"
-            title="Rolar menu para a esquerda"
-            aria-label="Rolar menu para a esquerda"
-          >
-            ◀
-          </button>
+        {/* Main Layout Container (Desktop Sidebar + Content) */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
 
-          <div 
-            ref={navTabsRef}
-            className="flex border-b border-gray-200 dark:border-white/10 gap-2.5 sm:gap-4 overflow-x-auto pb-3 select-none items-center touch-pan-x w-full custom-tab-scrollbar"
-          >
-            <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
-              📊 ERP & CRM
-            </span>
+          {/* LEFT SIDEBAR / MENU PANEL */}
+          <aside className="w-full lg:w-64 xl:w-72 shrink-0 bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs lg:sticky lg:top-4 transition-colors">
             
-            {isAdmin && (
-              <button 
-                onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
-                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-              >
-                📈 Dashboard
-              </button>
-            )}
-            
-            {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
-              <button 
-                onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
-                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-              >
-                🚗 Estoque & Histórico
-              </button>
-            )}
-            
-            <button 
-              onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_crm" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-            >
-              🤝 CRM e Funil Vendas
-            </button>
-
-            <button 
-              onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
-              className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-            >
-              👥 Clientes & Histórico
-            </button>
-
-            {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
-              <button 
-                onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
-                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-              >
-                🛠️ Pós Venda
-              </button>
-            )}
-            
-            {(isAdmin || user?.role?.toLowerCase() === "manager") && (
-              <button 
-                onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
-                className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-              >
-                💸 Financeiro Geral
-              </button>
-            )}
-
-            {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor) && (
-              <>
-                <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-2 shrink-0"></span>
-
-                <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
-                  🌐 Catálogo Site
-                </span>
-                
-                <button 
-                  onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
-                  className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+            {/* MOBILE HORIZONTAL BAR (< lg) */}
+            <div className="lg:hidden">
+              <div className="relative flex items-center group">
+                <button
+                  type="button"
+                  onClick={() => scrollNav("left")}
+                  className="flex items-center justify-center w-7 h-7 mr-1.5 text-gray-600 dark:text-gray-300 hover:text-brand-blue hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full shrink-0 transition-colors cursor-pointer border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold shadow-xs"
+                  title="Rolar menu para a esquerda"
+                  aria-label="Rolar menu para a esquerda"
                 >
-                  📦 Catálogo Ativo ({activeCars.length})
+                  ◀
                 </button>
-              </>
-            )}
 
-            {activeTab === "cadastrar" && (
-              <button 
-                className="pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400 cursor-default"
-              >
-                ✏️ Editando Anúncio do Site
-              </button>
-            )}
-
-            {isAdmin && (
-              <>
-                <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-2 shrink-0"></span>
-                <button 
-                  onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
-                  className={`pb-2 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                <div 
+                  ref={navTabsRef}
+                  className="flex gap-2.5 overflow-x-auto pb-1 select-none items-center touch-pan-x w-full custom-tab-scrollbar"
                 >
-                  👥 Contas
+                  <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
+                    📊 ERP
+                  </span>
+                  
+                  {isAdmin && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
+                      className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                    >
+                      📈 Dashboard
+                    </button>
+                  )}
+                  
+                  {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
+                      className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                    >
+                      🚗 Estoque
+                    </button>
+                  )}
+                  
+                  <button 
+                    onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
+                    className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_crm" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                  >
+                    🤝 CRM
+                  </button>
+
+                  <button 
+                    onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
+                    className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                  >
+                    👥 Clientes
+                  </button>
+
+                  {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
+                      className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                    >
+                      🛠️ Pós Venda
+                    </button>
+                  )}
+                  
+                  {(isAdmin || user?.role?.toLowerCase() === "manager") && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
+                      className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                    >
+                      💸 Financeiro
+                    </button>
+                  )}
+
+                  {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor) && (
+                    <>
+                      <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-1 shrink-0"></span>
+
+                      <button 
+                        onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
+                        className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                      >
+                        📦 Catálogo ({activeCars.length})
+                      </button>
+                    </>
+                  )}
+
+                  {activeTab === "cadastrar" && (
+                    <button 
+                      className="pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400 cursor-default"
+                    >
+                      ✏️ Editando
+                    </button>
+                  )}
+
+                  {isAdmin && (
+                    <>
+                      <span className="h-4 w-[1px] bg-gray-300 dark:bg-slate-700 mx-1 shrink-0"></span>
+                      <button 
+                        onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
+                        className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                      >
+                        👥 Contas
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => scrollNav("right")}
+                  className="flex items-center justify-center w-7 h-7 ml-1.5 text-gray-600 dark:text-gray-300 hover:text-brand-blue hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full shrink-0 transition-colors cursor-pointer border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold shadow-xs"
+                  title="Rolar menu para a direita"
+                  aria-label="Rolar menu para a direita"
+                >
+                  ▶
                 </button>
-              </>
+              </div>
+            </div>
+
+            {/* DESKTOP VERTICAL PANEL (lg+) */}
+            <div className="hidden lg:flex flex-col gap-5">
+              
+              {/* Header Title inside Side Panel */}
+              <div className="pb-3 border-b border-gray-100 dark:border-slate-800 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-brand-blue/10 dark:bg-blue-900/40 text-brand-blue dark:text-blue-400 flex items-center justify-center font-bold text-sm">
+                  🎛️
+                </div>
+                <div>
+                  <h2 className="text-xs font-extrabold uppercase text-gray-800 dark:text-gray-200 tracking-wider">
+                    Navegação
+                  </h2>
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
+                    Painel Dri-Car
+                  </p>
+                </div>
+              </div>
+
+              {/* Section 1: ERP & CRM */}
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-2 flex items-center gap-1.5">
+                  <span>📊 ERP & CRM</span>
+                </div>
+                <nav className="space-y-1">
+                  {isAdmin && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_dashboard" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                    >
+                      <span className="text-sm">📈</span>
+                      <span>Dashboard</span>
+                    </button>
+                  )}
+                  
+                  {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_estoque" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                    >
+                      <span className="text-sm">🚗</span>
+                      <span>Estoque & Histórico</span>
+                    </button>
+                  )}
+                  
+                  <button 
+                    onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_crm" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                  >
+                    <span className="text-sm">🤝</span>
+                    <span>CRM e Funil Vendas</span>
+                  </button>
+
+                  <button 
+                    onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_clientes" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                  >
+                    <span className="text-sm">👥</span>
+                    <span>Clientes & Histórico</span>
+                  </button>
+
+                  {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_posvenda" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                    >
+                      <span className="text-sm">🛠️</span>
+                      <span>Pós Venda</span>
+                    </button>
+                  )}
+                  
+                  {(isAdmin || user?.role?.toLowerCase() === "manager") && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_financeiro" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                    >
+                      <span className="text-sm">💸</span>
+                      <span>Financeiro Geral</span>
+                    </button>
+                  )}
+                </nav>
+              </div>
+
+              {/* Section 2: Catálogo Site */}
+              {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor || activeTab === "cadastrar") && (
+                <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-2 flex items-center gap-1.5">
+                    <span>🌐 CATÁLOGO SITE</span>
+                  </div>
+                  <nav className="space-y-1">
+                    {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor) && (
+                      <button 
+                        onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
+                        className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-between ${activeTab === "estoque" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-sm">📦</span>
+                          <span>Catálogo Ativo</span>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${activeTab === "estoque" ? "bg-white/20 text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300"}`}>
+                          {activeCars.length}
+                        </span>
+                      </button>
+                    )}
+
+                    {activeTab === "cadastrar" && (
+                      <button 
+                        className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all bg-brand-blue text-white shadow-sm dark:bg-blue-600 flex items-center gap-2.5 cursor-default"
+                      >
+                        <span className="text-sm">✏️</span>
+                        <span>Editando Anúncio</span>
+                      </button>
+                    )}
+                  </nav>
+                </div>
+              )}
+
+              {/* Section 3: Administração */}
+              {isAdmin && (
+                <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-2 flex items-center gap-1.5">
+                    <span>⚙️ SISTEMA</span>
+                  </div>
+                  <nav className="space-y-1">
+                    <button 
+                      onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "usuarios" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                    >
+                      <span className="text-sm">👥</span>
+                      <span>Contas & Usuários</span>
+                    </button>
+                  </nav>
+                </div>
+              )}
+
+              {/* Logout Quick Button inside Panel */}
+              <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all cursor-pointer flex items-center gap-2.5"
+                >
+                  <span className="text-sm">🚪</span>
+                  <span>Sair do Painel</span>
+                </button>
+              </div>
+
+            </div>
+
+          </aside>
+
+          {/* MAIN CONTENT AREA ON RIGHT */}
+          <div className="flex-1 w-full min-w-0">
+            {/* ERROS E LOADINGS */}
+            {error && (
+              <div className="text-red-600 text-sm font-semibold bg-red-50 p-4 rounded-xl border border-red-100 mb-6">
+                {error}
+              </div>
+            )}
+            {actionLoading && (
+              <div className="text-brand-blue text-sm font-semibold bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6 animate-pulse">
+                Processando gravação no banco de dados e upload de imagem no Supabase Storage... Aguarde.
+              </div>
             )}
 
-            <button 
-              onClick={handleLogout}
-              className="ml-auto pb-2 text-xs font-bold border-b-2 border-transparent text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
-            >
-              🚪 Sair
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => scrollNav("right")}
-            className="flex items-center justify-center w-7 h-7 ml-1.5 text-gray-600 dark:text-gray-300 hover:text-brand-blue hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full shrink-0 transition-colors cursor-pointer border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold shadow-xs"
-            title="Rolar menu para a direita"
-            aria-label="Rolar menu para a direita"
-          >
-            ▶
-          </button>
-        </div>
-
-        {/* ERROS E LOADINGS */}
-        {error && (
-          <div className="text-red-600 text-sm font-semibold bg-red-50 p-4 rounded-lg border border-red-100 mb-6">
-            {error}
-          </div>
-        )}
-        {actionLoading && (
-          <div className="text-brand-blue text-sm font-semibold bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 animate-pulse">
-            Processando gravação no banco de dados e upload de imagem no Supabase Storage... Aguarde.
-          </div>
-        )}
-
-        {/* ERP TABS RENDERING */}
-        {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
-        {activeTab === "erp_estoque" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <EstoqueTab />}
-        {activeTab === "erp_crm" && <CrmTab />}
-        {activeTab === "erp_clientes" && <ClientesTab />}
-        {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab />}
-        {activeTab === "erp_financeiro" && (isAdmin || user?.role?.toLowerCase() === "manager") && <FinanceiroTab />}
+            {/* ERP TABS RENDERING */}
+            {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
+            {activeTab === "erp_estoque" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <EstoqueTab />}
+            {activeTab === "erp_crm" && <CrmTab />}
+            {activeTab === "erp_clientes" && <ClientesTab />}
+            {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab />}
+            {activeTab === "erp_financeiro" && (isAdmin || user?.role?.toLowerCase() === "manager") && <FinanceiroTab />}
 
         {/* TAB 1: ESTOQUE ATIVO */}
         {activeTab === "estoque" && (() => {
@@ -1489,6 +1637,8 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+          </div>
+        </div>
       </main>
 
       {/* MODAL: MARCAR COMO VENDIDO (CRM) */}
