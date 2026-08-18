@@ -116,11 +116,11 @@ export default function AdminPage() {
   useEffect(() => {
     if (!user) return;
     const role = user.role?.toLowerCase();
-    if (role === "seller" && !["erp_crm", "erp_clientes", "estoque"].includes(activeTab)) {
+    if (role === "seller" && !["erp_crm", "estoque"].includes(activeTab)) {
       setActiveTab("erp_crm");
-    } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_clientes", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
+    } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_clientes", "erp_posvenda", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
       setActiveTab("erp_estoque");
-    } else if (role === "posvenda" && !["erp_posvenda", "erp_estoque", "erp_crm", "erp_clientes"].includes(activeTab)) {
+    } else if (role === "posvenda" && !["erp_crm", "erp_posvenda"].includes(activeTab)) {
       setActiveTab("erp_posvenda");
     }
   }, [user, activeTab]);
@@ -139,6 +139,8 @@ export default function AdminPage() {
             const role = session.user.role?.toLowerCase();
             if (role === "seller") {
               setActiveTab("erp_crm");
+            } else if (role === "posvenda") {
+              setActiveTab("erp_posvenda");
             } else if (role === "manager") {
               setActiveTab("erp_estoque");
             }
@@ -308,6 +310,8 @@ export default function AdminPage() {
         const role = session.user.role?.toLowerCase();
         if (role === "seller") {
           setActiveTab("erp_crm");
+        } else if (role === "posvenda") {
+          setActiveTab("erp_posvenda");
         } else if (role === "manager") {
           setActiveTab("erp_estoque");
         } else {
@@ -815,7 +819,7 @@ export default function AdminPage() {
                     </button>
                   )}
                   
-                  {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
+                  {(isAdmin || user?.role?.toLowerCase() === "manager") && (
                     <button 
                       onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
                       className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
@@ -831,14 +835,16 @@ export default function AdminPage() {
                     🤝 CRM
                   </button>
 
-                  <button 
-                    onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
-                    className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
-                  >
-                    👥 Clientes
-                  </button>
+                  {(isAdmin || user?.role?.toLowerCase() === "manager") && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
+                      className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
+                    >
+                      👥 Clientes
+                    </button>
+                  )}
 
-                  {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
+                  {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
                     <button 
                       onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
                       className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
@@ -936,7 +942,7 @@ export default function AdminPage() {
                     </button>
                   )}
                   
-                  {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
+                  {(isAdmin || user?.role?.toLowerCase() === "manager") && (
                     <button 
                       onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_estoque" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
@@ -954,15 +960,17 @@ export default function AdminPage() {
                     <span>CRM e Funil Vendas</span>
                   </button>
 
-                  <button 
-                    onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
-                    className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_clientes" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
-                  >
-                    <span className="text-sm">👥</span>
-                    <span>Clientes & Histórico</span>
-                  </button>
+                  {(isAdmin || user?.role?.toLowerCase() === "manager") && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_clientes" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                    >
+                      <span className="text-sm">👥</span>
+                      <span>Clientes & Histórico</span>
+                    </button>
+                  )}
 
-                  {(isAdmin || user?.role?.toLowerCase() === "posvenda") && (
+                  {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
                     <button 
                       onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_posvenda" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
@@ -1067,10 +1075,10 @@ export default function AdminPage() {
 
             {/* ERP TABS RENDERING */}
             {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
-            {activeTab === "erp_estoque" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <EstoqueTab />}
+            {activeTab === "erp_estoque" && (isAdmin || user?.role?.toLowerCase() === "manager") && <EstoqueTab />}
             {activeTab === "erp_crm" && <CrmTab />}
-            {activeTab === "erp_clientes" && <ClientesTab />}
-            {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab />}
+            {activeTab === "erp_clientes" && (isAdmin || user?.role?.toLowerCase() === "manager") && <ClientesTab />}
+            {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab />}
             {activeTab === "erp_financeiro" && (isAdmin || user?.role?.toLowerCase() === "manager") && <FinanceiroTab />}
 
         {/* TAB 1: ESTOQUE ATIVO */}
