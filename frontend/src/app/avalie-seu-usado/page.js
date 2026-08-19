@@ -21,8 +21,75 @@ export default function AvalieSeuUsadoPage() {
   });
 
   const [photos, setPhotos] = useState([]);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
+
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", index.toString());
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = (e, index) => {
+    if (dragOverIndex === index) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDrop = (e, targetIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    setPhotos((prev) => {
+      const updated = [...prev];
+      const [movedItem] = updated.splice(draggedIndex, 1);
+      updated.splice(targetIndex, 0, movedItem);
+      return updated;
+    });
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const movePhoto = (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= photos.length) return;
+    setPhotos((prev) => {
+      const updated = [...prev];
+      const [movedItem] = updated.splice(index, 1);
+      updated.splice(targetIndex, 0, movedItem);
+      return updated;
+    });
+  };
+
+  const setAsCoverPhoto = (index) => {
+    if (index === 0) return;
+    setPhotos((prev) => {
+      const updated = [...prev];
+      const [movedItem] = updated.splice(index, 1);
+      updated.unshift(movedItem);
+      return updated;
+    });
+  };
 
   const formatPhone = (val) => {
     let clean = val.replace(/\D/g, "").slice(0, 11);
@@ -367,21 +434,104 @@ export default function AvalieSeuUsadoPage() {
                 </div>
               </div>
 
-              {/* Grid de Previews */}
+              {/* Grid de Previews com Reordenação Drag & Drop */}
               {photos.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                  {photos.map((photo) => (
-                    <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xs aspect-square bg-slate-100 dark:bg-slate-800">
-                      <img src={photo.preview} alt="Preview do carro" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => handleRemovePhoto(photo.id)}
-                        className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md cursor-pointer transition-transform hover:scale-110"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
+                <div className="flex flex-col gap-2 pt-2">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    <span>Fotos selecionadas ({photos.length})</span>
+                    <span>💡 Arraste para reordenar (a 1ª foto será a principal)</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {photos.map((photo, index) => {
+                      const isCover = index === 0;
+                      const isDragging = draggedIndex === index;
+                      const isDragOver = dragOverIndex === index;
+
+                      return (
+                        <div
+                          key={photo.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragLeave={(e) => handleDragLeave(e, index)}
+                          onDrop={(e) => handleDrop(e, index)}
+                          onDragEnd={handleDragEnd}
+                          className={`relative group rounded-xl overflow-hidden border-2 shadow-xs aspect-square bg-slate-100 dark:bg-slate-800 cursor-grab active:cursor-grabbing select-none transition-all duration-150 ${
+                            isCover
+                              ? "border-emerald-600 ring-2 ring-emerald-500/30"
+                              : isDragOver
+                              ? "border-amber-500 ring-2 ring-amber-400 bg-amber-50"
+                              : "border-slate-200 dark:border-slate-700"
+                          } ${isDragging ? "opacity-30 scale-95" : "opacity-100"}`}
+                        >
+                          <img src={photo.preview} alt="Preview do carro" className="w-full h-full object-cover pointer-events-none" />
+                          
+                          {/* Badges */}
+                          <div className="absolute top-1.5 left-1.5 flex items-center gap-1 z-10">
+                            {isCover ? (
+                              <span className="bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-xs">
+                                ⭐ Principal
+                              </span>
+                            ) : (
+                              <span className="bg-slate-900/80 text-white text-[9px] px-1.5 py-0.5 rounded font-bold backdrop-blur-xs">
+                                #{index + 1}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Hover Action Overlay */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2 z-10 pointer-events-auto">
+                            <div className="flex justify-between items-center">
+                              <span className="text-white text-[9px] font-bold bg-black/50 px-1 py-0.5 rounded flex items-center gap-1">
+                                Arraste
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemovePhoto(photo.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-md cursor-pointer"
+                                title="Remover foto"
+                              >
+                                ✕
+                              </button>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-1 bg-black/60 p-1 rounded-lg backdrop-blur-xs">
+                              <button
+                                type="button"
+                                disabled={index === 0}
+                                onClick={() => movePhoto(index, -1)}
+                                className="text-white hover:text-amber-400 disabled:opacity-30 px-1 text-[10px] font-bold cursor-pointer"
+                                title="Mover para esquerda"
+                              >
+                                ◀
+                              </button>
+
+                              {!isCover && (
+                                <button
+                                  type="button"
+                                  onClick={() => setAsCoverPhoto(index)}
+                                  className="text-[8px] font-bold text-amber-300 hover:text-amber-100 bg-amber-600/60 hover:bg-amber-600 px-1.5 py-0.5 rounded cursor-pointer"
+                                  title="Definir como principal"
+                                >
+                                  Principal
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                disabled={index === photos.length - 1}
+                                onClick={() => movePhoto(index, 1)}
+                                className="text-white hover:text-amber-400 disabled:opacity-30 px-1 text-[10px] font-bold cursor-pointer"
+                                title="Mover para direita"
+                              >
+                                ▶
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

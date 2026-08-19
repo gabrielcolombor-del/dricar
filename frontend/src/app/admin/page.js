@@ -71,8 +71,10 @@ export default function AdminPage() {
     promoPrice: "",
   });
 
-  // Upload de Fotos Locais
-  const [uploadedImages, setUploadedImages] = useState([]); // Array de objetos { base64, name }
+  // Upload e Reordenação de Fotos (Drag & Drop)
+  const [photoItems, setPhotoItems] = useState([]); // Array de objetos { id, type: 'url'|'local', url, base64, name }
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
   const [imageUrlInput, setImageUrlInput] = useState(""); // Input local para adicionar imagem via URL
   const fileInputRef = useRef(null);
   const navTabsRef = useRef(null);
@@ -346,11 +348,83 @@ export default function AdminPage() {
 
   // Limpa estados de imagem
   const clearUploadStates = () => {
-    setUploadedImages([]);
+    setPhotoItems([]);
     setImageUrlInput("");
+    setDraggedIndex(null);
+    setDragOverIndex(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  // Funções de Drag and Drop e Reordenação
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", index.toString());
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = (e, index) => {
+    if (dragOverIndex === index) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDrop = (e, targetIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    setPhotoItems((prevItems) => {
+      const updated = [...prevItems];
+      const [movedItem] = updated.splice(draggedIndex, 1);
+      updated.splice(targetIndex, 0, movedItem);
+      return updated;
+    });
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const movePhoto = (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= photoItems.length) return;
+    setPhotoItems((prevItems) => {
+      const updated = [...prevItems];
+      const [movedItem] = updated.splice(index, 1);
+      updated.splice(targetIndex, 0, movedItem);
+      return updated;
+    });
+  };
+
+  const setAsCoverPhoto = (index) => {
+    if (index === 0) return;
+    setPhotoItems((prevItems) => {
+      const updated = [...prevItems];
+      const [movedItem] = updated.splice(index, 1);
+      updated.unshift(movedItem);
+      return updated;
+    });
+  };
+
+  const handleRemovePhoto = (id) => {
+    setPhotoItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
   // Selecionar múltiplos arquivos do dispositivo e comprimir no Canvas
@@ -383,7 +457,15 @@ export default function AdminPage() {
             const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
             const name = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
             
-            setUploadedImages(prev => [...prev, { base64: compressedDataUrl, name }]);
+            setPhotoItems(prev => [
+              ...prev,
+              {
+                id: `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                type: "local",
+                base64: compressedDataUrl,
+                name: name
+              }
+            ]);
           };
         };
         reader.readAsDataURL(file);
@@ -398,10 +480,14 @@ export default function AdminPage() {
   // Adicionar imagem via link manual (URL)
   const handleAddImageUrl = () => {
     if (imageUrlInput.trim()) {
-      setFormCar(prev => ({
+      setPhotoItems(prev => [
         ...prev,
-        images: [...(prev.images || []), imageUrlInput.trim()]
-      }));
+        {
+          id: `url-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: "url",
+          url: imageUrlInput.trim()
+        }
+      ]);
       setImageUrlInput("");
     }
   };
@@ -456,31 +542,33 @@ export default function AdminPage() {
 
     const uploadedUrls = [];
 
-    // 1. Se houver imagens locais selecionadas, faz upload de cada uma no Supabase Storage
-    if (uploadedImages.length > 0) {
+    // 1. Processa e faz upload das imagens na ordem em que o usuário as organizou
+    if (photoItems.length > 0) {
       try {
-        const uploadPromises = uploadedImages.map(async (imgObj) => {
-          const uploadRes = await fetch("/api/admin/upload", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ image: imgObj.base64, imageName: imgObj.name }),
-          });
+        for (let i = 0; i < photoItems.length; i++) {
+          const item = photoItems[i];
+          if (item.type === "local" && item.base64) {
+            const uploadRes = await fetch("/api/admin/upload", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ image: item.base64, imageName: item.name }),
+            });
 
-          if (!uploadRes.ok) {
-            throw new Error(`Erro de comunicação com o servidor de upload para a imagem ${imgObj.name}.`);
+            if (!uploadRes.ok) {
+              throw new Error(`Erro de comunicação com o servidor de upload para a imagem ${item.name || i + 1}.`);
+            }
+
+            const uploadResult = await uploadRes.json();
+
+            if (uploadResult.error) {
+              throw new Error(uploadResult.error);
+            }
+
+            uploadedUrls.push(uploadResult.imageUrl);
+          } else if (item.type === "url" && item.url) {
+            uploadedUrls.push(item.url);
           }
-
-          const uploadResult = await uploadRes.ok ? await uploadRes.json() : {};
-
-          if (uploadResult.error) {
-            throw new Error(uploadResult.error);
-          }
-
-          return uploadResult.imageUrl;
-        });
-
-        const urls = await Promise.all(uploadPromises);
-        uploadedUrls.push(...urls);
+        }
       } catch (err) {
         setError(`Falha ao fazer upload das imagens: ${err.message}`);
         setActionLoading(false);
@@ -488,8 +576,8 @@ export default function AdminPage() {
       }
     }
 
-    // 2. Combina as imagens já salvas (ou URLs manuais) com as novas carregadas do dispositivo
-    const finalImagesList = [...(formCar.images || []), ...uploadedUrls];
+    // 2. A primeira foto da lista reordenada é automaticamente a Capa (imageUrl)
+    const finalImagesList = uploadedUrls;
     const firstImageUrl = finalImagesList.length > 0 ? finalImagesList[0] : "";
 
     // 3. Envia os dados do carro e a lista de URLs pública para o banco de dados (Prisma/PostgreSQL)
@@ -499,7 +587,7 @@ export default function AdminPage() {
       car: {
         ...formCar,
         imageUrl: firstImageUrl, // Mantém compatibilidade com listagem antiga que usa imageUrl diretamente
-        images: finalImagesList,  // Array de todas as fotos salvas
+        images: finalImagesList,  // Array de todas as fotos salvas em sua ordem exata
         accessories: typeof formCar.accessories === "string" 
           ? formCar.accessories 
           : formCar.accessories.join(", "),
@@ -649,6 +737,18 @@ export default function AdminPage() {
     clearUploadStates();
     setEditingCar(car);
 
+    const existingImages = car.images && car.images.length > 0
+      ? car.images
+      : (car.imageUrl ? [car.imageUrl] : []);
+
+    const initialPhotoItems = existingImages.map((url, idx) => ({
+      id: `saved-${idx}-${Date.now()}`,
+      type: "url",
+      url: url,
+    }));
+
+    setPhotoItems(initialPhotoItems);
+
     let accessoriesArray = [];
     if (Array.isArray(car.accessories)) {
       accessoriesArray = car.accessories;
@@ -664,7 +764,7 @@ export default function AdminPage() {
       transmission: car.transmission || "Manual",
       price: car.price || "",
       imageUrl: car.imageUrl || "",
-      images: car.images || (car.imageUrl ? [car.imageUrl] : []),
+      images: existingImages,
       category: car.category || "Hatch",
       accessories: accessoriesArray,
       isOffer: car.isOffer || false,
@@ -1352,7 +1452,7 @@ export default function AdminPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
                     </svg>
-                    {uploadedImages.length > 0 ? `Adicionar mais Fotos (${uploadedImages.length} selecionadas)` : "Escolher Fotos do Celular / Computador"}
+                    {photoItems.length > 0 ? `Adicionar mais Fotos (${photoItems.length} selecionadas)` : "Escolher Fotos do Celular / Computador"}
                   </button>
                   
                   <input 
@@ -1383,63 +1483,128 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Pré-visualização de Todas as Fotos */}
-              {(((formCar.images && formCar.images.length > 0) || uploadedImages.length > 0)) && (
-                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 flex flex-col gap-3">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase text-center block">
-                    Fotos Selecionadas ({ (formCar.images?.length || 0) + uploadedImages.length })
-                  </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {/* Imagens já salvas ou inseridas via link */}
-                    {formCar.images && formCar.images.map((url, index) => (
-                      <div key={`saved-${index}`} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white aspect-video shadow-sm">
-                        <img 
-                          src={url} 
-                          alt={`Foto ${index + 1}`} 
-                          className="w-full h-full object-cover" 
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            setFormCar(prev => ({
-                              ...prev,
-                              images: prev.images.filter((_, i) => i !== index)
-                            }));
-                          }}
-                          className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md transition-colors cursor-pointer flex items-center justify-center"
-                          title="Remover foto"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                        <span className="absolute bottom-1 left-1 bg-brand-blue/80 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">Salva/URL</span>
-                      </div>
-                    ))}
+              {/* Pré-visualização de Todas as Fotos com Suporte a Drag & Drop */}
+              {photoItems.length > 0 && (
+                <div className="border border-gray-200 dark:border-slate-700 rounded-xl p-4 bg-gray-50 dark:bg-slate-800/40 flex flex-col gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b border-gray-200 dark:border-slate-700 pb-2">
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase flex items-center gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-brand-blue">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                      </svg>
+                      Fotos Selecionadas ({photoItems.length})
+                    </span>
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                      💡 <strong>Arraste as fotos</strong> para definir a ordem (a <span className="text-brand-blue dark:text-blue-400 font-bold">1ª foto</span> será a Capa do veículo).
+                    </span>
+                  </div>
 
-                    {/* Imagens do dispositivo prontas para upload */}
-                    {uploadedImages.map((imgObj, index) => (
-                      <div key={`local-${index}`} className="relative group border border-gray-200 rounded-lg overflow-hidden bg-white aspect-video shadow-sm">
-                        <img 
-                          src={imgObj.base64} 
-                          alt={`Local ${index + 1}`} 
-                          className="w-full h-full object-cover" 
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            setUploadedImages(prev => prev.filter((_, i) => i !== index));
-                          }}
-                          className="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md transition-colors cursor-pointer flex items-center justify-center"
-                          title="Remover foto"
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {photoItems.map((item, index) => {
+                      const isCover = index === 0;
+                      const isDragging = draggedIndex === index;
+                      const isDragOver = dragOverIndex === index;
+                      const src = item.type === "local" ? item.base64 : item.url;
+
+                      return (
+                        <div
+                          key={item.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragLeave={(e) => handleDragLeave(e, index)}
+                          onDrop={(e) => handleDrop(e, index)}
+                          onDragEnd={handleDragEnd}
+                          className={`relative group border-2 rounded-xl overflow-hidden bg-white dark:bg-slate-900 aspect-video shadow-xs transition-all duration-150 cursor-grab active:cursor-grabbing select-none ${
+                            isCover
+                              ? "border-brand-blue ring-2 ring-brand-blue/30 shadow-md"
+                              : isDragOver
+                              ? "border-amber-500 ring-2 ring-amber-400 bg-amber-50 scale-102"
+                              : "border-gray-200 dark:border-slate-700 hover:border-gray-300"
+                          } ${isDragging ? "opacity-30 scale-95" : "opacity-100"}`}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                        <span className="absolute bottom-1 left-1 bg-yellow-600/80 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">Upload Pendente</span>
-                      </div>
-                    ))}
+                          <img
+                            src={src}
+                            alt={`Foto ${index + 1}`}
+                            className="w-full h-full object-cover pointer-events-none"
+                          />
+
+                          {/* Badges de Posição e Status */}
+                          <div className="absolute top-2 left-2 flex items-center gap-1 z-10">
+                            {isCover ? (
+                              <span className="bg-brand-blue text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-xs flex items-center gap-1">
+                                ⭐ CAPA
+                              </span>
+                            ) : (
+                              <span className="bg-gray-900/80 text-white text-[10px] px-1.5 py-0.5 rounded font-bold backdrop-blur-xs">
+                                #{index + 1}
+                              </span>
+                            )}
+                            {item.type === "local" && (
+                              <span className="bg-amber-600/90 text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow-xs">
+                                Nova
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Overlay de Ações ao passar o mouse ou arrastar */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2 z-10 pointer-events-auto">
+                            <div className="flex justify-between items-center">
+                              <span className="text-white text-[10px] font-bold bg-black/50 px-1.5 py-0.5 rounded flex items-center gap-1 cursor-grab">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                                </svg>
+                                Arraste
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() => handleRemovePhoto(item.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md transition-colors cursor-pointer"
+                                title="Remover foto"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+
+                            {/* Controles Rápido (Mover Esquerda / Direita e Definir Capa) */}
+                            <div className="flex items-center justify-between gap-1 bg-black/60 p-1 rounded-lg backdrop-blur-xs">
+                              <button
+                                type="button"
+                                disabled={index === 0}
+                                onClick={() => movePhoto(index, -1)}
+                                className="text-white hover:text-amber-400 disabled:opacity-30 disabled:hover:text-white px-1.5 py-0.5 text-xs font-bold transition-colors cursor-pointer"
+                                title="Mover para esquerda"
+                              >
+                                ◀
+                              </button>
+
+                              {!isCover && (
+                                <button
+                                  type="button"
+                                  onClick={() => setAsCoverPhoto(index)}
+                                  className="text-[9px] font-bold text-amber-300 hover:text-amber-100 bg-amber-600/60 hover:bg-amber-600 px-2 py-0.5 rounded transition-colors cursor-pointer"
+                                  title="Definir como foto de capa"
+                                >
+                                  Definir Capa
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                disabled={index === photoItems.length - 1}
+                                onClick={() => movePhoto(index, 1)}
+                                className="text-white hover:text-amber-400 disabled:opacity-30 disabled:hover:text-white px-1.5 py-0.5 text-xs font-bold transition-colors cursor-pointer"
+                                title="Mover para direita"
+                              >
+                                ▶
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
