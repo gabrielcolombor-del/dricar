@@ -25,6 +25,21 @@ export default function PosVendaTab() {
     dataDespesa: new Date().toISOString().split("T")[0],
   });
 
+  // Modal Ver e Editar Custo Pós Venda
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [buscaPlacaEditModal, setBuscaPlacaEditModal] = useState("");
+  const [editExpense, setEditExpense] = useState({
+    id: "",
+    veiculoId: "",
+    categoria: "Mecânica",
+    descricao: "",
+    valor: "",
+    dataDespesa: "",
+  });
+
   async function fetchPosVendaData() {
     setLoading(true);
     setError("");
@@ -136,6 +151,77 @@ export default function PosVendaTab() {
     }
   };
 
+  const handleOpenViewModal = (d) => {
+    setSelectedExpense(d);
+    const dateFormatted = d.dataDespesa ? d.dataDespesa.split("T")[0] : new Date().toISOString().split("T")[0];
+    const valorFormatted = "R$ " + Number(d.valor).toLocaleString("pt-BR");
+    setEditExpense({
+      id: d.id,
+      veiculoId: d.veiculoId,
+      categoria: d.categoria || "Mecânica",
+      descricao: d.descricao || "",
+      valor: valorFormatted,
+      dataDespesa: dateFormatted,
+    });
+    setBuscaPlacaEditModal("");
+    setEditError("");
+    setShowViewModal(true);
+  };
+
+  const handleEditPriceChange = (val) => {
+    const clean = val.replace(/\D/g, "");
+    if (!clean) return setEditExpense(prev => ({ ...prev, valor: "" }));
+    const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
+    setEditExpense(prev => ({ ...prev, valor: formatted }));
+  };
+
+  const handleEditFormSubmit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError("");
+
+    if (!editExpense.veiculoId) {
+      setEditError("Por favor, selecione um veículo.");
+      setEditLoading(false);
+      return;
+    }
+
+    const valorNum = parseFloat(editExpense.valor.replace("R$", "").replace(/\./g, "").replace(",", ".").trim());
+    if (isNaN(valorNum) || valorNum <= 0) {
+      setEditError("Informe um valor válido.");
+      setEditLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/erp/despesas-veiculos", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editExpense.id,
+          veiculoId: editExpense.veiculoId,
+          categoria: editExpense.categoria,
+          descricao: editExpense.descricao,
+          valor: valorNum,
+          dataDespesa: editExpense.dataDespesa,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setShowViewModal(false);
+        setSelectedExpense(null);
+        fetchPosVendaData();
+      } else {
+        setEditError(data.error || "Erro ao salvar alterações no custo.");
+      }
+    } catch (err) {
+      setEditError("Erro de comunicação com o servidor.");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   // Filtragem de despesas na tabela
   const despesasFiltradas = despesas.filter(d => {
     const termo = busca.toLowerCase().trim();
@@ -154,6 +240,17 @@ export default function PosVendaTab() {
   // Veículos filtrados na busca do Modal de lançamento
   const veiculosFiltradosModal = veiculos.filter(v => {
     const term = buscaPlacaModal.toLowerCase().trim();
+    if (!term) return true;
+    return (
+      (v.placa && v.placa.toLowerCase().includes(term)) ||
+      (v.marca && v.marca.toLowerCase().includes(term)) ||
+      (v.modelo && v.modelo.toLowerCase().includes(term))
+    );
+  });
+
+  // Veículos filtrados na busca do Modal de edição
+  const veiculosFiltradosEditModal = veiculos.filter(v => {
+    const term = buscaPlacaEditModal.toLowerCase().trim();
     if (!term) return true;
     return (
       (v.placa && v.placa.toLowerCase().includes(term)) ||
@@ -328,13 +425,22 @@ export default function PosVendaTab() {
                         - R$ {Number(d.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </td>
                       <td className="p-4 text-center">
-                        <button
-                          onClick={() => handleDeleteExpense(d.id)}
-                          className="border border-red-200 text-red-600 hover:bg-red-50 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                          title="Excluir Custo"
-                        >
-                          ✕ Excluir
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleOpenViewModal(d)}
+                            className="border border-brand-blue/30 text-brand-blue hover:bg-brand-blue/10 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                            title="Ver e Editar Custo"
+                          >
+                            👁️ Ver
+                          </button>
+                          <button
+                            onClick={() => handleDeleteExpense(d.id)}
+                            className="border border-red-200 text-red-600 hover:bg-red-50 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                            title="Excluir Custo"
+                          >
+                            ✕ Excluir
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -488,6 +594,201 @@ export default function PosVendaTab() {
                 >
                   {formLoading ? "Confirmando..." : "Confirmar Custo"}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Modal Ver e Editar Custo Pós Venda */}
+      {showViewModal && selectedExpense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/55 animate-fade-in">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 w-[95%] sm:w-full max-w-[550px] max-h-[90vh] overflow-y-auto shadow-2xl relative">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
+              <h3 className="text-sm font-extrabold text-brand-blue uppercase flex items-center gap-2">
+                🔍 Detalhes e Edição do Custo
+              </h3>
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedExpense(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 font-bold text-sm cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Banner de informações do veículo vinculado */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4 text-xs">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <span className="bg-brand-blue/10 text-brand-blue px-2 py-0.5 rounded font-mono text-xs font-bold mr-2">
+                    {selectedExpense.veiculo?.placa || "SEM PLACA"}
+                  </span>
+                  <span className="font-extrabold text-slate-800">
+                    {selectedExpense.veiculo?.marca} {selectedExpense.veiculo?.modelo}
+                  </span>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  selectedExpense.veiculo?.status === "Vendido" || (selectedExpense.veiculo?.vendas && selectedExpense.veiculo.vendas.length > 0)
+                    ? "bg-purple-100 text-purple-700"
+                    : "bg-emerald-100 text-emerald-700"
+                }`}>
+                  {selectedExpense.veiculo?.status === "Vendido" || (selectedExpense.veiculo?.vendas && selectedExpense.veiculo.vendas.length > 0)
+                    ? "🚗 Vendido"
+                    : "🚘 Em Estoque"}
+                </span>
+              </div>
+              <div className="text-[11px] text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
+                <span>
+                  🗓️ Lançado em: <b>{selectedExpense.createdAt ? new Date(selectedExpense.createdAt).toLocaleDateString("pt-BR") : "-"}</b>
+                </span>
+                <span>
+                  💼 Vinculado ao Financeiro Geral: <b className="text-emerald-600">Sincronizado</b>
+                </span>
+              </div>
+            </div>
+
+            <form onSubmit={handleEditFormSubmit} className="space-y-4 text-xs">
+              {/* Pesquisa rápida por placa no modal de edição */}
+              <div>
+                <label className="block font-bold text-gray-700 uppercase mb-1">
+                  🔎 Trocar Veículo (Placa / Modelo)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Filtrar veículos pela placa ou modelo..."
+                  value={buscaPlacaEditModal}
+                  onChange={(e) => setBuscaPlacaEditModal(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-slate-900 font-semibold focus:outline-none focus:border-brand-blue mb-2"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 uppercase mb-1">
+                  Veículo *
+                </label>
+                <select
+                  value={editExpense.veiculoId}
+                  onChange={(e) => setEditExpense(prev => ({ ...prev, veiculoId: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                  required
+                >
+                  <option value="">Selecione o veículo...</option>
+                  {veiculosFiltradosEditModal.map(v => {
+                    const isVendido = v.status === "Vendido" || (v.vendas && v.vendas.length > 0);
+                    const dataVendaStr = (v.vendas && v.vendas.length > 0 && v.vendas[0].dataVenda)
+                      ? new Date(v.vendas[0].dataVenda).toLocaleDateString("pt-BR", { timeZone: "UTC" })
+                      : null;
+                    return (
+                      <option key={v.id} value={v.id}>
+                        [{v.placa || "SEM PLACA"}] {v.marca} {v.modelo} ({isVendido ? `Vendido${dataVendaStr ? ` em ${dataVendaStr}` : ""}` : `Em Estoque`})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 uppercase mb-1">
+                  Categoria de Custo *
+                </label>
+                <select
+                  value={editExpense.categoria}
+                  onChange={(e) => setEditExpense(prev => ({ ...prev, categoria: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                  required
+                >
+                  <option value="Mecânica">Mecânica</option>
+                  <option value="Funilaria">Funilaria</option>
+                  <option value="Lavagem">Lavagem</option>
+                  <option value="IPVA">IPVA</option>
+                  <option value="Documento">Documento</option>
+                  <option value="Licenciamento">Licenciamento</option>
+                  <option value="Detalhamento">Detalhamento</option>
+                  <option value="Outros">Outros</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 uppercase mb-1">
+                  📝 Descrição / Observação do Custo
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Troca de óleo, reparo no para-choque..."
+                  value={editExpense.descricao}
+                  onChange={(e) => setEditExpense(prev => ({ ...prev, descricao: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-medium placeholder-gray-400 focus:outline-none focus:border-brand-blue"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">
+                    Valor (R$) *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="R$ 0"
+                    value={editExpense.valor}
+                    onChange={(e) => handleEditPriceChange(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-extrabold focus:outline-none focus:border-brand-blue"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">
+                    Data Despesa *
+                  </label>
+                  <input
+                    type="date"
+                    value={editExpense.dataDespesa}
+                    onChange={(e) => setEditExpense(prev => ({ ...prev, dataDespesa: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
+                    required
+                  />
+                </div>
+              </div>
+
+              {editError && (
+                <p className="text-red-600 font-semibold bg-red-50 p-2.5 rounded-lg border border-red-100">
+                  {editError}
+                </p>
+              )}
+
+              <div className="flex gap-3 justify-between items-center pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleDeleteExpense(selectedExpense.id);
+                    setShowViewModal(false);
+                  }}
+                  className="border border-red-200 text-red-600 hover:bg-red-50 px-3.5 py-2 rounded-lg font-bold transition-all cursor-pointer text-xs"
+                >
+                  ✕ Excluir Custo
+                </button>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowViewModal(false);
+                      setSelectedExpense(null);
+                    }}
+                    className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    Fechar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={editLoading}
+                    className="bg-brand-blue text-white px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity cursor-pointer flex items-center gap-1.5"
+                  >
+                    {editLoading ? "Salvando..." : "💾 Salvar Alterações"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
