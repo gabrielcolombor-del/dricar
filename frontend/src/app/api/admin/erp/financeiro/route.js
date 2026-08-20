@@ -101,15 +101,18 @@ export async function GET(request) {
         : [],
     ]);
 
-    // Calcula o total mensal de custos fixos ativos
-    const allActiveRecorrentes = await prisma.custoRecorrente.findMany({
-      where: { ativo: true },
-      select: { valor: true },
-    });
-    const totalCustosFixosMensais = allActiveRecorrentes.reduce(
-      (acc, r) => acc + (parseFloat(r.valor) || 0),
-      0
-    );
+    // Calcula o total mensal de custos fixos ativos apenas se for Administrador
+    let totalCustosFixosMensais = 0;
+    if (isAdmin) {
+      const allActiveRecorrentes = await prisma.custoRecorrente.findMany({
+        where: { ativo: true },
+        select: { valor: true },
+      });
+      totalCustosFixosMensais = allActiveRecorrentes.reduce(
+        (acc, r) => acc + (parseFloat(r.valor) || 0),
+        0
+      );
+    }
 
     // Proteção de privacidade para Não-Administradores:
     // Salários aparecem somente como "Mão de obra" com descrições genéricas
@@ -134,7 +137,7 @@ export async function GET(request) {
     return NextResponse.json({
       custos: sanitizedCustos,
       recorrentes: isAdmin ? recorrentes : [],
-      totalCustosFixosMensais,
+      totalCustosFixosMensais: isAdmin ? totalCustosFixosMensais : 0,
       isAdmin,
     });
   } catch (error) {
