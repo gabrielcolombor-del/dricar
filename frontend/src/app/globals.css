@@ -230,9 +230,6 @@
 }
 
 @layer utilities {
-  .uppercase {
-    font-family: var(--font-caps), sans-serif;
-  }
   .text-h7 {
     font-size: 18px;
     font-weight: 600;

@@ -510,9 +510,14 @@ export default function FinanceiroTab() {
                       <td className="p-3.5 text-xs font-semibold text-gray-900 max-w-xs">
                         <p className="line-clamp-2">{c.descricao}</p>
                         {c.despesaVeiculo?.veiculo && (
-                          <span className="mt-1 inline-flex items-center gap-1 bg-brand-blue/10 text-brand-blue px-2 py-0.5 rounded text-[10px] font-bold font-mono">
-                            Placa: {c.despesaVeiculo.veiculo.placa} ({c.despesaVeiculo.veiculo.marca} {c.despesaVeiculo.veiculo.modelo})
-                          </span>
+                          <div className="mt-1 flex items-center gap-1.5 text-[10px]">
+                            <span className="bg-brand-blue/10 text-brand-blue px-1.5 py-0.5 rounded font-mono font-bold uppercase">
+                              {c.despesaVeiculo.veiculo.placa}
+                            </span>
+                            <span className="font-bold text-slate-800">
+                              {c.despesaVeiculo.veiculo.marca} {c.despesaVeiculo.veiculo.modelo}
+                            </span>
+                          </div>
                         )}
                       </td>
 
