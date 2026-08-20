@@ -1,5 +1,5 @@
 "use client";
-import { EyeOff, Eye, LogOut, ChevronLeft, BarChart2, TrendingUp, Car, Handshake, Users, Wrench, CircleDollarSign, Package, Pencil, ChevronRight, Sliders, Globe, Settings, AlertTriangle, Camera, Lightbulb, Trash2, User } from 'lucide-react';
+import { EyeOff, Eye, LogOut, ChevronLeft, BarChart2, TrendingUp, Car, Handshake, Users, Wrench, CircleDollarSign, Package, Pencil, ChevronRight, Sliders, Globe, Settings, AlertTriangle, Camera, Lightbulb, Trash2, User, History } from 'lucide-react';
 
 
 import { useState, useEffect, useRef } from "react";
@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { signIn, signOut } from "next-auth/react";
 import DashboardTab from "@/components/erp/DashboardTab";
 import EstoqueTab from "@/components/erp/EstoqueTab";
+import HistoricoVendasTab from "@/components/erp/HistoricoVendasTab";
 import CrmTab from "@/components/erp/CrmTab";
 import PosVendaTab from "@/components/erp/PosVendaTab";
 import FinanceiroTab from "@/components/erp/FinanceiroTab";
@@ -1054,6 +1055,16 @@ export default function AdminPage() {
                     </button>
                   )}
                   
+                  {(isAdmin || user?.role?.toLowerCase() === "manager") && (
+                    <button 
+                      onClick={() => { setActiveTab("erp_historico_vendas"); setEditingCar(null); clearUploadStates(); }}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_historico_vendas" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
+                    >
+                      <span className="text-sm"><History className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
+                      <span>Histórico de Vendas</span>
+                    </button>
+                  )}
+                  
                   <button 
                     onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
                     className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_crm" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
@@ -1178,6 +1189,7 @@ export default function AdminPage() {
             {/* ERP TABS RENDERING */}
             {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
             {activeTab === "erp_estoque" && (isAdmin || user?.role?.toLowerCase() === "manager") && <EstoqueTab />}
+            {activeTab === "erp_historico_vendas" && (isAdmin || user?.role?.toLowerCase() === "manager") && <HistoricoVendasTab />}
             {activeTab === "erp_crm" && <CrmTab />}
             {activeTab === "erp_clientes" && (isAdmin || user?.role?.toLowerCase() === "manager") && <ClientesTab />}
             {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab />}
