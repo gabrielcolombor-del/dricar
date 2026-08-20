@@ -136,17 +136,29 @@ export default function HistoricoVendasTab() {
 
   // Métricas Totais do Histórico
   const totalVendasCount = veiculosVendidos.length;
-  const faturamentoTotal = veiculosVendidos.reduce((acc, v) => {
-    const val = v.vendas && v.vendas.length > 0 ? parseFloat(v.vendas[0].valorVendaVeiculo) : 0;
-    return acc + (isNaN(val) ? 0 : val);
+
+  // Apenas veículos vendidos que possuem valor agregado (> 0)
+  const veiculosVendidosComValor = veiculosVendidos.filter(v => {
+    const venda = v.vendas && v.vendas.length > 0 ? v.vendas[0] : null;
+    const val = venda ? (parseFloat(venda.valorVendaVeiculo) || 0) + (parseFloat(venda.valorRetornoBancario) || 0) : 0;
+    return val > 0;
+  });
+
+  const faturamentoTotal = veiculosVendidosComValor.reduce((acc, v) => {
+    const venda = v.vendas[0];
+    const val = (parseFloat(venda.valorVendaVeiculo) || 0) + (parseFloat(venda.valorRetornoBancario) || 0);
+    return acc + val;
   }, 0);
+
   const totalCompra = veiculosVendidos.reduce((acc, v) => acc + (parseFloat(v.valorCompra) || 0), 0);
   const totalDespesas = veiculosVendidos.reduce((acc, v) => {
     const desp = v.despesas ? v.despesas.reduce((dAcc, d) => dAcc + (parseFloat(d.valor) || 0), 0) : 0;
     return acc + desp;
   }, 0);
   const lucroBruto = faturamentoTotal - totalCompra - totalDespesas;
-  const ticketMedio = totalVendasCount > 0 ? faturamentoTotal / totalVendasCount : 0;
+  
+  // Ticket Médio calculado usando apenas carros com valor agregado
+  const ticketMedio = veiculosVendidosComValor.length > 0 ? faturamentoTotal / veiculosVendidosComValor.length : 0;
 
   // Paginação
   const totalPaginas = Math.ceil(veiculosFiltrados.length / ITENS_POR_PAGINA) || 1;

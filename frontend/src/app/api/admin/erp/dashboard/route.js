@@ -67,11 +67,16 @@ export async function GET(request) {
       return year === anoAtual && monthIndex === mesAtualIndex;
     });
 
+    const vendasMesAtualComValor = vendasMesAtual.filter(v => {
+      const totalVal = (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0);
+      return totalVal > 0;
+    });
+
     const faturamentoMesAtual = vendasMesAtual.reduce((acc, v) => 
       acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0
     );
     const carrosVendidosMes = vendasMesAtual.length;
-    const ticketMedioMes = carrosVendidosMes > 0 ? faturamentoMesAtual / carrosVendidosMes : 0;
+    const ticketMedioMes = vendasMesAtualComValor.length > 0 ? faturamentoMesAtual / vendasMesAtualComValor.length : 0;
 
     // 2. Ano Atual Selecionado (Jan a Dez)
     const vendasAnoAtual = todasVendas.filter(v => {
@@ -79,11 +84,16 @@ export async function GET(request) {
       return year === anoAtual;
     });
 
+    const vendasAnoAtualComValor = vendasAnoAtual.filter(v => {
+      const totalVal = (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0);
+      return totalVal > 0;
+    });
+
     const faturamentoAnoAtual = vendasAnoAtual.reduce((acc, v) => 
       acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0
     );
     const carrosVendidosAno = vendasAnoAtual.length;
-    const ticketMedioAno = carrosVendidosAno > 0 ? faturamentoAnoAtual / carrosVendidosAno : 0;
+    const ticketMedioAno = vendasAnoAtualComValor.length > 0 ? faturamentoAnoAtual / vendasAnoAtualComValor.length : 0;
 
     const percentualDoTotalAno = faturamentoAnoAtual > 0 ? (faturamentoMesAtual / faturamentoAnoAtual) * 100 : 0;
 
@@ -113,11 +123,16 @@ export async function GET(request) {
       comparativoYoY = 100;
     }
 
-    // 4. Ticket Médio Geral
-    const totalFaturamentoGeral = todasVendas.reduce((acc, v) => 
+    // 4. Ticket Médio Geral (apenas vendas com valor agregado > 0)
+    const todasVendasComValor = todasVendas.filter(v => {
+      const totalVal = (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0);
+      return totalVal > 0;
+    });
+
+    const totalFaturamentoGeral = todasVendasComValor.reduce((acc, v) => 
       acc + (parseFloat(v.valorVendaVeiculo.toString()) || 0) + (parseFloat(v.valorRetornoBancario.toString()) || 0), 0
     );
-    const ticketMedioGeral = todasVendas.length > 0 ? totalFaturamentoGeral / todasVendas.length : 0;
+    const ticketMedioGeral = todasVendasComValor.length > 0 ? totalFaturamentoGeral / todasVendasComValor.length : 0;
 
     // 5. Dados Mensais para o Gráfico (Jan a Dez do Ano Selecionado vs Ano Anterior)
     const comparativoMensal = MESES_ABREV.map((mesNome, index) => {
