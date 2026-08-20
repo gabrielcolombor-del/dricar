@@ -1193,7 +1193,7 @@ export default function AdminPage() {
             {activeTab === "erp_crm" && <CrmTab />}
             {activeTab === "erp_clientes" && (isAdmin || user?.role?.toLowerCase() === "manager") && <ClientesTab />}
             {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab />}
-            {activeTab === "erp_financeiro" && (isAdmin || user?.role?.toLowerCase() === "manager") && <FinanceiroTab />}
+            {activeTab === "erp_financeiro" && (isAdmin || user?.role?.toLowerCase() === "manager") && <FinanceiroTab isAdmin={isAdmin} />}
 
         {/* TAB 1: ESTOQUE ATIVO */}
         {activeTab === "estoque" && (() => {

@@ -25,16 +25,13 @@ import {
   FileText
 } from 'lucide-react';
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 
-export default function FinanceiroTab() {
-  const { data: session } = useSession();
-  const isSessionAdmin = session?.user?.role?.toLowerCase() === "admin";
+export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
   const [custos, setCustos] = useState([]);
   const [recorrentes, setRecorrentes] = useState([]);
   const [totalCustosFixosMensais, setTotalCustosFixosMensais] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const effectiveIsAdmin = isSessionAdmin || isAdmin;
+  const [isAdmin, setIsAdmin] = useState(Boolean(propIsAdmin));
+  const effectiveIsAdmin = isAdmin || Boolean(propIsAdmin);
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
