@@ -164,11 +164,15 @@ export default function EstoqueTab() {
     fetchVeiculos();
   }, []);
 
-  const marcasUnicas = [...new Set(veiculos.map(v => v.marca))].sort();
-  const anosUnicos = [...new Set(veiculos.map(v => v.anoMod))].sort((a,b) => b - a);
+  const veiculosEmEstoque = veiculos.filter(v => v.status !== "Vendido");
+  const marcasUnicas = [...new Set(veiculosEmEstoque.map(v => v.marca))].sort();
+  const anosUnicos = [...new Set(veiculosEmEstoque.map(v => v.anoMod))].sort((a,b) => b - a);
 
-  // Filtragem com busca multi-parâmetros e filtro de datas
+  // Filtragem com busca multi-parâmetros e filtro de datas (apenas veículos disponíveis / em estoque)
   const veiculosFiltrados = veiculos.filter(v => {
+    // Na aba Estoque, exibir apenas veículos em estoque/disponíveis (histórico fica em Clientes & Histórico)
+    if (v.status === "Vendido") return false;
+
     const matchStatus = filtroStatus ? v.status === filtroStatus : true;
     const matchMarca = filtroMarca ? v.marca === filtroMarca : true;
     const matchAno = filtroAno ? v.anoMod === parseInt(filtroAno) : true;
@@ -712,12 +716,10 @@ export default function EstoqueTab() {
                 onChange={(e) => setFiltroStatus(e.target.value)}
                 className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 px-2 sm:px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
               >
-                <option value="">Todos</option>
+                <option value="">Todos em Estoque</option>
                 <option value="Disponível">Disponível</option>
-                <option value="Vendido">Vendido</option>
                 <option value="Em Preparação">Em Preparação</option>
                 <option value="Em processo de Transf.">Em processo de Transf.</option>
-                <option value="Transferido">Transferido</option>
                 <option value="Transferência em aberto">Transferência em aberto</option>
               </select>
             </div>

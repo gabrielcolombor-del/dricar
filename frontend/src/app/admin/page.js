@@ -1050,7 +1050,7 @@ export default function AdminPage() {
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_estoque" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
                     >
                       <span className="text-sm"><Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
-                      <span>Estoque & Histórico</span>
+                      <span>Estoque</span>
                     </button>
                   )}
                   
