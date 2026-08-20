@@ -16,7 +16,8 @@ import {
   RotateCcw,
   CheckCircle,
   Clock,
-  Plus
+  Plus,
+  User
 } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { generateSalePdf } from "@/lib/generateSalePdf";
@@ -284,11 +285,11 @@ export default function HistoricoVendasTab() {
     <div className="space-y-6 text-gray-800 animate-fade-in">
       
       {/* KPI CARDS (RESUMO DO HISTÓRICO) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* CARD 1: Total de Vendas */}
         <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-2xl p-5 shadow-sm border border-slate-800 relative overflow-hidden">
           <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider block mb-1">
-            📦 Veículos Vendidos
+            Veículos Vendidos
           </span>
           <p className="text-2xl sm:text-3xl font-extrabold text-white">
             {totalVendasCount}
@@ -298,42 +299,16 @@ export default function HistoricoVendasTab() {
           </span>
         </div>
 
-        {/* CARD 2: Faturamento Total */}
-        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-sm border-l-4 border-l-emerald-500">
-          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-            💰 Faturamento Total Vendas
-          </span>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-            R$ {faturamentoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <span className="text-[11px] text-gray-400 mt-2 block font-medium">
-            Soma de todas as vendas
-          </span>
-        </div>
-
-        {/* CARD 3: Ticket Médio */}
+        {/* CARD 2: Ticket Médio */}
         <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-sm border-l-4 border-l-blue-500">
           <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-            📊 Ticket Médio
+            Ticket Médio
           </span>
           <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
             R$ {ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <span className="text-[11px] text-gray-400 mt-2 block font-medium">
             Média por veículo vendido
-          </span>
-        </div>
-
-        {/* CARD 4: Lucro Estimado */}
-        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-sm border-l-4 border-l-amber-500">
-          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-            📈 Lucro Bruto Estimado
-          </span>
-          <p className="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
-            R$ {lucroBruto.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <span className="text-[11px] text-gray-400 mt-2 block font-medium">
-            Venda - (Compra + Despesas)
           </span>
         </div>
       </div>
@@ -493,14 +468,15 @@ export default function HistoricoVendasTab() {
                         </td>
                         <td className="p-4 text-xs font-bold">
                           <div className="text-emerald-700 dark:text-emerald-400 font-extrabold text-[11px] flex items-center gap-1">
-                            <span className="text-emerald-600 dark:text-emerald-500 font-semibold text-[10px]">💰 Venda:</span>
+                            <span className="text-emerald-600 dark:text-emerald-500 font-semibold text-[10px]">Venda:</span>
                             <span>R$ {valorVenda.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                           </div>
-                          <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold truncate max-w-[150px] mt-0.5" title={comprador}>
-                            👤 {comprador}
+                          <div className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold truncate max-w-[150px] mt-0.5 flex items-center gap-1" title={comprador}>
+                            <User className="w-3 h-3 text-gray-400 shrink-0" />
+                            <span className="truncate">{comprador}</span>
                           </div>
                           <div className="text-gray-400 dark:text-gray-500 font-medium text-[10px] mt-0.5">
-                            🛒 Compra: R$ {Number(v.valorCompra).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            Compra: R$ {Number(v.valorCompra).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                           </div>
                         </td>
                         <td className="p-4 text-xs font-bold text-slate-800 dark:text-slate-200">
