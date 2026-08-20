@@ -21,7 +21,8 @@ import {
   TrendingUp,
   CreditCard,
   Layers,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from 'lucide-react';
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -507,7 +508,7 @@ export default function FinanceiroTab() {
         {/* CARD 1: Total da Aba */}
         <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-800">
           <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider block mb-1">
-            {activeMainTab === "veiculos" ? "🚗 Total Custos Veículos" : "🏢 Total Custos Operacionais"}
+            {activeMainTab === "veiculos" ? "Total Custos Veículos" : "Total Custos Operacionais"}
           </span>
           <p className="text-xl sm:text-2xl font-extrabold text-white">
             R$ {totalGeralAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -520,7 +521,7 @@ export default function FinanceiroTab() {
         {/* CARD 2: Total Pago */}
         <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-emerald-500">
           <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-            ✅ Total Pago
+            Total Pago
           </span>
           <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
             R$ {totalPagoAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -533,7 +534,7 @@ export default function FinanceiroTab() {
         {/* CARD 3: Total A Pagar / Pendente */}
         <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-amber-500">
           <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-            ⏳ Total A Pagar / Pendente
+            Total A Pagar / Pendente
           </span>
           <p className="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400">
             R$ {totalAPagarAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -547,7 +548,7 @@ export default function FinanceiroTab() {
         {effectiveIsAdmin && (
           <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-purple-500">
             <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-              🔄 Custos Fixos Mensais
+              Custos Fixos Mensais
             </span>
             <p className="text-xl sm:text-2xl font-extrabold text-purple-700 dark:text-purple-400">
               R$ {totalCustosFixosMensais.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -693,7 +694,7 @@ export default function FinanceiroTab() {
             }`}
           >
             <Car className="w-4 h-4" />
-            <span>🚗 Registro de Custos de Veículos</span>
+            <span>Registro de Custos de Veículos</span>
           </button>
 
           {/* ABA 2: Custos Operacionais */}
@@ -706,7 +707,7 @@ export default function FinanceiroTab() {
             }`}
           >
             <Building className="w-4 h-4" />
-            <span>🏢 Custos Operacionais</span>
+            <span>Custos Operacionais</span>
           </button>
         </div>
 
@@ -715,13 +716,14 @@ export default function FinanceiroTab() {
           <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
             <button
               onClick={() => setActiveOperacionalSubTab("lancamentos")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeOperacionalSubTab === "lancamentos"
                   ? "bg-white dark:bg-slate-900 text-brand-blue dark:text-white shadow-2xs"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900"
               }`}
             >
-              📑 Lançamentos do Mês
+              <FileText className="w-3.5 h-3.5" />
+              <span>Lançamentos do Mês</span>
             </button>
             <button
               onClick={() => setActiveOperacionalSubTab("recorrentes")}
@@ -732,7 +734,7 @@ export default function FinanceiroTab() {
               }`}
             >
               <Settings className="w-3.5 h-3.5" />
-              <span>⚙️ Custos Fixos Recorrentes</span>
+              <span>Custos Fixos Recorrentes</span>
             </button>
           </div>
         )}
@@ -798,7 +800,7 @@ export default function FinanceiroTab() {
                     <tr key={r.id} className="hover:bg-gray-50/70 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="p-3.5 font-bold text-slate-900 dark:text-white">
                         <div className="flex items-center gap-2">
-                          {r.isSalario && <span className="text-xs">👤</span>}
+                          {r.isSalario && <Shield className="w-3.5 h-3.5 text-purple-600 shrink-0" title="Salário / Confidencial" />}
                           <span>{r.descricao}</span>
                         </div>
                       </td>
@@ -823,7 +825,7 @@ export default function FinanceiroTab() {
                           }`}
                           title="Clique para ativar/desativar este custo fixo"
                         >
-                          {r.ativo ? "● Ativo (Mensal)" : "○ Inativo"}
+                          {r.ativo ? "Ativo (Mensal)" : "Inativo"}
                         </button>
                       </td>
                       <td className="p-3.5 text-center">
@@ -859,12 +861,12 @@ export default function FinanceiroTab() {
               {activeMainTab === "veiculos" ? (
                 <>
                   <Car className="w-4 h-4" />
-                  <span>📋 Registro de Custos de Veículos (Preparação, Peças, Promissórias)</span>
+                  <span>Registro de Custos de Veículos (Preparação, Peças, Promissórias)</span>
                 </>
               ) : (
                 <>
                   <Building className="w-4 h-4" />
-                  <span>📋 Registro de Custos Operacionais da Loja</span>
+                  <span>Registro de Custos Operacionais da Loja</span>
                 </>
               )}
             </h4>
@@ -983,7 +985,7 @@ export default function FinanceiroTab() {
                                 }`}
                                 title="Clique para alternar status entre Pago e A Pagar"
                               >
-                                {isPago ? "● Pago" : "○ A Pagar"}
+                                {isPago ? "Pago" : "A Pagar"}
                               </button>
                             </td>
 
@@ -1055,7 +1057,7 @@ export default function FinanceiroTab() {
                                 }`}
                                 title="Clique para alternar status entre Pago e A Pagar"
                               >
-                                {isPago ? "● Pago" : "○ A Pagar"}
+                                {isPago ? "Pago" : "A Pagar"}
                               </button>
                             </td>
 
@@ -1166,20 +1168,22 @@ export default function FinanceiroTab() {
                   <button
                     type="button"
                     onClick={() => setFormMode("geral")}
-                    className={`py-2 rounded-lg font-extrabold transition-all cursor-pointer ${
+                    className={`py-2 rounded-lg font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                       formMode === "geral" ? "bg-white text-brand-blue shadow-xs" : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
-                    🏢 Custo Operacional / Geral
+                    <Building className="w-4 h-4" />
+                    <span>Custo Operacional / Geral</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setFormMode("veiculo")}
-                    className={`py-2 rounded-lg font-extrabold transition-all cursor-pointer ${
+                    className={`py-2 rounded-lg font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                       formMode === "veiculo" ? "bg-white text-brand-blue shadow-xs" : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
-                    🚗 Custo de Veículo (Placa)
+                    <Car className="w-4 h-4" />
+                    <span>Custo de Veículo (Placa)</span>
                   </button>
                 </div>
               )}
@@ -1413,7 +1417,10 @@ export default function FinanceiroTab() {
               </div>
 
               <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 text-purple-950 space-y-1">
-                <p className="font-extrabold text-[10px] uppercase">🔒 Privacidade de Salários:</p>
+                <p className="font-extrabold text-[10px] uppercase flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-purple-700" />
+                  Privacidade de Salários:
+                </p>
                 <p className="text-[10px] text-purple-900">
                   Custos categorizados como Salário são confidenciais e visíveis com detalhes somente para o Administrador. Para outros cargos, aparecerão consolidados como "Mão de obra".
                 </p>
