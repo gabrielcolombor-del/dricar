@@ -142,8 +142,8 @@ export default function DashboardTab() {
       {/* BARRA SUPERIOR: CONTROLE DE SELEÇÃO DE ANO DO DASHBOARD */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
         <div>
-          <span className="text-[10px] sm:text-xs text-white font-bold uppercase tracking-wider block opacity-90">PAINEL DE INDICADORES</span>
-          <h2 className="text-lg sm:text-xl font-extrabold flex items-center gap-2 text-white">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider block opacity-90 text-white" style={{ color: "#ffffff" }}>PAINEL DE INDICADORES</span>
+          <h2 className="text-lg sm:text-xl font-extrabold flex items-center gap-2 text-white" style={{ color: "#ffffff" }}>
             <BarChart2 className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Faturamento e Desempenho Dricar
           </h2>
         </div>

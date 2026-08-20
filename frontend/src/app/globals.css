@@ -72,21 +72,6 @@
     opacity: 1;
   }
 
-  /* Ensure elements with text-white or on dark containers always stay white */
-  .text-white,
-  .text-white *,
-  [class*="text-white"] {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-  }
-
-  .bg-slate-900 .text-white,
-  .bg-slate-800 .text-white,
-  .bg-brand-blue .text-white {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-  }
-
   /* Inputs with dark background classes specifically get white text */
   .dark input[class*="dark:bg-"],
   .dark select[class*="dark:bg-"],
