@@ -418,165 +418,164 @@ export default function FinanceiroTab() {
         </div>
       </div>
 
-      {/* Main Table and Form Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Costs Table */}
-        <div className={`bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden ${showForm ? "lg:col-span-2" : "lg:col-span-3"}`}>
-          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <h4 className="text-xs font-bold text-brand-blue uppercase tracking-wider">
-              📋 Registro Geral de Custos Operacionais & Veículos
-            </h4>
-            <span className="text-[10px] text-gray-400 font-medium">
-              Exibindo {custosFiltrados.length} de {custos.length} lançamentos
-            </span>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
-                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Data / Hora Lançamento</th>
-                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Origem / Categoria</th>
-                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Descrição / Veículo</th>
-                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Vencimento / Data</th>
-                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Valor (R$)</th>
-                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Status</th>
-                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 text-gray-700">
-                {loading ? (
-                  <tr>
-                    <td colSpan="7" className="p-12 text-center text-gray-400 text-xs">
-                      <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-brand-blue mx-auto mb-2"></div>
-                      Carregando dados financeiros...
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan="7" className="p-6 text-center text-red-600 text-xs font-semibold bg-red-50">{error}</td>
-                  </tr>
-                ) : custosFiltrados.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="p-12 text-center text-gray-400 text-xs font-medium">
-                      Nenhum custo encontrado para os filtros selecionados.
-                    </td>
-                  </tr>
-                ) : (
-                  custosFiltrados.map((c) => {
-                    const origem = getCustoOrigem(c);
-                    const categoria = getCustoCategoria(c);
-                    const dtInfo = formatDateTime(c.createdAt, c.dataVencimento);
-                    const dataVencFmt = c.dataVencimento ? new Date(c.dataVencimento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "-";
-
-                    // Badges de Origem
-                    let origemBadgeStyle = "bg-gray-100 text-gray-700";
-                    let origemIcon = "🏢";
-                    if (origem === "Pós Venda") {
-                      origemBadgeStyle = "bg-purple-100 text-purple-800 border border-purple-200";
-                      origemIcon = (<Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
-                    } else if (origem === "Estoque") {
-                      origemBadgeStyle = "bg-blue-100 text-blue-800 border border-blue-200";
-                      origemIcon = (<Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
-                    } else if (origem === "Venda") {
-                      origemBadgeStyle = "bg-emerald-100 text-emerald-800 border border-emerald-200";
-                      origemIcon = (<Handshake className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
-                    }
-
-                    return (
-                      <tr key={c.id} className="hover:bg-gray-50/70 transition-colors">
-                        {/* Data e Horário de Lançamento */}
-                        <td className="p-3.5 text-xs text-gray-700 whitespace-nowrap">
-                          <div className="font-bold text-gray-900 text-[11px] flex items-center gap-1">
-                            <span><Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> {dtInfo.date}</span>
-                          </div>
-                          <span className="text-[10px] text-gray-400 block font-mono mt-0.5">
-                            🕒 {dtInfo.time}
-                          </span>
-                        </td>
-
-                        {/* Origem / Categoria */}
-                        <td className="p-3.5 text-xs">
-                          <div className="space-y-1">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${origemBadgeStyle}`}>
-                              <span>{origemIcon}</span>
-                              <span>{origem}</span>
-                            </span>
-                            <span className="block text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full w-max">
-                              {categoria}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Descrição / Veículo */}
-                        <td className="p-3.5 text-xs font-semibold text-gray-900 max-w-xs">
-                          <p className="line-clamp-2">{c.descricao}</p>
-                          {c.despesaVeiculo?.veiculo && (
-                            <span className="mt-1 inline-flex items-center gap-1 bg-brand-blue/10 text-brand-blue px-2 py-0.5 rounded text-[10px] font-bold font-mono">
-                              Placa: {c.despesaVeiculo.veiculo.placa} ({c.despesaVeiculo.veiculo.marca} {c.despesaVeiculo.veiculo.modelo})
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Data Vencimento */}
-                        <td className="p-3.5 text-xs text-gray-500 font-medium whitespace-nowrap">
-                          <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> {dataVencFmt}
-                        </td>
-
-                        {/* Valor */}
-                        <td className="p-3.5 text-xs font-extrabold text-red-600 whitespace-nowrap">
-                          - R$ {Number(c.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </td>
-
-                        {/* Status */}
-                        <td className="p-3.5 text-xs whitespace-nowrap">
-                          <span className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase ${
-                            c.statusPagamento === "Pago" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
-                          }`}>
-                            {c.statusPagamento}
-                          </span>
-                        </td>
-
-                        {/* Ações */}
-                        <td className="p-3.5 text-center whitespace-nowrap">
-                          <div className="flex justify-center items-center gap-1.5">
-                            {!c.descricao.startsWith("Despesa Placa:") && (
-                              <button
-                                onClick={() => startEditCusto(c)}
-                                className="w-7 h-7 rounded-lg border border-brand-blue/40 text-brand-blue hover:bg-brand-blue hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                                title="Editar Custo"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleDeleteCusto(c.id)}
-                              className="w-7 h-7 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white flex items-center justify-center text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                              title="Excluir Custo"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+      {/* Costs Table */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <h4 className="text-xs font-bold text-brand-blue uppercase tracking-wider">
+            📋 Registro Geral de Custos Operacionais & Veículos
+          </h4>
+          <span className="text-[10px] text-gray-400 font-medium">
+            Exibindo {custosFiltrados.length} de {custos.length} lançamentos
+          </span>
         </div>
 
-        {/* Cost Registration Form */}
-        {showForm && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-4 animate-slide-in">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
+                <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Data / Hora Lançamento</th>
+                <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Origem / Categoria</th>
+                <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Descrição / Veículo</th>
+                <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Vencimento / Data</th>
+                <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Valor (R$)</th>
+                <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Status</th>
+                <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-gray-700">
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="p-12 text-center text-gray-400 text-xs">
+                    <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-brand-blue mx-auto mb-2"></div>
+                    Carregando dados financeiros...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="7" className="p-6 text-center text-red-600 text-xs font-semibold bg-red-50">{error}</td>
+                </tr>
+              ) : custosFiltrados.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="p-12 text-center text-gray-400 text-xs font-medium">
+                    Nenhum custo encontrado para os filtros selecionados.
+                  </td>
+                </tr>
+              ) : (
+                custosFiltrados.map((c) => {
+                  const origem = getCustoOrigem(c);
+                  const categoria = getCustoCategoria(c);
+                  const dtInfo = formatDateTime(c.createdAt, c.dataVencimento);
+                  const dataVencFmt = c.dataVencimento ? new Date(c.dataVencimento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "-";
+
+                  // Badges de Origem
+                  let origemBadgeStyle = "bg-gray-100 text-gray-700";
+                  let origemIcon = "🏢";
+                  if (origem === "Pós Venda") {
+                    origemBadgeStyle = "bg-purple-100 text-purple-800 border border-purple-200";
+                    origemIcon = (<Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
+                  } else if (origem === "Estoque") {
+                    origemBadgeStyle = "bg-blue-100 text-blue-800 border border-blue-200";
+                    origemIcon = (<Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
+                  } else if (origem === "Venda") {
+                    origemBadgeStyle = "bg-emerald-100 text-emerald-800 border border-emerald-200";
+                    origemIcon = (<Handshake className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
+                  }
+
+                  return (
+                    <tr key={c.id} className="hover:bg-gray-50/70 transition-colors">
+                      {/* Data e Horário de Lançamento */}
+                      <td className="p-3.5 text-xs text-gray-700 whitespace-nowrap">
+                        <div className="font-bold text-gray-900 text-[11px] flex items-center gap-1">
+                          <span><Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> {dtInfo.date}</span>
+                        </div>
+                        <span className="text-[10px] text-gray-400 block font-mono mt-0.5">
+                          🕒 {dtInfo.time}
+                        </span>
+                      </td>
+
+                      {/* Origem / Categoria */}
+                      <td className="p-3.5 text-xs">
+                        <div className="space-y-1">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${origemBadgeStyle}`}>
+                            <span>{origemIcon}</span>
+                            <span>{origem}</span>
+                          </span>
+                          <span className="block text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full w-max">
+                            {categoria}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Descrição / Veículo */}
+                      <td className="p-3.5 text-xs font-semibold text-gray-900 max-w-xs">
+                        <p className="line-clamp-2">{c.descricao}</p>
+                        {c.despesaVeiculo?.veiculo && (
+                          <span className="mt-1 inline-flex items-center gap-1 bg-brand-blue/10 text-brand-blue px-2 py-0.5 rounded text-[10px] font-bold font-mono">
+                            Placa: {c.despesaVeiculo.veiculo.placa} ({c.despesaVeiculo.veiculo.marca} {c.despesaVeiculo.veiculo.modelo})
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Data Vencimento */}
+                      <td className="p-3.5 text-xs text-gray-500 font-medium whitespace-nowrap">
+                        <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> {dataVencFmt}
+                      </td>
+
+                      {/* Valor */}
+                      <td className="p-3.5 text-xs font-extrabold text-red-600 whitespace-nowrap">
+                        - R$ {Number(c.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </td>
+
+                      {/* Status */}
+                      <td className="p-3.5 text-xs whitespace-nowrap">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-extrabold uppercase ${
+                          c.statusPagamento === "Pago" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+                        }`}>
+                          {c.statusPagamento}
+                        </span>
+                      </td>
+
+                      {/* Ações */}
+                      <td className="p-3.5 text-center whitespace-nowrap">
+                        <div className="flex justify-center items-center gap-1.5">
+                          {!c.descricao.startsWith("Despesa Placa:") && (
+                            <button
+                              onClick={() => startEditCusto(c)}
+                              className="w-7 h-7 rounded-lg border border-brand-blue/40 text-brand-blue hover:bg-brand-blue hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                              title="Editar Custo"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteCusto(c.id)}
+                            className="w-7 h-7 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white flex items-center justify-center text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                            title="Excluir Custo"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal Window Novo / Editar Lançamento de Custo */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/55 animate-fade-in">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 w-[95%] sm:w-full max-w-[550px] max-h-[90vh] overflow-y-auto shadow-2xl relative animate-slide-in flex flex-col gap-4">
             <div className="flex justify-between items-center border-b border-gray-100 pb-3">
               <h4 className="font-extrabold text-sm text-brand-blue uppercase">
                 {formCusto.id ? "Editar Lançamento" : "Novo Lançamento de Custo"}
               </h4>
               <button
                 onClick={() => setShowForm(false)}
-                className="text-gray-400 hover:text-gray-600 text-sm font-bold"
+                className="text-gray-400 hover:text-gray-600 text-sm font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -763,22 +762,22 @@ export default function FinanceiroTab() {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition-colors"
+                  className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="bg-brand-blue text-white px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity"
+                  className="bg-brand-blue text-white px-5 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity cursor-pointer"
                 >
-                  {formLoading ? "Salvação..." : "Confirmar"}
+                  {formLoading ? "Salvando..." : "Confirmar"}
                 </button>
               </div>
             </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
