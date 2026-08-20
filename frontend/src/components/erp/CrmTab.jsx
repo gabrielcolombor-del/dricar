@@ -1,4 +1,6 @@
 "use client";
+import { Plus, Pencil, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+
 
 import { useState, useEffect } from "react";
 
@@ -482,7 +484,7 @@ export default function CrmTab() {
             }}
             className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-2.5 sm:py-3 rounded-lg flex items-center justify-center gap-1.5 transition-all w-full sm:w-auto cursor-pointer"
           >
-            ➕ Novo Lead
+            <Plus className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Novo Lead
           </button>
         )}
       </div>
@@ -597,7 +599,7 @@ export default function CrmTab() {
                                     className="text-[10px] text-gray-400 hover:text-brand-blue"
                                     title="Editar Lead"
                                   >
-                                    ✏️
+                                    <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                                   </button>
                                 )}
                                 <button
@@ -613,7 +615,7 @@ export default function CrmTab() {
                             {/* Data da Venda (se vendido) */}
                             {dataVendaFmt && (
                               <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md self-start">
-                                📅 Venda: {dataVendaFmt}
+                                <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Venda: {dataVendaFmt}
                               </span>
                             )}
 
@@ -656,7 +658,7 @@ export default function CrmTab() {
                                       className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1 rounded text-[10px]"
                                       title="Voltar Funil"
                                     >
-                                      ◀
+                                      <ChevronLeft className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                                     </button>
                                   )}
                                   {/* Move forward */}
@@ -677,7 +679,7 @@ export default function CrmTab() {
                                     className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-1 rounded text-[10px]"
                                     title="Avançar Funil"
                                   >
-                                    ▶
+                                    <ChevronRight className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                                   </button>
                                 </div>
                               )}

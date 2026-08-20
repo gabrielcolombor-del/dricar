@@ -1,4 +1,6 @@
 "use client";
+import { Users, CheckCircle, Search, Car, Eye, Pencil } from 'lucide-react';
+
 
 import { useState, useEffect } from "react";
 
@@ -305,13 +307,13 @@ export default function ClientesTab() {
         <div className="bg-gradient-to-br from-blue-900 to-slate-900 text-white rounded-2xl p-5 shadow-lg border border-blue-800/40 relative overflow-hidden group hover:shadow-xl transition-all">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all"></div>
           <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block mb-1">
-            👥 Clientes Cadastrados
+            <Users className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Clientes Cadastrados
           </span>
           <p className="text-3xl font-extrabold text-white mt-1">
             {totalQualificados}
           </p>
           <span className="text-[10px] text-blue-200/80 mt-2 block flex items-center gap-1">
-            <span>✅ Nome + Telefone e/ou CPF validados</span>
+            <span><CheckCircle className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Nome + Telefone e/ou CPF validados</span>
           </span>
         </div>
       </div>
@@ -321,7 +323,7 @@ export default function ClientesTab() {
         <div className="flex flex-col sm:flex-row gap-3 flex-grow max-w-2xl">
           <div className="flex-grow">
             <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">
-              🔍 Buscar por Pessoa, CPF, Número (Telefone) ou Veículo
+              <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Buscar por Pessoa, CPF, Número (Telefone) ou Veículo
             </label>
             <div className="relative">
               <input
@@ -431,7 +433,7 @@ export default function ClientesTab() {
                                 <div key={venda.id} className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5 shadow-2xs hover:shadow-xs transition-all">
                                   <div className="flex items-center justify-between gap-2">
                                     <span className="font-extrabold text-emerald-950 text-xs flex items-center gap-1">
-                                      <span>🚗</span> {marca} {modelo}
+                                      <span><Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span> {marca} {modelo}
                                     </span>
                                     {placa && (
                                       <span className="bg-emerald-800 text-white font-mono font-bold text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider">
@@ -486,7 +488,7 @@ export default function ClientesTab() {
                             onClick={() => handleOpenModal(cliente)}
                             className="bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-700 font-bold px-3 py-1.5 rounded-lg text-xs transition-all shadow-2xs border border-slate-200 cursor-pointer"
                           >
-                            👁️ Ver / Editar
+                            <Eye className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px]" /> Ver / Editar
                           </button>
                           <button
                             onClick={() => handleDeleteCliente(cliente.id, cliente.nome)}
@@ -586,7 +588,7 @@ export default function ClientesTab() {
               {/* Resumo de Compras */}
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
                 <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <span>🚗</span> Veículos Comprados pelo Cliente
+                  <span><Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span> Veículos Comprados pelo Cliente
                 </h4>
                 {selectedCliente.vendas && selectedCliente.vendas.length > 0 ? (
                   <div className="space-y-2">
@@ -605,7 +607,7 @@ export default function ClientesTab() {
                           {editingVendaId === v.id ? (
                             <div className="space-y-3">
                               <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                                <span className="text-xs font-extrabold text-brand-blue uppercase">✏️ Editar Veículo / Venda</span>
+                                <span className="text-xs font-extrabold text-brand-blue uppercase"><Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Editar Veículo / Venda</span>
                                 <button
                                   type="button"
                                   onClick={() => setEditingVendaId(null)}
@@ -720,7 +722,7 @@ export default function ClientesTab() {
                                     className="bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-700 px-2 py-1 rounded-lg text-[11px] font-bold transition-all border border-slate-200 cursor-pointer"
                                     title="Editar Veículo"
                                   >
-                                    ✏️ Editar
+                                    <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Editar
                                   </button>
                                   <button
                                     type="button"

@@ -1,4 +1,6 @@
 "use client";
+import { Car, BarChart2, Users } from 'lucide-react';
+
 
 import { useState, useEffect } from "react";
 
@@ -124,7 +126,7 @@ export default function DashboardTab() {
 
   const getCategoryIcon = (cat) => {
     switch (cat) {
-      case "Hatch": return "🚗";
+      case "Hatch": return (<Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
       case "Sedan": return "🚘";
       case "SUV": return "🚙";
       case "Picape": return "🛻";
@@ -142,7 +144,7 @@ export default function DashboardTab() {
         <div>
           <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider block">PAINEL DE INDICADORES</span>
           <h2 className="text-lg sm:text-xl font-extrabold flex items-center gap-2">
-            📊 Faturamento e Desempenho Dricar
+            <BarChart2 className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Faturamento e Desempenho Dricar
           </h2>
         </div>
 
@@ -241,7 +243,7 @@ export default function DashboardTab() {
               <div className="flex justify-between items-start">
                 <span className="text-[11px] font-semibold text-gray-500">Faturamento Ano Anterior</span>
                 <div className="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-600 flex items-center justify-center text-xs font-bold shrink-0">
-                  📊
+                  <BarChart2 className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                 </div>
               </div>
               <h3 className="text-xl font-extrabold text-gray-900 mt-2">
@@ -289,7 +291,7 @@ export default function DashboardTab() {
               <div className="flex justify-between items-start">
                 <span className="text-[11px] font-semibold text-gray-500">Ticket Médio Geral</span>
                 <div className="w-8 h-8 rounded-xl bg-emerald-100/70 text-emerald-600 flex items-center justify-center text-xs font-bold shrink-0">
-                  👥
+                  <Users className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                 </div>
               </div>
               <h3 className="text-xl font-extrabold text-gray-900 mt-2">

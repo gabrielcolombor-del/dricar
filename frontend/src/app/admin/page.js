@@ -1,4 +1,6 @@
 "use client";
+import { EyeOff, Eye, LogOut, ChevronLeft, BarChart2, TrendingUp, Car, Handshake, Users, Wrench, CircleDollarSign, Package, Pencil, ChevronRight, Sliders, Globe, Settings, AlertTriangle, Camera, Lightbulb } from 'lucide-react';
+
 
 import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
@@ -838,7 +840,7 @@ export default function AdminPage() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-slate-800 dark:hover:text-white text-xs font-bold p-1 cursor-pointer select-none"
                     title={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   >
-                    {showPassword ? "🙈" : "👁️"}
+                    {showPassword ? <EyeOff className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px]" /> : <Eye className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px]" />}
                   </button>
                 </div>
               </div>
@@ -879,7 +881,7 @@ export default function AdminPage() {
             onClick={handleLogout}
             className="border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer self-start sm:self-auto flex items-center gap-1.5"
           >
-            🚪 Sair do Painel
+            <LogOut className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Sair do Painel
           </button>
         </div>
 
@@ -899,7 +901,7 @@ export default function AdminPage() {
                   title="Rolar menu para a esquerda"
                   aria-label="Rolar menu para a esquerda"
                 >
-                  ◀
+                  <ChevronLeft className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                 </button>
 
                 <div 
@@ -907,7 +909,7 @@ export default function AdminPage() {
                   className="flex gap-2.5 overflow-x-auto pb-1 select-none items-center touch-pan-x w-full custom-tab-scrollbar"
                 >
                   <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
-                    📊 ERP
+                    <BarChart2 className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> ERP
                   </span>
                   
                   {isAdmin && (
@@ -915,7 +917,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
                       className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_dashboard" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
                     >
-                      📈 Dashboard
+                      <TrendingUp className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Dashboard
                     </button>
                   )}
                   
@@ -924,7 +926,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
                       className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
                     >
-                      🚗 Estoque
+                      <Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Estoque
                     </button>
                   )}
                   
@@ -932,7 +934,7 @@ export default function AdminPage() {
                     onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
                     className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_crm" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
                   >
-                    🤝 CRM
+                    <Handshake className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> CRM
                   </button>
 
                   {(isAdmin || user?.role?.toLowerCase() === "manager") && (
@@ -940,7 +942,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
                       className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_clientes" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
                     >
-                      👥 Clientes
+                      <Users className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Clientes
                     </button>
                   )}
 
@@ -949,7 +951,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
                       className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_posvenda" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
                     >
-                      🛠️ Pós Venda
+                      <Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Pós Venda
                     </button>
                   )}
                   
@@ -958,7 +960,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
                       className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "erp_financeiro" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
                     >
-                      💸 Financeiro
+                      <CircleDollarSign className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Financeiro
                     </button>
                   )}
 
@@ -970,7 +972,7 @@ export default function AdminPage() {
                         onClick={() => { setActiveTab("estoque"); setEditingCar(null); clearUploadStates(); }}
                         className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "estoque" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
                       >
-                        📦 Catálogo ({activeCars.length})
+                        <Package className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Catálogo ({activeCars.length})
                       </button>
                     </>
                   )}
@@ -979,7 +981,7 @@ export default function AdminPage() {
                     <button 
                       className="pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400 cursor-default"
                     >
-                      ✏️ Editando
+                      <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Editando
                     </button>
                   )}
 
@@ -990,7 +992,7 @@ export default function AdminPage() {
                         onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
                         className={`pb-1 text-xs font-extrabold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${activeTab === "usuarios" ? "border-brand-blue text-brand-blue dark:border-blue-400 dark:text-blue-400" : "border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"}`}
                       >
-                        👥 Contas
+                        <Users className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Contas
                       </button>
                     </>
                   )}
@@ -1003,7 +1005,7 @@ export default function AdminPage() {
                   title="Rolar menu para a direita"
                   aria-label="Rolar menu para a direita"
                 >
-                  ▶
+                  <ChevronRight className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                 </button>
               </div>
             </div>
@@ -1014,7 +1016,7 @@ export default function AdminPage() {
               {/* Header Title inside Side Panel */}
               <div className="pb-3 border-b border-gray-100 dark:border-slate-800 flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-brand-blue/10 dark:bg-blue-900/40 text-brand-blue dark:text-blue-400 flex items-center justify-center font-bold text-sm">
-                  🎛️
+                  <Sliders className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                 </div>
                 <div>
                   <h2 className="text-xs font-extrabold uppercase text-gray-800 dark:text-gray-200 tracking-wider">
@@ -1029,7 +1031,7 @@ export default function AdminPage() {
               {/* Section 1: ERP & CRM */}
               <div>
                 <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-2 flex items-center gap-1.5">
-                  <span>📊 ERP & CRM</span>
+                  <span><BarChart2 className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> ERP & CRM</span>
                 </div>
                 <nav className="space-y-1">
                   {isAdmin && (
@@ -1037,7 +1039,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_dashboard"); setEditingCar(null); clearUploadStates(); }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_dashboard" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
                     >
-                      <span className="text-sm">📈</span>
+                      <span className="text-sm"><TrendingUp className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                       <span>Dashboard</span>
                     </button>
                   )}
@@ -1047,7 +1049,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_estoque"); setEditingCar(null); clearUploadStates(); }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_estoque" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
                     >
-                      <span className="text-sm">🚗</span>
+                      <span className="text-sm"><Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                       <span>Estoque & Histórico</span>
                     </button>
                   )}
@@ -1056,7 +1058,7 @@ export default function AdminPage() {
                     onClick={() => { setActiveTab("erp_crm"); setEditingCar(null); clearUploadStates(); }}
                     className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_crm" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
                   >
-                    <span className="text-sm">🤝</span>
+                    <span className="text-sm"><Handshake className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                     <span>CRM e Funil Vendas</span>
                   </button>
 
@@ -1065,7 +1067,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_clientes"); setEditingCar(null); clearUploadStates(); }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_clientes" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
                     >
-                      <span className="text-sm">👥</span>
+                      <span className="text-sm"><Users className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                       <span>Clientes & Histórico</span>
                     </button>
                   )}
@@ -1075,7 +1077,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_posvenda"); setEditingCar(null); clearUploadStates(); }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_posvenda" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
                     >
-                      <span className="text-sm">🛠️</span>
+                      <span className="text-sm"><Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                       <span>Pós Venda</span>
                     </button>
                   )}
@@ -1085,7 +1087,7 @@ export default function AdminPage() {
                       onClick={() => { setActiveTab("erp_financeiro"); setEditingCar(null); clearUploadStates(); }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_financeiro" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
                     >
-                      <span className="text-sm">💸</span>
+                      <span className="text-sm"><CircleDollarSign className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                       <span>Financeiro Geral</span>
                     </button>
                   )}
@@ -1096,7 +1098,7 @@ export default function AdminPage() {
               {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor || activeTab === "cadastrar") && (
                 <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
                   <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-2 flex items-center gap-1.5">
-                    <span>🌐 CATÁLOGO SITE</span>
+                    <span><Globe className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> CATÁLOGO SITE</span>
                   </div>
                   <nav className="space-y-1">
                     {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor) && (
@@ -1105,7 +1107,7 @@ export default function AdminPage() {
                         className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-between ${activeTab === "estoque" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className="text-sm">📦</span>
+                          <span className="text-sm"><Package className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                           <span>Catálogo Ativo</span>
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${activeTab === "estoque" ? "bg-white/20 text-white" : "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300"}`}>
@@ -1118,7 +1120,7 @@ export default function AdminPage() {
                       <button 
                         className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all bg-brand-blue text-white shadow-sm dark:bg-blue-600 flex items-center gap-2.5 cursor-default"
                       >
-                        <span className="text-sm">✏️</span>
+                        <span className="text-sm"><Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                         <span>Editando Anúncio</span>
                       </button>
                     )}
@@ -1130,14 +1132,14 @@ export default function AdminPage() {
               {isAdmin && (
                 <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
                   <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-2 flex items-center gap-1.5">
-                    <span>⚙️ SISTEMA</span>
+                    <span><Settings className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> SISTEMA</span>
                   </div>
                   <nav className="space-y-1">
                     <button 
                       onClick={() => { setActiveTab("usuarios"); setEditingCar(null); clearUploadStates(); }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "usuarios" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
                     >
-                      <span className="text-sm">👥</span>
+                      <span className="text-sm"><Users className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                       <span>Contas & Usuários</span>
                     </button>
                   </nav>
@@ -1150,7 +1152,7 @@ export default function AdminPage() {
                   onClick={handleLogout}
                   className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all cursor-pointer flex items-center gap-2.5"
                 >
-                  <span className="text-sm">🚪</span>
+                  <span className="text-sm"><LogOut className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                   <span>Sair do Painel</span>
                 </button>
               </div>
@@ -1222,7 +1224,7 @@ export default function AdminPage() {
                             <div className="text-gray-400 text-xs">{car.subtitle}</div>
                             {(!car.images || car.images.length === 0) && (
                               <span className="inline-flex mt-1 items-center gap-1 bg-amber-50 text-amber-700 border border-amber-250 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">
-                                ⚠️ Pendente de Fotos (Fora do site)
+                                <AlertTriangle className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Pendente de Fotos (Fora do site)
                               </span>
                             )}
                           </td>
@@ -1243,7 +1245,7 @@ export default function AdminPage() {
                             <div className="flex flex-col items-center gap-1.5">
                               {(!car.images || car.images.length === 0) && (
                                 <span className="text-[9px] text-amber-650 font-extrabold text-center uppercase tracking-wider max-w-[150px] bg-amber-50/50 px-2 py-1 rounded border border-amber-200 animate-pulse">
-                                  📸 Tirar fotos e inserir dados do anúncio
+                                  <Camera className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Tirar fotos e inserir dados do anúncio
                                 </span>
                               )}
                               <div className="flex justify-center items-center gap-3">
@@ -1291,7 +1293,7 @@ export default function AdminPage() {
                       onClick={() => setPaginaCatalogo((prev) => Math.max(prev - 1, 1))}
                       className="px-3 py-1.5 rounded-lg border border-gray-300 font-bold bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
-                      ◀ Anterior
+                      <ChevronLeft className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Anterior
                     </button>
 
                     <span className="px-3 py-1 font-bold text-gray-600 bg-white border border-gray-200 rounded-lg">
@@ -1303,7 +1305,7 @@ export default function AdminPage() {
                       onClick={() => setPaginaCatalogo((prev) => Math.min(prev + 1, totalPaginasCatalogo))}
                       className="px-3 py-1.5 rounded-lg border border-gray-300 font-bold bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
-                      Próximo ▶
+                      Próximo <ChevronRight className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                     </button>
                   </div>
                 </div>
@@ -1494,7 +1496,7 @@ export default function AdminPage() {
                       Fotos Selecionadas ({photoItems.length})
                     </span>
                     <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-                      💡 <strong>Arraste as fotos</strong> para definir a ordem (a <span className="text-brand-blue dark:text-blue-400 font-bold">1ª foto</span> será a Capa do veículo).
+                      <Lightbulb className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> <strong>Arraste as fotos</strong> para definir a ordem (a <span className="text-brand-blue dark:text-blue-400 font-bold">1ª foto</span> será a Capa do veículo).
                     </span>
                   </div>
 
@@ -1577,7 +1579,7 @@ export default function AdminPage() {
                                 className="text-white hover:text-amber-400 disabled:opacity-30 disabled:hover:text-white px-1.5 py-0.5 text-xs font-bold transition-colors cursor-pointer"
                                 title="Mover para esquerda"
                               >
-                                ◀
+                                <ChevronLeft className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                               </button>
 
                               {!isCover && (
@@ -1598,7 +1600,7 @@ export default function AdminPage() {
                                 className="text-white hover:text-amber-400 disabled:opacity-30 disabled:hover:text-white px-1.5 py-0.5 text-xs font-bold transition-colors cursor-pointer"
                                 title="Mover para direita"
                               >
-                                ▶
+                                <ChevronRight className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                               </button>
                             </div>
                           </div>
@@ -1653,7 +1655,7 @@ export default function AdminPage() {
         {activeTab === "usuarios" && isAdmin && (
           <div className="bg-white border border-gray-200 rounded-[20px] p-8 shadow-sm">
             <h2 className="text-xl font-extrabold text-brand-blue uppercase mb-6 flex items-center gap-2">
-              👥 Gerenciar Contas de Funcionários
+              <Users className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Gerenciar Contas de Funcionários
             </h2>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1783,7 +1785,7 @@ export default function AdminPage() {
                                     className="p-1.5 rounded-lg border border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white transition-all cursor-pointer text-xs font-bold flex items-center justify-center shadow-2xs"
                                     title="Editar login e senha desta conta"
                                   >
-                                    ✏️
+                                    <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                                   </button>
 
                                   {isSelf ? (

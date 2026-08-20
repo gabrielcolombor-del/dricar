@@ -1,4 +1,6 @@
 "use client";
+import { Search, Calendar, Plus, Package, AlertTriangle, Pencil, ChevronLeft, ChevronRight, LogOut, Handshake, Car } from 'lucide-react';
+
 
 import { useState, useEffect } from "react";
 import { generateSalePdf, numeroParaExtenso } from "@/lib/generateSalePdf";
@@ -681,7 +683,7 @@ export default function EstoqueTab() {
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center flex-grow max-w-3xl">
           {/* Campo de Busca Geral */}
           <div className="flex-grow min-w-full sm:min-w-[220px]">
-            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">🔍 Pesquisar Veículo / Peças / Placa</label>
+            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1"><Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Pesquisar Veículo / Peças / Placa</label>
             <div className="relative">
               <input
                 type="text"
@@ -690,7 +692,7 @@ export default function EstoqueTab() {
                 onChange={(e) => setBuscaGeral(e.target.value)}
                 className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 pl-8 pr-7 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-brand-blue"
               />
-              <span className="absolute left-2.5 top-2 text-gray-400 dark:text-gray-400 text-xs">🔍</span>
+              <span className="absolute left-2.5 top-2 text-gray-400 dark:text-gray-400 text-xs"><Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
               {buscaGeral && (
                 <button
                   onClick={() => setBuscaGeral("")}
@@ -752,7 +754,7 @@ export default function EstoqueTab() {
           {/* Filtro por Período de Datas */}
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-150 dark:border-slate-700 w-full text-xs">
             <span className="text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1">
-              📅 Período:
+              <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Período:
             </span>
 
             <div className="flex items-center gap-1">
@@ -809,7 +811,7 @@ export default function EstoqueTab() {
           }}
           className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-2.5 sm:py-3 rounded-lg flex items-center justify-center gap-1.5 transition-all w-full md:w-auto cursor-pointer"
         >
-          ➕ Novo Veículo
+          <Plus className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Novo Veículo
         </button>
       </div>
 
@@ -873,7 +875,7 @@ export default function EstoqueTab() {
                         ) : v.status === "Vendido" ? (
                           <div className="text-emerald-700 dark:text-emerald-400 font-bold text-[10px] mt-0.5">💰 Vendido</div>
                         ) : (
-                          <div className="text-gray-400 dark:text-gray-500 font-medium text-[10px] mt-0.5">📦 Em Pátio</div>
+                          <div className="text-gray-400 dark:text-gray-500 font-medium text-[10px] mt-0.5"><Package className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Em Pátio</div>
                         )}
                       </td>
                       <td className="p-4 text-xs" onClick={(e) => e.stopPropagation()}>
@@ -904,7 +906,7 @@ export default function EstoqueTab() {
                       </td>
                       <td className="p-4 text-xs">
                         {v.documentoPendente ? (
-                          <span className="text-red-600 font-bold text-[10px]">⚠️ Pendente</span>
+                          <span className="text-red-600 font-bold text-[10px]"><AlertTriangle className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Pendente</span>
                         ) : (
                           <span className="text-gray-400 text-[10px]">Regular</span>
                         )}
@@ -954,7 +956,7 @@ export default function EstoqueTab() {
                             onClick={() => startEditVeiculo(v)}
                             className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white p-1.5 rounded-md text-[10px] font-bold transition-all cursor-pointer"
                           >
-                            ✏️
+                            <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                           </button>
                           <button
                             onClick={() => handleDeleteVeiculo(v.id)}
@@ -986,7 +988,7 @@ export default function EstoqueTab() {
                   disabled={paginaAtual === 1}
                   className="px-2.5 py-1 rounded-md border border-gray-300 font-bold bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs cursor-pointer"
                 >
-                  ◀ Anterior
+                  <ChevronLeft className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Anterior
                 </button>
 
                 {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(page => (
@@ -1008,7 +1010,7 @@ export default function EstoqueTab() {
                   disabled={paginaAtual === totalPaginas}
                   className="px-2.5 py-1 rounded-md border border-gray-300 font-bold bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-xs cursor-pointer"
                 >
-                  Próximo ▶
+                  Próximo <ChevronRight className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                 </button>
               </div>
             </div>
@@ -1047,7 +1049,7 @@ export default function EstoqueTab() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50/80 p-3.5 rounded-xl border border-gray-200/80">
               <div>
                 <span className="text-[9px] text-gray-500 uppercase font-bold block flex items-center gap-1">
-                  📅 Data Entrada (Estoque)
+                  <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Data Entrada (Estoque)
                 </span>
                 <span className="text-xs font-extrabold text-slate-900 block mt-1">
                   {selectedVeiculo.dataEntrada 
@@ -1057,7 +1059,7 @@ export default function EstoqueTab() {
               </div>
               <div>
                 <span className="text-[9px] text-gray-500 uppercase font-bold block flex items-center gap-1">
-                  🚪 Data Saída (Estoque)
+                  <LogOut className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Data Saída (Estoque)
                 </span>
                 <span className="text-xs font-extrabold text-slate-900 block mt-1">
                   {selectedVeiculo.status === "Vendido" && selectedVeiculo.vendas && selectedVeiculo.vendas.length > 0
@@ -1119,7 +1121,7 @@ export default function EstoqueTab() {
             {selectedVeiculo.status === "Vendido" && (
               <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 text-left">
                 <div className="flex items-center gap-1.5 mb-2.5 border-b border-emerald-200/60 pb-2">
-                  <span className="text-sm">🤝</span>
+                  <span className="text-sm"><Handshake className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /></span>
                   <h5 className="text-[11px] font-extrabold text-emerald-800 uppercase tracking-wider">
                     Informações da Venda Realizada
                   </h5>
@@ -1462,7 +1464,7 @@ export default function EstoqueTab() {
                       onChange={(e) => setFormVeiculo(prev => ({ ...prev, documentoPendente: e.target.checked }))}
                       className="w-4 h-4 rounded border-gray-350 text-brand-blue focus:ring-brand-blue"
                     />
-                    <span className="font-bold text-gray-700">⚠️ Pendência de Documentação</span>
+                    <span className="font-bold text-gray-700"><AlertTriangle className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Pendência de Documentação</span>
                   </label>
                 </div>
               </div>
@@ -1613,7 +1615,7 @@ export default function EstoqueTab() {
                   <div>
                     <label className="block font-extrabold text-slate-900 uppercase mb-1 flex justify-between items-center">
                       <span>CEP</span>
-                      {cepLoading && <span className="text-[10px] text-brand-blue font-bold animate-pulse">🔍 Buscando...</span>}
+                      {cepLoading && <span className="text-[10px] text-brand-blue font-bold animate-pulse"><Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Buscando...</span>}
                     </label>
                     <input
                       type="text"
@@ -1670,7 +1672,7 @@ export default function EstoqueTab() {
               {/* Seção 2: Especificações Adicionais do Veículo */}
               <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-3">
                 <h4 className="font-extrabold text-slate-900 uppercase text-[11px] flex items-center gap-1.5">
-                  🚗 3. Complemento do Veículo no Contrato
+                  <Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> 3. Complemento do Veículo no Contrato
                 </h4>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

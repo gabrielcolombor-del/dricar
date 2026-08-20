@@ -1,4 +1,6 @@
 "use client";
+import { Wrench, Car, Search, Plus, Calendar, Eye } from 'lucide-react';
+
 
 import { useState, useEffect } from "react";
 
@@ -270,7 +272,7 @@ export default function PosVendaTab() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-            🛠️ Total Custos Pós Venda
+            <Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Total Custos Pós Venda
           </span>
           <p className="text-2xl font-extrabold text-red-600">
             R$ {totalPosVenda.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -290,7 +292,7 @@ export default function PosVendaTab() {
 
         <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-            🚗 Veículos Com Pós Venda
+            <Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Veículos Com Pós Venda
           </span>
           <p className="text-2xl font-extrabold text-purple-600">
             {veiculosUnicos}
@@ -305,7 +307,7 @@ export default function PosVendaTab() {
           {/* Busca */}
           <div className="flex-grow">
             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-              🔍 Buscar por Placa / Veículo / Categoria / Descrição
+              <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Buscar por Placa / Veículo / Categoria / Descrição
             </label>
             <input
               type="text"
@@ -354,7 +356,7 @@ export default function PosVendaTab() {
           }}
           className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-sm cursor-pointer whitespace-nowrap self-stretch sm:self-auto flex items-center justify-center gap-2"
         >
-          <span>➕ Novo Custo por Veículo</span>
+          <span><Plus className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Novo Custo por Veículo</span>
         </button>
       </div>
 
@@ -419,7 +421,7 @@ export default function PosVendaTab() {
                         )}
                       </td>
                       <td className="p-4 text-xs text-gray-500 font-medium">
-                        📅 {dataFmt}
+                        <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> {dataFmt}
                       </td>
                       <td className="p-4 text-xs font-extrabold text-red-600">
                         - R$ {Number(d.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -431,7 +433,7 @@ export default function PosVendaTab() {
                             className="border border-brand-blue/30 text-brand-blue hover:bg-brand-blue/10 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
                             title="Ver e Editar Custo"
                           >
-                            👁️ Ver
+                            <Eye className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px]" /> Ver
                           </button>
                           <button
                             onClick={() => handleDeleteExpense(d.id)}
@@ -457,7 +459,7 @@ export default function PosVendaTab() {
           <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 w-[95%] sm:w-full max-w-[500px] max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-sm font-extrabold text-brand-blue uppercase">
-                🛠️ Registrar Custo por Veículo (Pós Venda)
+                <Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Registrar Custo por Veículo (Pós Venda)
               </h3>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 font-bold text-sm">
                 ✕
@@ -605,7 +607,7 @@ export default function PosVendaTab() {
           <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 w-[95%] sm:w-full max-w-[550px] max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4">
               <h3 className="text-sm font-extrabold text-brand-blue uppercase flex items-center gap-2">
-                🔍 Detalhes e Edição do Custo
+                <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Detalhes e Edição do Custo
               </h3>
               <button
                 onClick={() => {
@@ -635,7 +637,7 @@ export default function PosVendaTab() {
                     : "bg-emerald-100 text-emerald-700"
                 }`}>
                   {selectedExpense.veiculo?.status === "Vendido" || (selectedExpense.veiculo?.vendas && selectedExpense.veiculo.vendas.length > 0)
-                    ? "🚗 Vendido"
+                    ? (<><Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm inline" /> Vendido</>)
                     : "🚘 Em Estoque"}
                 </span>
               </div>

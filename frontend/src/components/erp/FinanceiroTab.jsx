@@ -1,4 +1,6 @@
 "use client";
+import { CircleDollarSign, Plus, CheckCircle, Wrench, Car, BarChart2, Search, Handshake, Calendar, Pencil } from 'lucide-react';
+
 
 import { useState, useEffect } from "react";
 
@@ -262,7 +264,7 @@ export default function FinanceiroTab() {
       <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h4 className="font-extrabold text-brand-blue text-xs sm:text-sm uppercase tracking-wider">
-            💸 Central de Custos e Financeiro Geral
+            <CircleDollarSign className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Central de Custos e Financeiro Geral
           </h4>
           <p className="text-[11px] sm:text-xs text-gray-400 mt-0.5">
             Consolidação de todos os lançamentos: Pós-Venda, Preparação de Veículos, Vendas e Despesas Operacionais com data e horário de registro.
@@ -288,7 +290,7 @@ export default function FinanceiroTab() {
           }}
           className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-3 rounded-xl flex items-center justify-center gap-2 transition-all w-full sm:w-auto cursor-pointer shadow-sm"
         >
-          ➕ Novo Lançamento de Custo
+          <Plus className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Novo Lançamento de Custo
         </button>
       </div>
 
@@ -296,7 +298,7 @@ export default function FinanceiroTab() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
-            ✅ Total Pago
+            <CheckCircle className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Total Pago
           </span>
           <p className="text-lg font-extrabold text-green-600 mt-1">
             R$ {totalPago.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -314,7 +316,7 @@ export default function FinanceiroTab() {
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
-            🛠️ Custos Pós-Venda
+            <Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Custos Pós-Venda
           </span>
           <p className="text-lg font-extrabold text-purple-600 mt-1">
             R$ {totalPosVenda.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -323,7 +325,7 @@ export default function FinanceiroTab() {
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
-            🚗 Prep. & Estoque
+            <Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Prep. & Estoque
           </span>
           <p className="text-lg font-extrabold text-blue-600 mt-1">
             R$ {totalEstoque.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -332,7 +334,7 @@ export default function FinanceiroTab() {
 
         <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm col-span-2 md:col-span-1 bg-gray-50/70">
           <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
-            📊 Total Lançado
+            <BarChart2 className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Total Lançado
           </span>
           <p className="text-lg font-extrabold text-gray-900 mt-1">
             R$ {totalGeral.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -346,7 +348,7 @@ export default function FinanceiroTab() {
           {/* Busca por texto */}
           <div>
             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-              🔍 Buscar por Placa / Descrição / Veículo
+              <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Buscar por Placa / Descrição / Veículo
             </label>
             <input
               type="text"
@@ -368,9 +370,9 @@ export default function FinanceiroTab() {
               className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
             >
               <option value="">Todas as Origens</option>
-              <option value="Pós Venda">🛠️ Pós Venda</option>
+              <option value="Pós Venda"><Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Pós Venda</option>
               <option value="Estoque">🚗 Estoque / Preparação</option>
-              <option value="Venda">🤝 Venda</option>
+              <option value="Venda"><Handshake className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Venda</option>
               <option value="Operacional">🏢 Operacional / Fixo</option>
             </select>
           </div>
@@ -472,13 +474,13 @@ export default function FinanceiroTab() {
                     let origemIcon = "🏢";
                     if (origem === "Pós Venda") {
                       origemBadgeStyle = "bg-purple-100 text-purple-800 border border-purple-200";
-                      origemIcon = "🛠️";
+                      origemIcon = (<Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
                     } else if (origem === "Estoque") {
                       origemBadgeStyle = "bg-blue-100 text-blue-800 border border-blue-200";
-                      origemIcon = "🚗";
+                      origemIcon = (<Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
                     } else if (origem === "Venda") {
                       origemBadgeStyle = "bg-emerald-100 text-emerald-800 border border-emerald-200";
-                      origemIcon = "🤝";
+                      origemIcon = (<Handshake className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />);
                     }
 
                     return (
@@ -486,7 +488,7 @@ export default function FinanceiroTab() {
                         {/* Data e Horário de Lançamento */}
                         <td className="p-3.5 text-xs text-gray-700 whitespace-nowrap">
                           <div className="font-bold text-gray-900 text-[11px] flex items-center gap-1">
-                            <span>📅 {dtInfo.date}</span>
+                            <span><Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> {dtInfo.date}</span>
                           </div>
                           <span className="text-[10px] text-gray-400 block font-mono mt-0.5">
                             🕒 {dtInfo.time}
@@ -518,7 +520,7 @@ export default function FinanceiroTab() {
 
                         {/* Data Vencimento */}
                         <td className="p-3.5 text-xs text-gray-500 font-medium whitespace-nowrap">
-                          📅 {dataVencFmt}
+                          <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> {dataVencFmt}
                         </td>
 
                         {/* Valor */}
@@ -544,7 +546,7 @@ export default function FinanceiroTab() {
                                 className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
                                 title="Editar Custo"
                               >
-                                ✏️
+                                <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
                               </button>
                             )}
                             <button
@@ -599,7 +601,7 @@ export default function FinanceiroTab() {
                     formMode === "veiculo" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400"
                   }`}
                 >
-                  🚗 Custo por Veículo
+                  <Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Custo por Veículo
                 </button>
               </div>
             )}
