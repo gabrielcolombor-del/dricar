@@ -1189,10 +1189,10 @@ export default function AdminPage() {
             {/* ERP TABS RENDERING */}
             {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
             {activeTab === "erp_estoque" && (isAdmin || user?.role?.toLowerCase() === "manager") && <EstoqueTab />}
-            {activeTab === "erp_historico_vendas" && (isAdmin || user?.role?.toLowerCase() === "manager") && <HistoricoVendasTab />}
+            {activeTab === "erp_historico_vendas" && (isAdmin || user?.role?.toLowerCase() === "manager") && <HistoricoVendasTab isAdmin={isAdmin} />}
             {activeTab === "erp_crm" && <CrmTab />}
             {activeTab === "erp_clientes" && (isAdmin || user?.role?.toLowerCase() === "manager") && <ClientesTab />}
-            {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab />}
+            {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab isAdmin={isAdmin} />}
             {activeTab === "erp_financeiro" && (isAdmin || user?.role?.toLowerCase() === "manager") && <FinanceiroTab isAdmin={isAdmin} />}
 
         {/* TAB 1: ESTOQUE ATIVO */}

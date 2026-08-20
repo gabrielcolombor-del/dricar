@@ -500,49 +500,49 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
         </div>
       </div>
 
-      {/* KPI STATS CARDS */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${effectiveIsAdmin ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-3.5`}>
-        {/* CARD 1: Total da Aba */}
-        <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-800">
-          <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider block mb-1">
-            {activeMainTab === "veiculos" ? "Total Custos Veículos" : "Total Custos Operacionais"}
-          </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-white">
-            R$ {totalGeralAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <span className="text-[11px] text-blue-200/80 mt-1.5 block font-medium">
-            {custosFiltrados.length} lançamentos encontrados
-          </span>
-        </div>
+      {/* KPI STATS CARDS (EXCLUSIVO PARA ADMINISTRADOR) */}
+      {effectiveIsAdmin && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {/* CARD 1: Total da Aba */}
+          <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-800">
+            <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider block mb-1">
+              {activeMainTab === "veiculos" ? "Total Custos Veículos" : "Total Custos Operacionais"}
+            </span>
+            <p className="text-xl sm:text-2xl font-extrabold text-white">
+              R$ {totalGeralAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <span className="text-[11px] text-blue-200/80 mt-1.5 block font-medium">
+              {custosFiltrados.length} lançamentos encontrados
+            </span>
+          </div>
 
-        {/* CARD 2: Total Pago */}
-        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-emerald-500">
-          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-            Total Pago
-          </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
-            R$ {totalPagoAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <span className="text-[11px] text-gray-400 mt-1.5 block font-medium">
-            Lançamentos liquidados
-          </span>
-        </div>
+          {/* CARD 2: Total Pago */}
+          <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-emerald-500">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
+              Total Pago
+            </span>
+            <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
+              R$ {totalPagoAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <span className="text-[11px] text-gray-400 mt-1.5 block font-medium">
+              Lançamentos liquidados
+            </span>
+          </div>
 
-        {/* CARD 3: Total A Pagar / Pendente */}
-        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-amber-500">
-          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-            Total A Pagar / Pendente
-          </span>
-          <p className="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400">
-            R$ {totalAPagarAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <span className="text-[11px] text-gray-400 mt-1.5 block font-medium">
-            Aguardando pagamento
-          </span>
-        </div>
+          {/* CARD 3: Total A Pagar / Pendente */}
+          <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-amber-500">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
+              Total A Pagar / Pendente
+            </span>
+            <p className="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400">
+              R$ {totalAPagarAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <span className="text-[11px] text-gray-400 mt-1.5 block font-medium">
+              Aguardando pagamento
+            </span>
+          </div>
 
-        {/* CARD 4: Custos Fixos Mensais (EXCLUSIVO PARA ADMINISTRADOR) */}
-        {effectiveIsAdmin && (
+          {/* CARD 4: Custos Fixos Mensais */}
           <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-purple-500">
             <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
               Custos Fixos Mensais
@@ -554,8 +554,8 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
               Aluguel, salários e obrigações mensais
             </span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* FILTROS E BUSCA */}
       <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors">

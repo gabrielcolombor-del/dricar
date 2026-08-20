@@ -4,7 +4,7 @@ import { Wrench, Car, Search, Plus, Calendar, Eye, FileText, ClipboardList } fro
 
 import { useState, useEffect } from "react";
 
-export default function PosVendaTab() {
+export default function PosVendaTab({ isAdmin = false }) {
   const [despesas, setDespesas] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -269,16 +269,18 @@ export default function PosVendaTab() {
   return (
     <div className="space-y-6 text-gray-800 animate-fade-in">
       {/* Top Banner / Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-            <Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Total Custos Pós Venda
-          </span>
-          <p className="text-2xl font-extrabold text-red-600">
-            R$ {totalPosVenda.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-          </p>
-          <span className="text-[10px] text-gray-400 mt-1 block">Somado automaticamente no Financeiro Geral</span>
-        </div>
+      <div className={`grid ${isAdmin ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"} gap-4`}>
+        {isAdmin && (
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+              <Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Total Custos Pós Venda
+            </span>
+            <p className="text-2xl font-extrabold text-red-600">
+              R$ {totalPosVenda.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            </p>
+            <span className="text-[10px] text-gray-400 mt-1 block">Somado automaticamente no Financeiro Geral</span>
+          </div>
+        )}
 
         <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">

@@ -22,7 +22,7 @@ import {
 import { useState, useEffect } from "react";
 import { generateSalePdf } from "@/lib/generateSalePdf";
 
-export default function HistoricoVendasTab() {
+export default function HistoricoVendasTab({ isAdmin = false }) {
   const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -297,7 +297,7 @@ export default function HistoricoVendasTab() {
     <div className="space-y-6 text-gray-800 animate-fade-in">
       
       {/* KPI CARDS (RESUMO DO HISTÓRICO) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className={`grid ${isAdmin ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 max-w-xs"} gap-4`}>
         {/* CARD 1: Total de Vendas */}
         <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-2xl p-5 shadow-sm border border-slate-800 relative overflow-hidden">
           <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider block mb-1">
@@ -311,18 +311,20 @@ export default function HistoricoVendasTab() {
           </span>
         </div>
 
-        {/* CARD 2: Ticket Médio */}
-        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-sm border-l-4 border-l-blue-500">
-          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-            Ticket Médio
-          </span>
-          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-            R$ {ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <span className="text-[11px] text-gray-400 mt-2 block font-medium">
-            Média por veículo vendido
-          </span>
-        </div>
+        {/* CARD 2: Ticket Médio (Exclusivo Administrador) */}
+        {isAdmin && (
+          <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-5 shadow-sm border-l-4 border-l-blue-500">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
+              Ticket Médio
+            </span>
+            <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
+              R$ {ticketMedio.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <span className="text-[11px] text-gray-400 mt-2 block font-medium">
+              Média por veículo vendido
+            </span>
+          </div>
+        )}
       </div>
 
       {/* FILTROS E BUSCA */}
