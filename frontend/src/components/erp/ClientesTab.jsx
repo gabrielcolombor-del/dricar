@@ -1,6 +1,5 @@
 "use client";
-import { Users, CheckCircle, Search, Car, Eye, Pencil, Trash2 } from 'lucide-react';
-
+import { Users, CheckCircle, Search, Car, Eye, Pencil, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
 
 import { useState, useEffect } from "react";
 
@@ -39,6 +38,10 @@ export default function ClientesTab() {
     dataVenda: "",
   });
   const [vendaLoading, setVendaLoading] = useState(false);
+
+  // Modal de Confirmação para Desfazer Venda
+  const [vendaToUndo, setVendaToUndo] = useState(null);
+  const [undoLoading, setUndoLoading] = useState(false);
 
   async function fetchClientes() {
     setLoading(true);
@@ -262,30 +265,40 @@ export default function ClientesTab() {
     }
   };
 
-  // Desvincular / Excluir Veículo
-  const handleDeleteVenda = async (v) => {
-    if (!window.confirm("Tem certeza que deseja desvincular/excluir este veículo do histórico do cliente?")) return;
+  // Executar reversão/desfazer da venda
+  const handleConfirmUndoVenda = async () => {
+    if (!vendaToUndo) return;
+    setUndoLoading(true);
     try {
       const res = await fetch("/api/admin/erp/vendas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", id: v.id, veiculoId: v.veiculo?.id }),
+        body: JSON.stringify({
+          action: "delete",
+          id: vendaToUndo.id,
+          veiculoId: vendaToUndo.veiculo?.id || vendaToUndo.veiculoId,
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        const undoneId = vendaToUndo.id;
+        setVendaToUndo(null);
+        setEditingVendaId(null);
         await fetchClientes();
         setSelectedCliente((prev) => {
           if (!prev) return null;
           return {
             ...prev,
-            vendas: prev.vendas.filter((item) => item.id !== v.id),
+            vendas: (prev.vendas || []).filter((item) => item.id !== undoneId),
           };
         });
       } else {
-        alert(data.error || "Erro ao desvincular veículo.");
+        alert(data.error || "Erro ao desfazer venda.");
       }
     } catch (err) {
-      alert("Erro ao comunicar com o servidor.");
+      alert("Erro ao conectar com o servidor para desfazer a venda.");
+    } finally {
+      setUndoLoading(false);
     }
   };
 
@@ -681,10 +694,11 @@ export default function ClientesTab() {
                               <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                                 <button
                                   type="button"
-                                  onClick={() => handleDeleteVenda(v)}
-                                  className="text-red-600 hover:bg-red-100 bg-red-50 border border-red-200 font-bold px-2.5 py-1 rounded-lg text-[11px] transition-all cursor-pointer"
+                                  onClick={() => setVendaToUndo(v)}
+                                  className="text-rose-700 hover:bg-rose-100 bg-rose-50 border border-rose-200 font-extrabold px-2.5 py-1 rounded-lg text-[11px] transition-all cursor-pointer flex items-center gap-1.5"
                                 >
-                                  🗑️ Excluir Venda / Veículo
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                  <span>Desfazer Venda</span>
                                 </button>
                                 <div className="flex gap-2">
                                   <button
@@ -720,18 +734,20 @@ export default function ClientesTab() {
                                   <button
                                     type="button"
                                     onClick={() => handleStartEditVenda(v)}
-                                    className="bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-700 px-2 py-1 rounded-lg text-[11px] font-bold transition-all border border-slate-200 cursor-pointer"
-                                    title="Editar Veículo"
+                                    className="bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-700 px-2 py-1 rounded-lg text-[11px] font-bold transition-all border border-slate-200 cursor-pointer flex items-center gap-1"
+                                    title="Editar Dados da Venda"
                                   >
-                                    <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Editar
+                                    <Pencil className="w-3.5 h-3.5 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
+                                    <span>Editar</span>
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => handleDeleteVenda(v)}
-                                    className="bg-red-50 hover:bg-red-600 hover:text-white text-red-600 px-2 py-1 rounded-lg text-[11px] font-bold transition-all border border-red-200 cursor-pointer"
-                                    title="Excluir / Desvincular Veículo"
+                                    onClick={() => setVendaToUndo(v)}
+                                    className="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all border border-rose-200 cursor-pointer flex items-center gap-1 shadow-2xs"
+                                    title="Desfazer venda deste veículo e retornar ao estoque"
                                   >
-                                    🗑️
+                                    <RotateCcw className="w-3.5 h-3.5" />
+                                    <span>Desfazer Venda</span>
                                   </button>
                                 </div>
                               </div>
@@ -838,6 +854,93 @@ export default function ClientesTab() {
                   {formLoading ? "Salvando..." : "💾 Salvar Alterações"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação: Desfazer Venda */}
+      {vendaToUndo && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-[60] p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-gray-200 animate-scale-in">
+            {/* Cabeçalho */}
+            <div className="bg-amber-500 p-5 text-white flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <RotateCcw className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base">Desfazer Venda</h3>
+                <p className="text-xs text-amber-100 font-medium">Reversão de operação e retorno ao estoque</p>
+              </div>
+            </div>
+
+            {/* Conteúdo */}
+            <div className="p-6 space-y-4 text-gray-700 text-xs">
+              <p className="text-sm font-bold text-gray-900">
+                Tem certeza que deseja desfazer a venda deste veículo?
+              </p>
+
+              {/* Detalhes do Veículo e Venda */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 space-y-2 font-medium">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Veículo:</span>
+                  <strong className="text-gray-900 font-bold">
+                    {vendaToUndo.veiculo?.marca || vendaToUndo.marca} {vendaToUndo.veiculo?.modelo || vendaToUndo.modelo}
+                  </strong>
+                </div>
+                {(vendaToUndo.veiculo?.placa || vendaToUndo.placa) && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Placa:</span>
+                    <strong className="font-mono text-gray-900 font-bold uppercase bg-gray-200 px-1.5 py-0.5 rounded text-[11px]">
+                      {vendaToUndo.veiculo?.placa || vendaToUndo.placa}
+                    </strong>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Valor da Venda:</span>
+                  <strong className="text-emerald-700 font-bold text-sm">
+                    R$ {Number(vendaToUndo.valorVendaVeiculo || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </strong>
+                </div>
+                <div className="flex justify-between items-center border-t border-gray-200/80 pt-1.5">
+                  <span className="text-gray-500">Cliente Comprador:</span>
+                  <strong className="text-gray-900 font-bold">{selectedCliente?.nome}</strong>
+                </div>
+              </div>
+
+              {/* Explicação dos Impactos */}
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-amber-950 space-y-1.5">
+                <p className="font-extrabold text-[11px] uppercase tracking-wide text-amber-900 flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  Ao confirmar esta ação:
+                </p>
+                <ul className="list-disc pl-4 space-y-1 text-[11px] text-amber-900">
+                  <li>O veículo retornará para a aba <strong>Estoque</strong> com status <strong>Disponível</strong>.</li>
+                  <li>O veículo voltará a ficar ativo no <strong>catálogo do site</strong>.</li>
+                  <li>O registro da venda e os indicadores financeiros serão revertidos no banco de dados.</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Ações */}
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={undoLoading}
+                onClick={() => setVendaToUndo(null)}
+                className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 text-xs font-bold hover:bg-gray-100 transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={undoLoading}
+                onClick={handleConfirmUndoVenda}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold transition-all shadow-sm cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                {undoLoading ? "Desfazendo..." : "Sim, Desfazer Venda"}
+              </button>
             </div>
           </div>
         </div>

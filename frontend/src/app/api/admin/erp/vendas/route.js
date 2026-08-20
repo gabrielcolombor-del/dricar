@@ -94,7 +94,7 @@ export async function POST(request) {
         });
         await prisma.car.updateMany({
           where: { veiculoId: targetVeiculoId },
-          data: { status: "active", buyerName: null, soldPrice: null, soldDate: null },
+          data: { status: "active", buyerName: null, salePrice: null, saleDate: null },
         });
 
         const clientes = await prisma.clienteCrm.findMany({
