@@ -583,24 +583,28 @@ export default function FinanceiroTab() {
 
             {/* Selector Geral ou Veículo */}
             {!formCusto.id && (
-              <div className="flex bg-gray-100 rounded-lg p-1 text-[10px] font-bold border border-gray-200 select-none">
+              <div className="grid grid-cols-2 bg-gray-100 rounded-xl p-1 text-xs font-bold border border-gray-200 select-none gap-1">
                 <button
                   type="button"
                   onClick={() => { setFormMode("geral"); setFormError(""); }}
-                  className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${
-                    formMode === "geral" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400"
+                  className={`py-2 px-3 rounded-lg text-center transition-all cursor-pointer flex items-center justify-center ${
+                    formMode === "geral" 
+                      ? "bg-white text-brand-blue shadow-sm font-extrabold" 
+                      : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
-                  🏢 Custo Geral / Operacional
+                  Custo Geral / Operacional
                 </button>
                 <button
                   type="button"
                   onClick={() => { setFormMode("veiculo"); setFormError(""); }}
-                  className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${
-                    formMode === "veiculo" ? "bg-white text-brand-blue shadow-sm" : "text-gray-400"
+                  className={`py-2 px-3 rounded-lg text-center transition-all cursor-pointer flex items-center justify-center ${
+                    formMode === "veiculo" 
+                      ? "bg-white text-brand-blue shadow-sm font-extrabold" 
+                      : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
-                  <Car className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Custo por Veículo
+                  Custo por Veículo
                 </button>
               </div>
             )}
