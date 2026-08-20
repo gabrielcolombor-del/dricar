@@ -14,12 +14,6 @@ const louisGeorge = localFont({
   variable: "--font-louis-george",
   weight: "300",
   display: "swap",
-  declarations: [
-    {
-      prop: "unicode-range",
-      value: "U+0000-0033, U+0035-FFFF",
-    },
-  ],
 });
 
 export const metadata = {
