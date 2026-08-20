@@ -12,7 +12,7 @@ const kantumruy = localFont({
 const louisGeorge = localFont({
   src: "../../public/fonts/LouisGeorgeCafeLight.ttf",
   variable: "--font-louis-george",
-  weight: "300",
+  weight: "100 900",
   display: "swap",
 });
 
