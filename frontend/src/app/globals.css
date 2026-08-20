@@ -72,17 +72,19 @@
     opacity: 1;
   }
 
-  /* Ensure uniform text color across light mode so no text appears light gray in the middle of black */
-  :root:not(.dark) .text-slate-400,
-  :root:not(.dark) .text-slate-500,
-  :root:not(.dark) .text-slate-600,
-  :root:not(.dark) .text-slate-700,
-  :root:not(.dark) .text-gray-400,
-  :root:not(.dark) .text-gray-500,
-  :root:not(.dark) .text-gray-600,
-  :root:not(.dark) .text-gray-650,
-  :root:not(.dark) .text-gray-700 {
-    color: #000000 !important;
+  /* Ensure elements with text-white or on dark containers always stay white */
+  .text-white,
+  .text-white *,
+  [class*="text-white"] {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  .bg-slate-900 .text-white,
+  .bg-slate-800 .text-white,
+  .bg-brand-blue .text-white {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
   }
 
   /* Inputs with dark background classes specifically get white text */

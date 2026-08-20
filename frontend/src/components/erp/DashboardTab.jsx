@@ -142,15 +142,15 @@ export default function DashboardTab() {
       {/* BARRA SUPERIOR: CONTROLE DE SELEÇÃO DE ANO DO DASHBOARD */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
         <div>
-          <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider block">PAINEL DE INDICADORES</span>
-          <h2 className="text-lg sm:text-xl font-extrabold flex items-center gap-2">
+          <span className="text-[10px] sm:text-xs text-white font-bold uppercase tracking-wider block opacity-90">PAINEL DE INDICADORES</span>
+          <h2 className="text-lg sm:text-xl font-extrabold flex items-center gap-2 text-white">
             <BarChart2 className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Faturamento e Desempenho Dricar
           </h2>
         </div>
 
         {/* SELETOR DE ANO */}
         <div className="flex items-center justify-between sm:justify-start gap-3 bg-slate-800/80 border border-slate-700 p-2 rounded-xl w-full sm:w-auto">
-          <label htmlFor="anoSelect" className="text-xs font-bold text-slate-300 uppercase tracking-wide">
+          <label htmlFor="anoSelect" className="text-xs font-bold text-white uppercase tracking-wide">
             Ano de Análise:
           </label>
           <select
