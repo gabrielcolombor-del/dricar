@@ -121,17 +121,34 @@ model Venda {
 }
 
 model CustoFixo {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   descricao       String
-  valor           Decimal  @db.Decimal(12, 2)
-  dataVencimento  DateTime @map("data_vencimento") @db.Date
-  statusPagamento String   @map("status_pagamento")
-  tipo            String   @default("Fixo") // Fixo ou Variavel
-  categoria       String?  @default("Geral")
-  origem          String?  @default("Financeiro") // Pós Venda, Venda, Estoque, Operacional
-  createdAt       DateTime @default(now()) @map("created_at")
+  valor           Decimal          @db.Decimal(12, 2)
+  dataVencimento  DateTime         @map("data_vencimento") @db.Date
+  statusPagamento String           @map("status_pagamento")
+  tipo            String           @default("Fixo") // Fixo ou Variavel
+  categoria       String?          @default("Geral")
+  origem          String?          @default("Financeiro") // Pós Venda, Venda, Estoque, Operacional
+  createdAt       DateTime         @default(now()) @map("created_at")
   despesaVeiculo  DespesaVeiculo?
+  recorrenteId    String?          @map("recorrente_id") @db.Uuid
+  recorrente      CustoRecorrente? @relation(fields: [recorrenteId], references: [id], onDelete: SetNull)
 
   @@map("custos_fixos")
 }
+
+model CustoRecorrente {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  descricao     String
+  categoria     String      // Aluguel, Salário, Água, Luz, Internet, etc.
+  valor         Decimal     @db.Decimal(12, 2)
+  diaVencimento Int         @default(5) @map("dia_vencimento")
+  ativo         Boolean     @default(true)
+  isSalario     Boolean     @default(false) @map("is_salario")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  custos        CustoFixo[]
+
+  @@map("custos_recorrentes")
+}
+
 

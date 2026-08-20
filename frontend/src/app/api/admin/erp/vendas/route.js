@@ -40,6 +40,7 @@ export async function POST(request) {
       valorVendaVeiculo,
       valorRetornoBancario,
       dataVenda,
+      promissoriaParcelas,
     } = body;
 
     if (action === "update") {
@@ -86,6 +87,23 @@ export async function POST(request) {
       await prisma.venda.delete({
         where: { id },
       });
+
+      // Remove eventuais parcelas de notas promissórias geradas durante a venda
+      const promissorias = await prisma.despesaVeiculo.findMany({
+        where: { veiculoId: targetVeiculoId, categoria: "Promissória" },
+        select: { id: true, custoFixoId: true },
+      });
+      const custoFixoIds = promissorias.map(p => p.custoFixoId).filter(Boolean);
+      if (promissorias.length > 0) {
+        await prisma.despesaVeiculo.deleteMany({
+          where: { id: { in: promissorias.map(p => p.id) } },
+        });
+      }
+      if (custoFixoIds.length > 0) {
+        await prisma.custoFixo.deleteMany({
+          where: { id: { in: custoFixoIds } },
+        });
+      }
 
       if (targetVeiculoId) {
         await prisma.veiculo.updateMany({
@@ -236,6 +254,37 @@ export async function POST(request) {
       where: { veiculoId },
       data: { status: "sold" },
     });
+
+    // Se houver parcelas de Nota Promissória, cadastrar cada parcela no Financeiro Geral
+    if (promissoriaParcelas && Array.isArray(promissoriaParcelas) && promissoriaParcelas.length > 0) {
+      for (const p of promissoriaParcelas) {
+        const pValor = parseFloat(p.valor);
+        if (!isNaN(pValor) && pValor > 0) {
+          const pVencimento = p.dataVencimento ? new Date(p.dataVencimento) : new Date();
+          const newCusto = await prisma.custoFixo.create({
+            data: {
+              descricao: `Nota Promissória (${p.numero}/${p.totalParcelas}) - Placa: ${veiculo.placa || "SEM PLACA"} (${veiculo.marca} ${veiculo.modelo}) - Comprador: ${buyerName || "Cliente"}`,
+              valor: pValor,
+              dataVencimento: pVencimento,
+              statusPagamento: "A Pagar",
+              tipo: "Variável",
+              categoria: "Promissória",
+              origem: "Venda",
+            },
+          });
+          await prisma.despesaVeiculo.create({
+            data: {
+              veiculoId,
+              categoria: "Promissória",
+              descricao: `Nota Promissória (${p.numero}/${p.totalParcelas}) - Comprador: ${buyerName || "Cliente"}`,
+              valor: pValor,
+              dataDespesa: pVencimento,
+              custoFixoId: newCusto.id,
+            },
+          });
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, venda: newVenda });
   } catch (error) {

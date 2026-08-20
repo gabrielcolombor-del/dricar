@@ -402,6 +402,14 @@ export default function EstoqueTab() {
         promissoria: { checked: false, text: "" },
         observacoes: { checked: false, text: "" },
       },
+      promissoriaTipo: "parcelado",
+      promissoriaQtdParcelas: "1",
+      promissoriaValorParcela: "",
+      promissoriaPrimeiroVencimento: (() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 1);
+        return d.toISOString().split("T")[0];
+      })(),
       entryTradeText: "",
       financedSaldoText: "",
       selectedSeguros: [],
@@ -448,6 +456,33 @@ export default function EstoqueTab() {
 
     const combinedPhone = [saleForm.buyerPhone, saleForm.buyerPhone2].filter(Boolean).join(" / ");
 
+    // Montar as parcelas de Nota Promissória para gravação no Financeiro Geral
+    const promissoriaParcelas = [];
+    if (saleForm.condicoesState?.promissoria?.checked) {
+      const qtd = parseInt(saleForm.promissoriaQtdParcelas) || 1;
+      const cleanPValor = (saleForm.promissoriaValorParcela || "").replace(/\D/g, "");
+      const valorParcelaNum = (parseFloat(cleanPValor) || 0) / 100;
+
+      if (valorParcelaNum > 0) {
+        const baseDate = saleForm.promissoriaPrimeiroVencimento
+          ? new Date(saleForm.promissoriaPrimeiroVencimento + "T00:00:00Z")
+          : (saleForm.saleDate ? new Date(saleForm.saleDate + "T00:00:00Z") : new Date());
+
+        for (let i = 1; i <= qtd; i++) {
+          const d = new Date(baseDate);
+          if (i > 1) {
+            d.setUTCMonth(d.getUTCMonth() + (i - 1));
+          }
+          promissoriaParcelas.push({
+            numero: i,
+            totalParcelas: qtd,
+            valor: valorParcelaNum,
+            dataVencimento: d.toISOString().split("T")[0],
+          });
+        }
+      }
+    }
+
     try {
       const res = await fetch("/api/admin/erp/vendas", {
         method: "POST",
@@ -457,6 +492,7 @@ export default function EstoqueTab() {
           valorVendaVeiculo: valorVendaNum,
           valorRetornoBancario: 0,
           dataVenda: saleForm.saleDate,
+          promissoriaParcelas,
           buyerName: saleForm.buyerName,
           buyerCpfCnpj: saleForm.buyerCpfCnpj,
           buyerRg: saleForm.buyerRg,
@@ -1822,26 +1858,151 @@ export default function EstoqueTab() {
                           </label>
 
                           {state.checked && (
-                            <div className="pl-6">
-                              <input
-                                type="text"
-                                value={state.text || ""}
-                                placeholder={opt.id === "observacoes" ? "Digite observações..." : "Digite o valor ou detalhes (ex: R$ 20.000 ou 36x R$ 800)"}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setSaleForm((prev) => ({
-                                    ...prev,
-                                    condicoesState: {
-                                      ...prev.condicoesState,
-                                      [opt.id]: {
-                                        ...prev.condicoesState?.[opt.id],
-                                        text: val,
+                            <div className="pl-6 pt-1 space-y-2">
+                              {opt.id === "promissoria" ? (
+                                <div className="bg-white p-3.5 rounded-xl border border-blue-200 shadow-2xs space-y-3">
+                                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                    <div className="w-full sm:w-1/3">
+                                      <label className="block text-[10px] font-extrabold text-gray-700 uppercase mb-1">
+                                        Nº de Parcelas
+                                      </label>
+                                      <select
+                                        value={saleForm.promissoriaQtdParcelas || "1"}
+                                        onChange={(e) => {
+                                          const qtd = e.target.value;
+                                          const cleanPValor = (saleForm.promissoriaValorParcela || "").replace(/\D/g, "");
+                                          const valorParcelaNum = (parseFloat(cleanPValor) || 0) / 100;
+                                          const totalNum = valorParcelaNum * (parseInt(qtd) || 1);
+                                          const textSummary = `${qtd}x de ${formatCurrencyInput(cleanPValor)} (Total: R$ ${totalNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+
+                                          setSaleForm(prev => ({
+                                            ...prev,
+                                            promissoriaQtdParcelas: qtd,
+                                            condicoesState: {
+                                              ...prev.condicoesState,
+                                              promissoria: {
+                                                ...prev.condicoesState?.promissoria,
+                                                text: textSummary,
+                                              },
+                                            },
+                                          }));
+                                        }}
+                                        className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-blue"
+                                      >
+                                        <option value="1">1x (Parcela Única)</option>
+                                        {Array.from({ length: 47 }, (_, i) => i + 2).map((num) => (
+                                          <option key={num} value={num}>{num}x parcelas</option>
+                                        ))}
+                                      </select>
+                                    </div>
+
+                                    <div className="w-full sm:w-1/3">
+                                      <label className="block text-[10px] font-extrabold text-gray-700 uppercase mb-1">
+                                        Valor da Parcela (R$) <span className="text-red-500">*</span>
+                                      </label>
+                                      <input
+                                        type="text"
+                                        placeholder="R$ 0,00"
+                                        value={saleForm.promissoriaValorParcela || ""}
+                                        onChange={(e) => {
+                                          const clean = e.target.value.replace(/\D/g, "");
+                                          const formatted = formatCurrencyInput(clean);
+                                          const qtd = parseInt(saleForm.promissoriaQtdParcelas) || 1;
+                                          const valorParcelaNum = (parseFloat(clean) || 0) / 100;
+                                          const totalNum = valorParcelaNum * qtd;
+                                          const textSummary = `${qtd}x de ${formatted} (Total: R$ ${totalNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+
+                                          setSaleForm(prev => ({
+                                            ...prev,
+                                            promissoriaValorParcela: formatted,
+                                            condicoesState: {
+                                              ...prev.condicoesState,
+                                              promissoria: {
+                                                ...prev.condicoesState?.promissoria,
+                                                text: textSummary,
+                                              },
+                                            },
+                                          }));
+                                        }}
+                                        className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-blue"
+                                      />
+                                    </div>
+
+                                    <div className="w-full sm:w-1/3">
+                                      <label className="block text-[10px] font-extrabold text-gray-700 uppercase mb-1">
+                                        1º Vencimento <span className="text-red-500">*</span>
+                                      </label>
+                                      <input
+                                        type="date"
+                                        value={saleForm.promissoriaPrimeiroVencimento || ""}
+                                        onChange={(e) => {
+                                          setSaleForm(prev => ({
+                                            ...prev,
+                                            promissoriaPrimeiroVencimento: e.target.value,
+                                          }));
+                                        }}
+                                        className="w-full border border-gray-300 rounded-lg p-2 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-blue"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Cronograma visual das parcelas */}
+                                  {(() => {
+                                    const qtd = parseInt(saleForm.promissoriaQtdParcelas) || 1;
+                                    const cleanPValor = (saleForm.promissoriaValorParcela || "").replace(/\D/g, "");
+                                    const valorParcelaNum = (parseFloat(cleanPValor) || 0) / 100;
+                                    if (valorParcelaNum <= 0) return null;
+
+                                    const baseDate = saleForm.promissoriaPrimeiroVencimento
+                                      ? new Date(saleForm.promissoriaPrimeiroVencimento + "T00:00:00Z")
+                                      : new Date();
+
+                                    return (
+                                      <div className="bg-blue-50/50 p-2.5 rounded-lg border border-blue-100 space-y-1.5">
+                                        <span className="text-[10px] font-extrabold text-blue-900 uppercase block flex items-center gap-1">
+                                          📅 Cronograma de Vencimento das Parcelas ({qtd}x de {saleForm.promissoriaValorParcela}):
+                                        </span>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5 max-h-36 overflow-y-auto pr-1">
+                                          {Array.from({ length: qtd }, (_, i) => {
+                                            const d = new Date(baseDate);
+                                            d.setUTCMonth(d.getUTCMonth() + i);
+                                            const dataFmt = d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+                                            return (
+                                              <div key={i} className="bg-white px-2 py-1 rounded border border-blue-200/60 text-[10px] flex justify-between items-center">
+                                                <span className="font-bold text-slate-800">{i + 1}ª ({dataFmt})</span>
+                                                <span className="font-extrabold text-emerald-700">{saleForm.promissoriaValorParcela}</span>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                        <p className="text-[9px] text-blue-800 font-semibold italic">
+                                          * Cada parcela entrará automaticamente na aba Financeiro Geral com status "A Pagar" vinculada à placa deste veículo.
+                                        </p>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              ) : (
+                                <input
+                                  type="text"
+                                  value={state.text || ""}
+                                  placeholder={opt.id === "observacoes" ? "Digite observações..." : "Digite o valor ou detalhes (ex: R$ 20.000 ou 36x R$ 800)"}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setSaleForm((prev) => ({
+                                      ...prev,
+                                      condicoesState: {
+                                        ...prev.condicoesState,
+                                        [opt.id]: {
+                                          ...prev.condicoesState?.[opt.id],
+                                          text: val,
+                                        },
                                       },
-                                    },
-                                  }));
-                                }}
-                                className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
-                              />
+                                    }));
+                                  }}
+                                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-bold text-xs focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue"
+                                />
+                              )}
                             </div>
                           )}
                         </div>
