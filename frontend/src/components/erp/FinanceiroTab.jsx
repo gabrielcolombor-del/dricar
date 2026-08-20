@@ -1266,21 +1266,6 @@ export default function FinanceiroTab() {
                       <option value="Outros">Outros</option>
                     </select>
                   </div>
-
-                  {isAdmin && !formCusto.id && (
-                    <label className="flex items-center gap-2.5 p-3 rounded-xl bg-purple-50 border border-purple-200 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formCusto.isFixoRecorrente}
-                        onChange={(e) => setFormCusto({ ...formCusto, isFixoRecorrente: e.target.checked })}
-                        className="w-4 h-4 text-purple-600 rounded"
-                      />
-                      <div>
-                        <strong className="text-purple-950 font-bold block text-xs">🔄 Repetir este custo todo mês (Custo Fixo Recorrente)</strong>
-                        <span className="text-[10px] text-purple-800">O sistema cobrará automaticamente este mesmo valor todo mês.</span>
-                      </div>
-                    </label>
-                  )}
                 </>
               )}
 
