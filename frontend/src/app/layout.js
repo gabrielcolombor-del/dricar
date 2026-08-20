@@ -1,4 +1,3 @@
-import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeContext";
@@ -10,10 +9,17 @@ const kantumruy = localFont({
   display: "swap",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+const louisGeorge = localFont({
+  src: "../../public/fonts/LouisGeorgeCafeLight.ttf",
+  variable: "--font-louis-george",
+  weight: "300",
   display: "swap",
+  declarations: [
+    {
+      prop: "unicode-range",
+      value: "U+0000-0033, U+0035-FFFF",
+    },
+  ],
 });
 
 export const metadata = {
@@ -23,7 +29,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-BR" className={`${kantumruy.variable} ${inter.variable} antialiased h-full`}>
+    <html lang="pt-BR" className={`${kantumruy.variable} ${louisGeorge.variable} antialiased h-full`}>
       <body className="min-h-full flex flex-col bg-brand-white text-brand-blue dark:bg-[#070f26] dark:text-slate-100 transition-colors duration-300">
         <ThemeProvider>
           {children}
