@@ -1,5 +1,5 @@
 "use client";
-import { EyeOff, Eye, LogOut, ChevronLeft, BarChart2, TrendingUp, Car, Handshake, Users, Wrench, CircleDollarSign, Package, Pencil, ChevronRight, Sliders, Globe, Settings, AlertTriangle, Camera, Lightbulb } from 'lucide-react';
+import { EyeOff, Eye, LogOut, ChevronLeft, BarChart2, TrendingUp, Car, Handshake, Users, Wrench, CircleDollarSign, Package, Pencil, ChevronRight, Sliders, Globe, Settings, AlertTriangle, Camera, Lightbulb, Trash2, User } from 'lucide-react';
 
 
 import { useState, useEffect, useRef } from "react";
@@ -1248,11 +1248,11 @@ export default function AdminPage() {
                                   <Camera className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Tirar fotos e inserir dados do anúncio
                                 </span>
                               )}
-                              <div className="flex justify-center items-center gap-3">
+                              <div className="flex justify-center items-center gap-2">
                                 {!isVendedor && (
                                   <button 
                                     onClick={() => startEditCar(car)}
-                                    className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                    className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer min-w-[80px] h-8 flex items-center justify-center gap-1 shadow-2xs"
                                   >
                                     Editar
                                   </button>
@@ -1261,7 +1261,7 @@ export default function AdminPage() {
                                 {isAdmin && (
                                   <button 
                                     onClick={() => handleDeleteCar(car.id)}
-                                    className="border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                    className="border border-red-200 text-red-600 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer min-w-[80px] h-8 flex items-center justify-center gap-1 shadow-2xs"
                                   >
                                     Excluir
                                   </button>
@@ -1782,7 +1782,7 @@ export default function AdminPage() {
                                   <button 
                                     onClick={() => startEditUser(u)}
                                     disabled={actionLoading}
-                                    className="p-1.5 rounded-lg border border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white transition-all cursor-pointer text-xs font-bold flex items-center justify-center shadow-2xs"
+                                    className="w-8 h-8 rounded-lg border border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white transition-all cursor-pointer text-xs font-bold flex items-center justify-center shadow-2xs"
                                     title="Editar login e senha desta conta"
                                   >
                                     <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
@@ -1790,19 +1790,19 @@ export default function AdminPage() {
 
                                   {isSelf ? (
                                     <span 
-                                      className="p-1.5 text-[10px] bg-purple-50 text-purple-700 font-bold rounded-lg border border-purple-200 flex items-center justify-center"
+                                      className="w-8 h-8 text-[10px] bg-purple-50 text-purple-700 font-bold rounded-lg border border-purple-200 flex items-center justify-center"
                                       title="Sua conta atual (Logado)"
                                     >
-                                      👤
+                                      <User className="w-3.5 h-3.5" />
                                     </span>
                                   ) : (
                                     <button 
                                       onClick={() => handleDeleteUser(u.id)}
                                       disabled={actionLoading}
-                                      className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-all cursor-pointer text-xs font-bold flex items-center justify-center shadow-2xs"
+                                      className="w-8 h-8 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer text-xs font-bold flex items-center justify-center shadow-2xs"
                                       title="Excluir esta conta"
                                     >
-                                      🗑️
+                                      <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                   )}
                                 </div>

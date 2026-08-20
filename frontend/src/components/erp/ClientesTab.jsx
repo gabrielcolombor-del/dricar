@@ -1,5 +1,5 @@
 "use client";
-import { Users, CheckCircle, Search, Car, Eye, Pencil } from 'lucide-react';
+import { Users, CheckCircle, Search, Car, Eye, Pencil, Trash2 } from 'lucide-react';
 
 
 import { useState, useEffect } from "react";
@@ -486,16 +486,17 @@ export default function ClientesTab() {
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleOpenModal(cliente)}
-                            className="bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-700 font-bold px-3 py-1.5 rounded-lg text-xs transition-all shadow-2xs border border-slate-200 cursor-pointer"
+                            className="bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-700 font-bold px-3 py-1.5 rounded-lg text-xs transition-all shadow-2xs border border-slate-200 cursor-pointer flex items-center justify-center gap-1.5 h-8"
                           >
-                            <Eye className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px]" /> Ver / Editar
+                            <Eye className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px]" />
+                            <span>Ver / Editar</span>
                           </button>
                           <button
                             onClick={() => handleDeleteCliente(cliente.id, cliente.nome)}
-                            className="bg-red-50 hover:bg-red-600 hover:text-white text-red-600 font-bold px-2.5 py-1.5 rounded-lg text-xs transition-all shadow-2xs border border-red-200 cursor-pointer"
+                            className="bg-red-50 hover:bg-red-600 hover:text-white text-red-600 font-bold px-2.5 py-1.5 rounded-lg text-xs transition-all shadow-2xs border border-red-200 cursor-pointer flex items-center justify-center gap-1.5 h-8 w-8"
                             title="Excluir Cliente"
                           >
-                            🗑️
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>

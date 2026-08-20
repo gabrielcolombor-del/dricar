@@ -539,19 +539,19 @@ export default function FinanceiroTab() {
 
                         {/* Ações */}
                         <td className="p-3.5 text-center whitespace-nowrap">
-                          <div className="flex justify-center gap-1.5">
+                          <div className="flex justify-center items-center gap-1.5">
                             {!c.descricao.startsWith("Despesa Placa:") && (
                               <button
                                 onClick={() => startEditCusto(c)}
-                                className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+                                className="w-7 h-7 rounded-lg border border-brand-blue/40 text-brand-blue hover:bg-brand-blue hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                                 title="Editar Custo"
                               >
-                                <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
+                                <Pencil className="w-3.5 h-3.5" />
                               </button>
                             )}
                             <button
                               onClick={() => handleDeleteCusto(c.id)}
-                              className="border border-red-200 text-red-500 hover:bg-red-50 px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+                              className="w-7 h-7 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white flex items-center justify-center text-xs font-bold transition-all cursor-pointer shadow-2xs"
                               title="Excluir Custo"
                             >
                               ✕

@@ -1,5 +1,5 @@
 "use client";
-import { Search, Calendar, Plus, Package, AlertTriangle, Pencil, ChevronLeft, ChevronRight, LogOut, Handshake, Car } from 'lucide-react';
+import { Search, Calendar, Plus, Package, AlertTriangle, Pencil, ChevronLeft, ChevronRight, LogOut, Handshake, Car, Trash2, FileText, DollarSign } from 'lucide-react';
 
 
 import { useState, useEffect } from "react";
@@ -916,10 +916,11 @@ export default function EstoqueTab() {
                           {v.status !== "Vendido" ? (
                             <button
                               onClick={() => openSaleModal(v)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-pointer flex items-center gap-1 shadow-xs whitespace-nowrap"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 h-7 rounded-md text-[10px] font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1 shadow-xs whitespace-nowrap"
                               title="Dar baixa / Vender veículo e gerar PDF"
                             >
-                              💰 Vender
+                              <DollarSign className="w-3.5 h-3.5" />
+                              <span>Vender</span>
                             </button>
                           ) : (
                             (() => {
@@ -934,16 +935,17 @@ export default function EstoqueTab() {
                                 return (
                                   <button
                                     onClick={() => handleDownloadContract(v, venda)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-pointer flex items-center gap-1 shadow-xs whitespace-nowrap"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-2.5 h-7 rounded-md text-[10px] font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1 shadow-xs whitespace-nowrap"
                                     title="Baixar Contrato (Disponível por 3 meses após a venda)"
                                   >
-                                    📄 Contrato
+                                    <FileText className="w-3.5 h-3.5" />
+                                    <span>Contrato</span>
                                   </button>
                                 );
                               } else {
                                 return (
                                   <span
-                                    className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-1 rounded border border-gray-200"
+                                    className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 h-7 flex items-center justify-center rounded border border-gray-200"
                                     title="O contrato esteve disponível por 3 meses e foi expirado."
                                   >
                                     ⏰ Expirado (3m)
@@ -954,15 +956,17 @@ export default function EstoqueTab() {
                           )}
                           <button
                             onClick={() => startEditVeiculo(v)}
-                            className="border border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white p-1.5 rounded-md text-[10px] font-bold transition-all cursor-pointer"
+                            className="w-7 h-7 rounded-md border border-brand-blue/40 text-brand-blue hover:bg-brand-blue hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            title="Editar Veículo"
                           >
-                            <Pencil className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteVeiculo(v.id)}
-                            className="border border-red-200 text-red-500 hover:bg-red-50 p-1.5 rounded-md text-[10px] font-bold transition-all cursor-pointer"
+                            className="w-7 h-7 rounded-md border border-red-200 text-red-600 hover:bg-red-600 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                            title="Excluir Veículo"
                           >
-                            🗑️
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>

@@ -1,5 +1,5 @@
 "use client";
-import { Wrench, Car, Search, Plus, Calendar, Eye } from 'lucide-react';
+import { Wrench, Car, Search, Plus, Calendar, Eye, FileText, ClipboardList } from 'lucide-react';
 
 
 import { useState, useEffect } from "react";
@@ -282,7 +282,7 @@ export default function PosVendaTab() {
 
         <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-            📝 Lançamentos Realizados
+            <ClipboardList className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Lançamentos Realizados
           </span>
           <p className="text-2xl font-extrabold text-brand-blue">
             {totalLancamentos}
@@ -302,11 +302,11 @@ export default function PosVendaTab() {
       </div>
 
       {/* Action and Filter Bar */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row gap-3 flex-grow max-w-2xl">
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col md:flex-row items-stretch md:items-end justify-between gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-grow max-w-2xl">
           {/* Busca */}
-          <div className="flex-grow">
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+          <div>
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
               <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Buscar por Placa / Veículo / Categoria / Descrição
             </label>
             <input
@@ -319,8 +319,8 @@ export default function PosVendaTab() {
           </div>
 
           {/* Filtro Categoria */}
-          <div className="w-full sm:w-48">
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+          <div>
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
               Categoria
             </label>
             <select
@@ -354,17 +354,19 @@ export default function PosVendaTab() {
             setFormError("");
             setShowModal(true);
           }}
-          className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-3 rounded-xl transition-all shadow-sm cursor-pointer whitespace-nowrap self-stretch sm:self-auto flex items-center justify-center gap-2"
+          className="bg-brand-blue hover:opacity-90 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 h-[41px] shrink-0"
         >
-          <span><Plus className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Novo Custo por Veículo</span>
+          <Plus className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
+          <span>Novo Custo por Veículo</span>
         </button>
       </div>
 
       {/* Main Table */}
       <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h4 className="text-xs font-bold text-brand-blue uppercase tracking-wider">
-            📋 Histórico de Custos por Veículo (Pós Venda)
+          <h4 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-1.5">
+            <FileText className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
+            <span>Histórico de Custos por Veículo (Pós Venda)</span>
           </h4>
           <span className="text-[10px] text-gray-400 font-medium">
             Exibindo {despesasFiltradas.length} de {despesas.length} lançamentos
@@ -420,27 +422,31 @@ export default function PosVendaTab() {
                           <span className="text-gray-300 italic">Sem descrição</span>
                         )}
                       </td>
-                      <td className="p-4 text-xs text-gray-500 font-medium">
-                        <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> {dataFmt}
+                      <td className="p-4 text-xs text-gray-500 font-medium whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> {dataFmt}
+                        </span>
                       </td>
-                      <td className="p-4 text-xs font-extrabold text-red-600">
+                      <td className="p-4 text-xs font-extrabold text-red-600 whitespace-nowrap">
                         - R$ {Number(d.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </td>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleOpenViewModal(d)}
-                            className="border border-brand-blue/30 text-brand-blue hover:bg-brand-blue/10 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                            className="border border-brand-blue/40 text-brand-blue hover:bg-brand-blue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-[85px] h-8 shadow-2xs"
                             title="Ver e Editar Custo"
                           >
-                            <Eye className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px]" /> Ver
+                            <Eye className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px]" />
+                            <span>Ver</span>
                           </button>
                           <button
                             onClick={() => handleDeleteExpense(d.id)}
-                            className="border border-red-200 text-red-600 hover:bg-red-50 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                            className="border border-red-200 text-red-600 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-[85px] h-8 shadow-2xs"
                             title="Excluir Custo"
                           >
-                            ✕ Excluir
+                            <span className="text-sm font-black leading-none">✕</span>
+                            <span>Excluir</span>
                           </button>
                         </div>
                       </td>
