@@ -890,7 +890,7 @@ export default function AdminPage() {
         <div className="flex flex-col lg:flex-row gap-6 items-start">
 
           {/* LEFT SIDEBAR / MENU PANEL */}
-          <aside className="w-full lg:w-64 xl:w-72 shrink-0 bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs lg:sticky lg:top-4 transition-colors">
+          <aside className="w-full lg:w-64 xl:w-72 shrink-0 bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs lg:sticky lg:top-4 transition-colors overflow-hidden">
             
             {/* MOBILE HORIZONTAL BAR (< lg) */}
             <div className="lg:hidden">
@@ -909,8 +909,8 @@ export default function AdminPage() {
                   ref={navTabsRef}
                   className="flex gap-2.5 overflow-x-auto pb-1 select-none items-center touch-pan-x w-full custom-tab-scrollbar"
                 >
-                  <span className="text-[10px] font-extrabold uppercase text-gray-400 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-md shrink-0">
-                    <BarChart2 className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> ERP
+                  <span className="text-[11px] font-black uppercase tracking-wider text-white bg-brand-blue dark:bg-blue-900 px-3 py-1 rounded-md shrink-0">
+                    ERP & CRM
                   </span>
                   
                   {isAdmin && (
@@ -1031,8 +1031,8 @@ export default function AdminPage() {
 
               {/* Section 1: ERP & CRM */}
               <div>
-                <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-2 flex items-center gap-1.5">
-                  <span><BarChart2 className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> ERP & CRM</span>
+                <div className="-mx-4 sm:-mx-5 px-4 sm:px-5 py-2.5 sm:py-3 bg-brand-blue dark:bg-blue-900 text-white text-xs sm:text-sm font-black uppercase tracking-wider mb-2.5 shadow-xs flex items-center">
+                  <span>ERP & CRM</span>
                 </div>
                 <nav className="space-y-1">
                   {isAdmin && (
@@ -1107,9 +1107,9 @@ export default function AdminPage() {
 
               {/* Section 2: Catálogo Site */}
               {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor || activeTab === "cadastrar") && (
-                <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-2 flex items-center gap-1.5">
-                    <span><Globe className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> CATÁLOGO SITE</span>
+                <div className="pt-2">
+                  <div className="-mx-4 sm:-mx-5 px-4 sm:px-5 py-2.5 sm:py-3 bg-brand-blue dark:bg-blue-900 text-white text-xs sm:text-sm font-black uppercase tracking-wider mb-2.5 shadow-xs flex items-center">
+                    <span>CATÁLOGO SITE</span>
                   </div>
                   <nav className="space-y-1">
                     {(isAdmin || user?.role?.toLowerCase() === "manager" || isVendedor) && (
@@ -1141,9 +1141,9 @@ export default function AdminPage() {
 
               {/* Section 3: Administração */}
               {isAdmin && (
-                <div className="pt-3 border-t border-gray-100 dark:border-slate-800">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-2 flex items-center gap-1.5">
-                    <span><Settings className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> SISTEMA</span>
+                <div className="pt-2">
+                  <div className="-mx-4 sm:-mx-5 px-4 sm:px-5 py-2.5 sm:py-3 bg-brand-blue dark:bg-blue-900 text-white text-xs sm:text-sm font-black uppercase tracking-wider mb-2.5 shadow-xs flex items-center">
+                    <span>SISTEMA</span>
                   </div>
                   <nav className="space-y-1">
                     <button 
