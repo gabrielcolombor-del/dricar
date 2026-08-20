@@ -6,10 +6,10 @@ export default function CarCard({ id, slug, title, subtitle, year, mileage, tran
   const carSlug = slug || getCarSlug({ id, title, subtitle, brand, model, description });
 
   return (
-    <div className="bg-white dark:bg-[#0e1b42] dark:border dark:border-white/10 dark:hover:border-blue-400/50 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 group">
+    <div className="bg-white dark:bg-[#0e1b42] dark:border dark:border-white/10 dark:hover:border-blue-400/50 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 group h-full">
       
       {/* Imagem */}
-      <div className="relative w-full aspect-[4/3] bg-[#E5E5E5] dark:bg-slate-800 overflow-hidden">
+      <div className="relative w-full aspect-[4/3] bg-[#E5E5E5] dark:bg-slate-800 overflow-hidden shrink-0">
         {imageUrl ? (
           <img src={imageUrl} alt={title} className="absolute inset-0 w-full h-full object-cover animate-fade-in" />
         ) : (
@@ -28,13 +28,19 @@ export default function CarCard({ id, slug, title, subtitle, year, mileage, tran
         )}
       </div>
       
-      <div className="px-4 pt-4 pb-4 flex flex-col flex-grow items-center">
-        {/* Título e Subtítulo */}
-        <h3 className="text-[17px] font-medium text-gray-800 dark:text-white leading-tight text-center">{title}</h3>
-        <p className="text-[12px] font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-3 mt-1 text-center">{subtitle}</p>
+      <div className="px-4 pt-4 pb-4 flex flex-col flex-grow items-center justify-between">
+        {/* Título - Centralizado pelo meio vertical com altura fixa para 2 linhas */}
+        <div className="h-[46px] w-full flex items-center justify-center text-center px-1">
+          <h3 className="text-[17px] font-medium text-gray-800 dark:text-white leading-tight line-clamp-2">{title}</h3>
+        </div>
+
+        {/* Subtítulo - Centralizado pelo meio vertical com altura fixa */}
+        <div className="h-[28px] w-full flex items-center justify-center text-center mt-1 mb-3 px-1">
+          <p className="text-[12px] font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wide truncate">{subtitle}</p>
+        </div>
         
-        {/* Ícones de Específicações */}
-        <div className="w-full flex flex-col gap-2 mb-4 px-2">
+        {/* Ícones de Especificações */}
+        <div className="w-full flex flex-col gap-2 mb-4 px-2 h-[52px] justify-center">
           <div className="flex items-center justify-center gap-3">
             <Image src="/images/calendar icon.png" alt="Ano" width={18} height={18} className="opacity-80 dark:invert" unoptimized />
             <span className="text-[12px] font-medium text-gray-700 dark:text-gray-200">{year}</span>
@@ -45,8 +51,8 @@ export default function CarCard({ id, slug, title, subtitle, year, mileage, tran
           </div>
         </div>
         
-        {/* Preço */}
-        <div className="text-center mb-4 flex flex-col items-center justify-center min-h-[48px]">
+        {/* Preço - Centralizado pelo meio vertical com altura fixa */}
+        <div className="text-center mb-4 flex flex-col items-center justify-center h-[46px] w-full">
           {isOffer && promoPrice ? (
             <>
               <span className="text-[12px] text-gray-400 dark:text-gray-400 line-through leading-none mb-1 font-normal">de {price}</span>
