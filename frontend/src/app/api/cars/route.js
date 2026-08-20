@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getCarSlug } from "@/lib/slug";
 
 // Rota dinâmica devido ao uso de query parameters (?all=true)
 export const dynamic = "force-dynamic";
@@ -31,13 +32,17 @@ export async function GET(request) {
 
         // Traduz o status do banco para compatibilidade da listagem administrativa em português
         const statusPt = car.status === "sold" ? "Vendido" : "Ativo";
+        const title = `${car.brand} ${car.model}`;
+        const subtitle = car.description || "";
+        const slug = getCarSlug({ id: car.id, title, subtitle, brand: car.brand, model: car.model, description: car.description });
 
         return {
           id: car.id,
+          slug,
           brand: car.brand,
           model: car.model,
-          title: `${car.brand} ${car.model}`,
-          subtitle: car.description || "",
+          title,
+          subtitle,
           year: car.year,
           mileage: car.mileage,
           transmission: car.transmission,

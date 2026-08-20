@@ -1,7 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getCarSlug } from "@/lib/slug";
 
-export default function CarCard({ id, title, subtitle, year, mileage, transmission, price, imageUrl, isOffer, promoPrice }) {
+export default function CarCard({ id, slug, title, subtitle, year, mileage, transmission, price, imageUrl, isOffer, promoPrice, brand, model, description }) {
+  const carSlug = slug || getCarSlug({ id, title, subtitle, brand, model, description });
+
   return (
     <div className="bg-white dark:bg-[#0e1b42] dark:border dark:border-white/10 dark:hover:border-blue-400/50 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 group">
       
@@ -56,7 +59,7 @@ export default function CarCard({ id, title, subtitle, year, mileage, transmissi
         
         {/* Botão */}
         <div className="w-full mt-auto">
-          <Link href={`/veiculos/${id}`} className="bg-brand-blue dark:bg-blue-600 text-white rounded-[25px] w-full py-2 text-center block font-semibold text-[13px] hover:bg-blue-900 dark:hover:bg-blue-500 transition-colors shadow">
+          <Link href={`/veiculos/${carSlug}`} className="bg-brand-blue dark:bg-blue-600 text-white rounded-[25px] w-full py-2 text-center block font-semibold text-[13px] hover:bg-blue-900 dark:hover:bg-blue-500 transition-colors shadow">
             Saiba mais
           </Link>
         </div>

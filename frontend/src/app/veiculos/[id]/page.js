@@ -6,9 +6,11 @@ import Footer from "@/components/Footer";
 import CarCard from "@/components/CarCard";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { findCarBySlugOrId } from "@/lib/slug";
 
 export default function ProductPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id || params?.slug;
   const [cars, setCars] = useState([]);
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,7 @@ export default function ProductPage() {
           const data = await res.json();
           setCars(data);
           
-          const found = data.find(c => String(c.id) === String(id));
+          const found = findCarBySlugOrId(data, id);
           if (found) {
             setCar(found);
           }
@@ -69,7 +71,7 @@ export default function ProductPage() {
   const rightColAccessories = car.accessories.slice(halfLength);
 
   // Recommendations: exclude current car, take up to 5 cars
-  const recommendations = cars.filter(c => String(c.id) !== String(id)).slice(0, 5);
+  const recommendations = cars.filter(c => String(c.id) !== String(car.id)).slice(0, 5);
 
   const carImages = car.images && car.images.length > 0 
     ? car.images 
