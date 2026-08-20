@@ -344,11 +344,11 @@ export default function FinanceiroTab() {
 
       {/* Action and Filter Bar */}
       <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
           {/* Busca por texto */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-              <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Buscar por Placa / Descrição / Veículo
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1 whitespace-nowrap truncate h-5">
+              <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Buscar
             </label>
             <input
               type="text"
@@ -361,7 +361,7 @@ export default function FinanceiroTab() {
 
           {/* Filtro por Origem */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1 whitespace-nowrap truncate h-5">
               Origem do Custo
             </label>
             <select
@@ -370,16 +370,16 @@ export default function FinanceiroTab() {
               className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white text-slate-900 font-semibold focus:outline-none focus:border-brand-blue"
             >
               <option value="">Todas as Origens</option>
-              <option value="Pós Venda"><Wrench className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Pós Venda</option>
-              <option value="Estoque">🚗 Estoque / Preparação</option>
-              <option value="Venda"><Handshake className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Venda</option>
-              <option value="Operacional">🏢 Operacional / Fixo</option>
+              <option value="Pós Venda">Pós Venda</option>
+              <option value="Estoque">Estoque / Preparação</option>
+              <option value="Venda">Venda</option>
+              <option value="Operacional">Operacional / Fixo</option>
             </select>
           </div>
 
           {/* Filtro por Categoria */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1 whitespace-nowrap truncate h-5">
               Categoria
             </label>
             <select
@@ -402,7 +402,7 @@ export default function FinanceiroTab() {
 
           {/* Filtro por Status */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1 whitespace-nowrap truncate h-5">
               Status Pagamento
             </label>
             <select

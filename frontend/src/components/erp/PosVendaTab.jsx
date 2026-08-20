@@ -306,8 +306,8 @@ export default function PosVendaTab() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-grow max-w-2xl">
           {/* Busca */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Buscar por Placa / Veículo / Categoria / Descrição
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1 whitespace-nowrap truncate h-5">
+              <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Buscar
             </label>
             <input
               type="text"
@@ -320,7 +320,7 @@ export default function PosVendaTab() {
 
           {/* Filtro Categoria */}
           <div>
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1 whitespace-nowrap truncate h-5">
               Categoria
             </label>
             <select
