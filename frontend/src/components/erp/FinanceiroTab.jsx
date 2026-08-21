@@ -19,15 +19,38 @@ import {
   ChevronLeft, 
   ChevronRight,
   TrendingUp,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight,
   CreditCard,
   Layers,
   AlertCircle,
-  FileText
+  FileText,
+  Wallet,
+  Filter,
+  DollarSign,
+  User
 } from 'lucide-react';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+
+const MESES = [
+  { value: "0", label: "Janeiro" },
+  { value: "1", label: "Fevereiro" },
+  { value: "2", label: "Março" },
+  { value: "3", label: "Abril" },
+  { value: "4", label: "Maio" },
+  { value: "5", label: "Junho" },
+  { value: "6", label: "Julho" },
+  { value: "7", label: "Agosto" },
+  { value: "8", label: "Setembro" },
+  { value: "9", label: "Outubro" },
+  { value: "10", label: "Novembro" },
+  { value: "11", label: "Dezembro" },
+];
 
 export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
   const [custos, setCustos] = useState([]);
+  const [vendas, setVendas] = useState([]);
   const [recorrentes, setRecorrentes] = useState([]);
   const [totalCustosFixosMensais, setTotalCustosFixosMensais] = useState(0);
   const [isAdmin, setIsAdmin] = useState(Boolean(propIsAdmin));
@@ -36,22 +59,34 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Data atual de referência
+  const agora = new Date();
+  const mesAtualStr = String(agora.getMonth());
+  const anoAtualStr = String(agora.getFullYear());
+
   // Navegação Principal de Abas
-  // 'veiculos' = Registro de Custos de Veículos (despesas de veículos, preparação, promissórias)
-  // 'operacionais' = Custos Operacionais da Loja (aluguel, salários, água, luz, etc.)
-  const [activeMainTab, setActiveMainTab] = useState("veiculos");
+  // 'extrato' = Extrato & Fluxo Geral (Todas as Entradas e Saídas unificadas)
+  // 'entradas' = Entradas (Vendas de Veículos)
+  // 'veiculos' = Custos de Veículos (despesas de preparação, peças, oficina, promissórias)
+  // 'operacionais' = Custos Operacionais da Loja (aluguel, salários, água, luz, contas)
+  const [activeMainTab, setActiveMainTab] = useState("extrato");
 
   // Sub-aba para Custos Operacionais (quando for Admin)
   // 'lancamentos' = Lançamentos do Mês / Período
   // 'recorrentes' = Configuração de Custos Fixos Recorrentes (Aluguel, Salários, etc.)
   const [activeOperacionalSubTab, setActiveOperacionalSubTab] = useState("lancamentos");
 
-  // Filtros de Busca
-  const [busca, setBusca] = useState("");
-  const [filtroCategoria, setFiltroCategoria] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState("");
+  // Filtros de Mês, Ano e Período
+  const [filtroMes, setFiltroMes] = useState(mesAtualStr); // Padrão: Mês Atual
+  const [filtroAno, setFiltroAno] = useState(anoAtualStr); // Padrão: Ano Atual
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
+
+  // Filtros Avançados de Busca
+  const [busca, setBusca] = useState("");
+  const [filtroTipo, setFiltroTipo] = useState(""); // '' = Todos, 'entrada' = Entradas, 'saida' = Saídas
+  const [filtroCategoria, setFiltroCategoria] = useState("");
+  const [filtroStatus, setFiltroStatus] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
   const ITENS_POR_PAGINA = 15;
 
@@ -87,9 +122,10 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
     isSalario: false,
   });
 
+  // Resetar paginação ao alterar qualquer filtro
   useEffect(() => {
     setPaginaAtual(1);
-  }, [busca, filtroCategoria, filtroStatus, dataInicio, dataFim, activeMainTab, activeOperacionalSubTab]);
+  }, [busca, filtroMes, filtroAno, dataInicio, dataFim, filtroTipo, filtroCategoria, filtroStatus, activeMainTab, activeOperacionalSubTab]);
 
   async function fetchData() {
     setLoading(true);
@@ -105,6 +141,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
         const veicData = await veiculosRes.json();
         
         setCustos(finData.custos || []);
+        setVendas(finData.vendas || []);
         setRecorrentes(finData.recorrentes || []);
         setTotalCustosFixosMensais(finData.totalCustosFixosMensais || 0);
         setIsAdmin(Boolean(finData.isAdmin));
@@ -379,62 +416,220 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
     );
   };
 
-  // Filtragem dos custos com base na aba ativa
-  const custosDaAba = custos.filter(c => {
-    if (activeMainTab === "veiculos") {
-      return isCustoVeiculo(c);
-    } else {
-      return !isCustoVeiculo(c);
-    }
-  });
+  // Consolidar todas as movimentações financeiras (Entradas das Vendas + Saídas dos Custos)
+  const todasMovimentacoes = useMemo(() => {
+    const lista = [];
 
-  const custosFiltrados = custosDaAba.filter(c => {
-    const termo = busca.toLowerCase().trim();
-    const placa = (c.despesaVeiculo?.veiculo?.placa || "").toLowerCase();
-    const modelo = (c.despesaVeiculo?.veiculo?.modelo || "").toLowerCase();
-    const marca = (c.despesaVeiculo?.veiculo?.marca || "").toLowerCase();
-    const desc = (c.descricao || "").toLowerCase();
-    const cat = (c.categoria || "").toLowerCase();
+    // 1. Inserir ENTRADAS (Vendas de Veículos)
+    vendas.forEach(v => {
+      const valorVenda = parseFloat(v.valorVendaVeiculo) || 0;
+      const valorRetorno = parseFloat(v.valorRetornoBancario) || 0;
+      const valorTotalEntrada = valorVenda + valorRetorno;
+      const compradorNome = v.cliente?.nome || v.contratoPayload?.buyerName || "Cliente";
 
-    const matchBusca = !termo ||
-      desc.includes(termo) ||
-      placa.includes(termo) ||
-      modelo.includes(termo) ||
-      marca.includes(termo) ||
-      cat.includes(termo);
+      lista.push({
+        id: `venda-${v.id}`,
+        tipo: "entrada",
+        tipoLabel: "Entrada (Venda)",
+        categoria: "Venda de Veículo",
+        descricao: `Venda ${v.veiculo ? `${v.veiculo.marca} ${v.veiculo.modelo} [${v.veiculo.placa || 'SEM PLACA'}]` : 'Veículo'}${compradorNome ? ` • Comprador: ${compradorNome}` : ''}`,
+        detalheSecundario: valorRetorno > 0 ? `Venda: R$ ${valorVenda.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} + Retorno Bancário: R$ ${valorRetorno.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : null,
+        data: v.dataVenda ? new Date(v.dataVenda) : (v.createdAt ? new Date(v.createdAt) : new Date()),
+        dataRaw: v.dataVenda || v.createdAt,
+        valor: valorTotalEntrada,
+        valorVenda,
+        valorRetorno,
+        status: "Recebido",
+        isPago: true,
+        origem: "Venda",
+        veiculo: v.veiculo,
+        cliente: v.cliente,
+        contratoPayload: v.contratoPayload,
+        rawVenda: v,
+      });
+    });
 
-    const matchCategoria = !filtroCategoria || c.categoria === filtroCategoria;
-    const matchStatus = !filtroStatus || (
-      filtroStatus === "Pago" ? c.statusPagamento === "Pago" : c.statusPagamento !== "Pago"
-    );
+    // 2. Inserir SAÍDAS (Custos de Veículos e Custos Operacionais)
+    custos.forEach(c => {
+      const isVeic = isCustoVeiculo(c);
+      lista.push({
+        id: `custo-${c.id}`,
+        tipo: "saida",
+        tipoLabel: isVeic ? "Saída (Veículo)" : "Saída (Operacional)",
+        categoria: c.categoria || "Geral",
+        descricao: c.descricao,
+        detalheSecundario: c.recorrenteId ? "Custo Fixo Recorrente Mensal" : null,
+        data: c.dataVencimento ? new Date(c.dataVencimento) : (c.createdAt ? new Date(c.createdAt) : new Date()),
+        dataRaw: c.dataVencimento || c.createdAt,
+        valor: parseFloat(c.valor) || 0,
+        status: c.statusPagamento || "A Pagar",
+        isPago: c.statusPagamento === "Pago",
+        origem: c.origem || (isVeic ? "Estoque" : "Operacional"),
+        tipoCusto: c.tipo || "Fixo",
+        veiculo: c.despesaVeiculo?.veiculo,
+        recorrenteId: c.recorrenteId,
+        rawCusto: c,
+      });
+    });
 
-    let matchData = true;
-    if (dataInicio || dataFim) {
-      const dInicio = dataInicio ? new Date(dataInicio + "T00:00:00Z") : null;
-      const dFim = dataFim ? new Date(dataFim + "T23:59:59Z") : null;
-      const dt = c.dataVencimento ? new Date(c.dataVencimento) : null;
-      matchData = dt ? ((!dInicio || dt >= dInicio) && (!dFim || dt <= dFim)) : true;
-    }
+    // Ordenação decrescente por data
+    return lista.sort((a, b) => b.data - a.data);
+  }, [vendas, custos]);
 
-    return matchBusca && matchCategoria && matchStatus && matchData;
-  });
+  // Lista de anos disponíveis calculada dinamicamente
+  const anosDisponiveis = useMemo(() => {
+    const anos = new Set();
+    const anoAtual = new Date().getFullYear();
+    anos.add(anoAtual);
+    anos.add(anoAtual - 1);
+    anos.add(anoAtual + 1);
 
-  // Métricas da aba atual
-  const totalPagoAba = custosFiltrados
-    .filter(c => c.statusPagamento === "Pago")
-    .reduce((acc, curr) => acc + parseFloat(curr.valor), 0);
+    todasMovimentacoes.forEach(m => {
+      if (m.data instanceof Date && !isNaN(m.data.getTime())) {
+        anos.add(m.data.getFullYear());
+      }
+    });
 
-  const totalAPagarAba = custosFiltrados
-    .filter(c => c.statusPagamento !== "Pago")
-    .reduce((acc, curr) => acc + parseFloat(curr.valor), 0);
+    return Array.from(anos).sort((a, b) => b - a);
+  }, [todasMovimentacoes]);
 
-  const totalGeralAba = totalPagoAba + totalAPagarAba;
+  // Filtragem das movimentações de acordo com a aba selecionada e filtros de busca/data
+  const movimentacoesFiltradas = useMemo(() => {
+    return todasMovimentacoes.filter(m => {
+      // 1. Filtro pela Aba Ativa
+      if (activeMainTab === "entradas" && m.tipo !== "entrada") {
+        return false;
+      }
+      if (activeMainTab === "veiculos") {
+        if (m.tipo !== "saida" || !isCustoVeiculo(m.rawCusto)) {
+          return false;
+        }
+      }
+      if (activeMainTab === "operacionais") {
+        if (m.tipo !== "saida" || isCustoVeiculo(m.rawCusto)) {
+          return false;
+        }
+      }
+
+      // 2. Filtro de Tipo de Movimentação (dentro do Extrato)
+      if (filtroTipo === "entrada" && m.tipo !== "entrada") return false;
+      if (filtroTipo === "saida" && m.tipo !== "saida") return false;
+
+      // 3. Filtro de Texto / Busca Geral
+      const termo = busca.toLowerCase().trim();
+      if (termo) {
+        const desc = (m.descricao || "").toLowerCase();
+        const cat = (m.categoria || "").toLowerCase();
+        const placa = (m.veiculo?.placa || "").toLowerCase();
+        const modelo = (m.veiculo?.modelo || "").toLowerCase();
+        const marca = (m.veiculo?.marca || "").toLowerCase();
+        const clienteNome = (m.cliente?.nome || "").toLowerCase();
+        const clienteCpf = (m.cliente?.cpfCnpj || "").toLowerCase();
+
+        const match = desc.includes(termo) ||
+          cat.includes(termo) ||
+          placa.includes(termo) ||
+          modelo.includes(termo) ||
+          marca.includes(termo) ||
+          clienteNome.includes(termo) ||
+          clienteCpf.includes(termo);
+
+        if (!match) return false;
+      }
+
+      // 4. Filtro por Categoria
+      if (filtroCategoria && m.categoria !== filtroCategoria) {
+        return false;
+      }
+
+      // 5. Filtro por Status
+      if (filtroStatus) {
+        if (filtroStatus === "Pago" && !m.isPago) return false;
+        if (filtroStatus === "A Pagar" && m.isPago) return false;
+      }
+
+      // 6. Filtro por Data (Período de Datas Personalizado ou Mês/Ano)
+      if (dataInicio || dataFim) {
+        const dInicio = dataInicio ? new Date(dataInicio + "T00:00:00Z") : null;
+        const dFim = dataFim ? new Date(dataFim + "T23:59:59Z") : null;
+        const dt = m.data;
+        if (dt) {
+          if (dInicio && dt < dInicio) return false;
+          if (dFim && dt > dFim) return false;
+        }
+      } else {
+        // Se não tem período de datas específico preenchido, usa Filtro de Mês e Ano
+        if (filtroAno) {
+          const anoMov = m.data.getFullYear();
+          if (anoMov !== parseInt(filtroAno)) return false;
+        }
+        if (filtroMes !== "") {
+          const mesMov = m.data.getMonth(); // 0 a 11
+          if (mesMov !== parseInt(filtroMes)) return false;
+        }
+      }
+
+      return true;
+    });
+  }, [todasMovimentacoes, activeMainTab, filtroTipo, busca, filtroCategoria, filtroStatus, dataInicio, dataFim, filtroAno, filtroMes]);
+
+  // Métricas / KPIs calculados com base no filtro atual
+  const metricas = useMemo(() => {
+    let totalEntradas = 0;
+    let qtdVendas = 0;
+    let totalSaidas = 0;
+    let totalSaidasPagas = 0;
+    let totalSaidasPendentes = 0;
+
+    movimentacoesFiltradas.forEach(m => {
+      if (m.tipo === "entrada") {
+        totalEntradas += m.valor;
+        qtdVendas += 1;
+      } else {
+        totalSaidas += m.valor;
+        if (m.isPago) {
+          totalSaidasPagas += m.valor;
+        } else {
+          totalSaidasPendentes += m.valor;
+        }
+      }
+    });
+
+    const saldoLiquido = totalEntradas - totalSaidas;
+    const margemLucro = totalEntradas > 0 ? (saldoLiquido / totalEntradas) * 100 : 0;
+
+    return {
+      totalEntradas,
+      qtdVendas,
+      totalSaidas,
+      totalSaidasPagas,
+      totalSaidasPendentes,
+      saldoLiquido,
+      margemLucro,
+      totalMovimentacoes: movimentacoesFiltradas.length,
+    };
+  }, [movimentacoesFiltradas]);
+
+  // Lista de Categorias Únicas presentes nas movimentações
+  const categoriasDisponiveis = useMemo(() => {
+    const cats = new Set();
+    todasMovimentacoes.forEach(m => {
+      if (m.categoria) cats.add(m.categoria);
+    });
+    return Array.from(cats).sort();
+  }, [todasMovimentacoes]);
 
   // Paginação
-  const totalPaginas = Math.ceil(custosFiltrados.length / ITENS_POR_PAGINA) || 1;
+  const totalPaginas = Math.ceil(movimentacoesFiltradas.length / ITENS_POR_PAGINA) || 1;
   const inicioIndex = (paginaAtual - 1) * ITENS_POR_PAGINA;
   const fimIndex = inicioIndex + ITENS_POR_PAGINA;
-  const custosPaginados = custosFiltrados.slice(inicioIndex, fimIndex);
+  const movimentacoesPaginadas = movimentacoesFiltradas.slice(inicioIndex, fimIndex);
+
+  // Label do mês e ano filtrado para exibição nos cabeçalhos
+  const mesLabelAtual = filtroMes !== "" ? MESES.find(m => m.value === filtroMes)?.label : "Todos os Meses";
+  const periodoLabelTexto = (dataInicio || dataFim)
+    ? `Período personalizado (${dataInicio ? new Date(dataInicio + "T00:00:00Z").toLocaleDateString("pt-BR") : "Início"} até ${dataFim ? new Date(dataFim + "T23:59:59Z").toLocaleDateString("pt-BR") : "Fim"})`
+    : `${mesLabelAtual} de ${filtroAno || "Todos os Anos"}`;
 
   return (
     <div className="space-y-6 text-gray-800 animate-fade-in">
@@ -444,15 +639,15 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
         <div>
           <h4 className="font-extrabold text-brand-blue dark:text-blue-400 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
             <CircleDollarSign className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
-            Central Financeira & Gestão de Custos
+            Central Financeira & Fluxo de Caixa Geral
           </h4>
           <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">
-            Controle integrado de despesas de veículos, promissórias parceladas, custos operacionais e custos fixos recorrentes.
+            Gestão integrada de entradas de vendas, despesas de veículos, contas operacionais e custos fixos recorrentes.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {isAdmin && activeMainTab === "operacionais" && (
+          {isAdmin && (
             <button
               onClick={() => {
                 setFormRecorrente({
@@ -495,81 +690,189 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             className="bg-brand-blue hover:opacity-90 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" />
-            <span>Novo Lançamento</span>
+            <span>Novo Lançamento de Custo</span>
           </button>
         </div>
       </div>
 
-      {/* KPI STATS CARDS (EXCLUSIVO PARA ADMINISTRADOR) */}
-      {effectiveIsAdmin && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {/* CARD 1: Total da Aba */}
-          <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-800">
-            <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider block mb-1">
-              {activeMainTab === "veiculos" ? "Total Custos Veículos" : "Total Custos Operacionais"}
+      {/* KPI STATS CARDS (FLUXO DE CAIXA COMPLETO) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* CARD 1: Total Entradas (Vendas de Carros) */}
+        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-emerald-500">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block">
+              Entradas (Vendas de Carros)
             </span>
-            <p className="text-xl sm:text-2xl font-extrabold text-white">
-              R$ {totalGeralAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            <span className="text-[11px] text-blue-200/80 mt-1.5 block font-medium">
-              {custosFiltrados.length} lançamentos encontrados
+            <span className="p-1 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+              <ArrowUpRight className="w-4 h-4" />
             </span>
           </div>
+          <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
+            + R$ {metricas.totalEntradas.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+            {metricas.qtdVendas} veículo{metricas.qtdVendas === 1 ? "" : "s"} vendido{metricas.qtdVendas === 1 ? "" : "s"} no período
+          </span>
+        </div>
 
-          {/* CARD 2: Total Pago */}
-          <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-emerald-500">
-            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-              Total Pago
+        {/* CARD 2: Total Saídas (Custos & Despesas) */}
+        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-rose-500">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block">
+              Saídas (Custos & Despesas)
             </span>
-            <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
-              R$ {totalPagoAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            <span className="text-[11px] text-gray-400 mt-1.5 block font-medium">
-              Lançamentos liquidados
+            <span className="p-1 rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+              <ArrowDownRight className="w-4 h-4" />
             </span>
           </div>
+          <p className="text-xl sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">
+            - R$ {metricas.totalSaidas.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+            Pago: R$ {metricas.totalSaidasPagas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          </span>
+        </div>
 
-          {/* CARD 3: Total A Pagar / Pendente */}
-          <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-amber-500">
-            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-              Total A Pagar / Pendente
+        {/* CARD 3: Balanço / Saldo Líquido do Período */}
+        <div className={`rounded-2xl p-4 sm:p-5 shadow-sm border ${
+          metricas.saldoLiquido >= 0
+            ? "bg-gradient-to-br from-slate-900 to-blue-950 text-white border-slate-800"
+            : "bg-gradient-to-br from-rose-950 to-slate-900 text-white border-rose-900"
+        }`}>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider block">
+              Balanço Líquido do Mês
             </span>
-            <p className="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400">
-              R$ {totalAPagarAba.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            <span className="text-[11px] text-gray-400 mt-1.5 block font-medium">
-              Aguardando pagamento
+            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+              metricas.saldoLiquido >= 0 ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40" : "bg-rose-500/30 text-rose-300 border border-rose-500/40"
+            }`}>
+              {metricas.saldoLiquido >= 0 ? "Superávit / Lucro" : "Déficit"}
             </span>
           </div>
+          <p className={`text-xl sm:text-2xl font-extrabold mt-1 ${metricas.saldoLiquido >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+            {metricas.saldoLiquido >= 0 ? "+ " : "" }R$ {metricas.saldoLiquido.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <span className="text-[11px] text-blue-200/80 mt-1 block font-medium">
+            Entradas (-) Saídas em {periodoLabelTexto}
+          </span>
+        </div>
 
-          {/* CARD 4: Custos Fixos Mensais */}
-          <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-purple-500">
-            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
-              Custos Fixos Mensais
+        {/* CARD 4: Total A Pagar / Pendente ou Custos Fixos */}
+        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-amber-500">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block">
+              Despesas A Pagar (Pendente)
             </span>
-            <p className="text-xl sm:text-2xl font-extrabold text-purple-700 dark:text-purple-400">
-              R$ {totalCustosFixosMensais.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            <span className="text-[11px] text-gray-400 mt-1.5 block font-medium">
-              Aluguel, salários e obrigações mensais
+            <span className="p-1 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+              <Clock className="w-4 h-4" />
             </span>
+          </div>
+          <p className="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
+            R$ {metricas.totalSaidasPendentes.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+            {effectiveIsAdmin ? `Custos Fixos Mensais: R$ ${totalCustosFixosMensais.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "Aguardando quitação"}
+          </span>
+        </div>
+      </div>
+
+      {/* FILTROS INTELIGENTES (FILTRO POR MÊS, ANO, PERÍODO E BUSCA) */}
+      <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3.5 transition-colors">
+        
+        {/* BARRA DE FILTRO POR MÊS & ANO (PRIORIDADE) */}
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-blue-50/60 dark:bg-slate-800/60 p-3 rounded-xl border border-blue-100/80 dark:border-slate-700">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-[11px] font-extrabold text-brand-blue dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-brand-blue" />
+              Filtrar por Mês:
+            </span>
+
+            {/* Seletor de Mês */}
+            <select
+              value={filtroMes}
+              onChange={(e) => {
+                setFiltroMes(e.target.value);
+                // Limpa período personalizado para dar preferência ao mês
+                setDataInicio("");
+                setDataFim("");
+              }}
+              className="border border-blue-200 dark:border-slate-600 rounded-lg py-1.5 px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-extrabold focus:outline-none focus:border-brand-blue"
+            >
+              <option value="">Todos os Meses</option>
+              {MESES.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label} {m.value === mesAtualStr && filtroAno === anoAtualStr ? " (Mês Vigente)" : ""}
+                </option>
+              ))}
+            </select>
+
+            {/* Seletor de Ano */}
+            <select
+              value={filtroAno}
+              onChange={(e) => {
+                setFiltroAno(e.target.value);
+                setDataInicio("");
+                setDataFim("");
+              }}
+              className="border border-blue-200 dark:border-slate-600 rounded-lg py-1.5 px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-extrabold focus:outline-none focus:border-brand-blue"
+            >
+              <option value="">Todos os Anos</option>
+              {anosDisponiveis.map((ano) => (
+                <option key={ano} value={String(ano)}>
+                  Ano {ano}
+                </option>
+              ))}
+            </select>
+
+            {/* Atalho Mês Atual */}
+            {(filtroMes !== mesAtualStr || filtroAno !== anoAtualStr || dataInicio || dataFim) && (
+              <button
+                onClick={() => {
+                  setFiltroMes(mesAtualStr);
+                  setFiltroAno(anoAtualStr);
+                  setDataInicio("");
+                  setDataFim("");
+                }}
+                className="bg-brand-blue text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-all cursor-pointer shadow-xs flex items-center gap-1"
+                title="Voltar para o mês corrente"
+              >
+                <span>📅 Mês Atual ({MESES.find(m => m.value === mesAtualStr)?.label})</span>
+              </button>
+            )}
+
+            {/* Ver Tudo */}
+            {(filtroMes !== "" || filtroAno !== "") && (
+              <button
+                onClick={() => {
+                  setFiltroMes("");
+                  setFiltroAno("");
+                  setDataInicio("");
+                  setDataFim("");
+                }}
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-[11px] font-bold px-2 py-1 rounded-md transition-colors cursor-pointer"
+              >
+                Ver Todo o Histórico
+              </button>
+            )}
+          </div>
+
+          <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400">
+            Visualizando: <span className="font-extrabold text-brand-blue dark:text-blue-300">{periodoLabelTexto}</span>
           </div>
         </div>
-      )}
 
-      {/* FILTROS E BUSCA */}
-      <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors">
-        <div className="flex flex-wrap items-center gap-3 flex-grow max-w-4xl">
-          {/* Campo de Busca */}
+        {/* LINHA DE FILTROS SECUNDÁRIOS: BUSCA, TIPO, CATEGORIA, STATUS E PERÍODO PERSONALIZADO */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Campo de Busca Geral */}
           <div className="flex-grow min-w-[220px]">
             <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">
-              <Search className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm inline-block mr-1" />
+              <Search className="w-3.5 h-3.5 inline-block mr-1 text-brand-blue" />
               Pesquisar
             </label>
             <div className="relative">
               <input
                 type="text"
-                placeholder={activeMainTab === "veiculos" ? "Buscar por placa, modelo, promissória, descrição..." : "Buscar por aluguel, conta, fornecedor..."}
+                placeholder="Buscar por placa, modelo, comprador, despesa, aluguel..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 pl-8 pr-7 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium placeholder-gray-400 focus:outline-none focus:border-brand-blue"
@@ -588,6 +891,20 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             </div>
           </div>
 
+          {/* Filtro por Tipo de Movimentação */}
+          <div className="w-full sm:w-auto min-w-[140px]">
+            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">Tipo</label>
+            <select
+              value={filtroTipo}
+              onChange={(e) => setFiltroTipo(e.target.value)}
+              className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
+            >
+              <option value="">Todas (Entradas e Saídas)</option>
+              <option value="entrada">🟢 Apenas Entradas (Vendas)</option>
+              <option value="saida">🔴 Apenas Saídas (Despesas)</option>
+            </select>
+          </div>
+
           {/* Filtro por Categoria */}
           <div className="w-full sm:w-auto min-w-[150px]">
             <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">Categoria</label>
@@ -597,32 +914,10 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
               className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
             >
               <option value="">Todas as Categorias</option>
-              {activeMainTab === "veiculos" ? (
-                <>
-                  <option value="Mecânica">Mecânica</option>
-                  <option value="Funilaria">Funilaria</option>
-                  <option value="Promissória">Nota Promissória</option>
-                  <option value="Lavagem">Lavagem</option>
-                  <option value="IPVA">IPVA</option>
-                  <option value="Documento">Documento</option>
-                  <option value="Licenciamento">Licenciamento</option>
-                  <option value="Detalhamento">Detalhamento</option>
-                  <option value="Outros">Outros</option>
-                </>
-              ) : (
-                <>
-                  <option value="Aluguel">Aluguel</option>
-                  <option value="Salário">{isAdmin ? "Salário" : "Mão de obra"}</option>
-                  <option value="Água">Água</option>
-                  <option value="Luz">Luz</option>
-                  <option value="Internet">Internet</option>
-                  <option value="Contabilidade">Contabilidade</option>
-                  <option value="Marketing">Marketing / Tráfego</option>
-                  <option value="Manutenção">Manutenção Predial</option>
-                  <option value="Geral">Geral</option>
-                  <option value="Outros">Outros</option>
-                </>
-              )}
+              <option value="Venda de Veículo">Venda de Veículo (Entrada)</option>
+              {categoriasDisponiveis.filter(c => c !== "Venda de Veículo").map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
             </select>
           </div>
 
@@ -635,69 +930,109 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
               className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
             >
               <option value="">Todos os Status</option>
-              <option value="Pago">Pago</option>
+              <option value="Pago">Pago / Recebido</option>
               <option value="A Pagar">A Pagar / Pendente</option>
             </select>
           </div>
-
-          {/* Filtro por Período */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-150 dark:border-slate-700 w-full text-xs">
-            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1">
-              <Calendar className="w-4 h-4 text-brand-blue bg-white rounded-sm shrink-0 p-[2px] shadow-sm" /> Período de Vencimento:
-            </span>
-
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] text-gray-400 font-medium">De:</span>
-              <input
-                type="date"
-                value={dataInicio}
-                onChange={(e) => setDataInicio(e.target.value)}
-                className="border border-gray-300 dark:border-slate-700 rounded-lg py-1 px-2 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
-              />
-            </div>
-
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] text-gray-400 font-medium">Até:</span>
-              <input
-                type="date"
-                value={dataFim}
-                onChange={(e) => setDataFim(e.target.value)}
-                className="border border-gray-300 dark:border-slate-700 rounded-lg py-1 px-2 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
-              />
-            </div>
-
-            {(dataInicio || dataFim) && (
-              <button
-                onClick={() => { setDataInicio(""); setDataFim(""); }}
-                className="text-red-600 hover:text-red-800 text-[11px] font-bold bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors cursor-pointer"
-              >
-                ✕ Limpar Datas
-              </button>
-            )}
-          </div>
         </div>
+
+        {/* Período Personalizado (De / Até) */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-150 dark:border-slate-700 w-full text-xs">
+          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5 text-brand-blue" />
+            Ou selecione Período de Datas Específico:
+          </span>
+
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-gray-400 font-medium">De:</span>
+            <input
+              type="date"
+              value={dataInicio}
+              onChange={(e) => {
+                setDataInicio(e.target.value);
+                setFiltroMes("");
+              }}
+              className="border border-gray-300 dark:border-slate-700 rounded-lg py-1 px-2 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
+            />
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-gray-400 font-medium">Até:</span>
+            <input
+              type="date"
+              value={dataFim}
+              onChange={(e) => {
+                setDataFim(e.target.value);
+                setFiltroMes("");
+              }}
+              className="border border-gray-300 dark:border-slate-700 rounded-lg py-1 px-2 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
+            />
+          </div>
+
+          {(dataInicio || dataFim) && (
+            <button
+              onClick={() => { 
+                setDataInicio(""); 
+                setDataFim("");
+                setFiltroMes(mesAtualStr);
+                setFiltroAno(anoAtualStr);
+              }}
+              className="text-red-600 hover:text-red-800 text-[11px] font-bold bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+            >
+              ✕ Limpar Período
+            </button>
+          )}
+        </div>
+
       </div>
 
-      {/* ABAS DE NAVEGAÇÃO (EM CIMA DO REGISTRO GERAL E EMBAIXO DOS FILTROS) */}
+      {/* ABAS DE NAVEGAÇÃO */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-slate-700 pb-1">
-        <div className="flex items-center gap-2">
-          {/* ABA 1: Custos de Veículos */}
+        <div className="flex flex-wrap items-center gap-2">
+          
+          {/* ABA 1: Extrato & Fluxo Geral (Todas as Entradas e Saídas) */}
+          <button
+            onClick={() => setActiveMainTab("extrato")}
+            className={`px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 ${
+              activeMainTab === "extrato"
+                ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600"
+                : "bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50"
+            }`}
+          >
+            <BarChart2 className="w-4 h-4" />
+            <span>Extrato & Fluxo Geral</span>
+          </button>
+
+          {/* ABA 2: Entradas (Vendas de Veículos) */}
+          <button
+            onClick={() => setActiveMainTab("entradas")}
+            className={`px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 ${
+              activeMainTab === "entradas"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50"
+            }`}
+          >
+            <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400 group-hover:text-white" />
+            <span>Entradas (Vendas)</span>
+          </button>
+
+          {/* ABA 3: Custos de Veículos */}
           <button
             onClick={() => setActiveMainTab("veiculos")}
-            className={`px-5 py-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 ${
               activeMainTab === "veiculos"
                 ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600"
                 : "bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50"
             }`}
           >
             <Car className="w-4 h-4" />
-            <span>Registro de Custos de Veículos</span>
+            <span>Custos de Veículos</span>
           </button>
 
-          {/* ABA 2: Custos Operacionais */}
+          {/* ABA 4: Custos Operacionais */}
           <button
             onClick={() => setActiveMainTab("operacionais")}
-            className={`px-5 py-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 ${
               activeMainTab === "operacionais"
                 ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600"
                 : "bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50"
@@ -720,7 +1055,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>Lançamentos do Mês</span>
+              <span>Lançamentos</span>
             </button>
             <button
               onClick={() => setActiveOperacionalSubTab("recorrentes")}
@@ -749,7 +1084,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                 Configuração de Custos Fixos Recorrentes (Mensais)
               </h4>
               <p className="text-[11px] text-purple-800 dark:text-purple-300 font-medium mt-0.5">
-                Estes custos são cobrados automaticamente todo mês com o mesmo valor (aluguel, salários, contas fixas).
+                Estes custos são gerados automaticamente todo mês (aluguel, salários, contas fixas da loja).
               </p>
             </div>
 
@@ -851,234 +1186,215 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
           </div>
         </div>
       ) : (
-        /* TABELA DE LANÇAMENTOS (CUSTOS DE VEÍCULOS OU CUSTOS OPERACIONAIS) */
+        /* TABELA DE MOVIMENTAÇÕES (EXTRATO GERAL / ENTRADAS / CUSTOS DE VEÍCULOS / CUSTOS OPERACIONAIS) */
         <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/50">
-            <h4 className="text-xs font-extrabold text-brand-blue dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-              {activeMainTab === "veiculos" ? (
-                <>
-                  <Car className="w-4 h-4" />
-                  <span>Registro de Custos de Veículos (Preparação, Peças, Promissórias)</span>
-                </>
-              ) : (
-                <>
-                  <Building className="w-4 h-4" />
-                  <span>Registro de Custos Operacionais da Loja</span>
-                </>
-              )}
-            </h4>
-            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">
-              Exibindo {custosFiltrados.length} lançamentos
-            </span>
+          <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-2 bg-gray-50/50 dark:bg-slate-800/50">
+            <div>
+              <h4 className="text-xs font-extrabold text-brand-blue dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                {activeMainTab === "extrato" && (
+                  <>
+                    <BarChart2 className="w-4 h-4" />
+                    <span>Extrato & Fluxo de Caixa Geral (Entradas e Saídas)</span>
+                  </>
+                )}
+                {activeMainTab === "entradas" && (
+                  <>
+                    <TrendingUp className="w-4 h-4 text-emerald-600" />
+                    <span>Registro de Entradas Financeiras (Vendas de Veículos)</span>
+                  </>
+                )}
+                {activeMainTab === "veiculos" && (
+                  <>
+                    <Car className="w-4 h-4" />
+                    <span>Custos e Despesas de Veículos (Preparação, Oficina, Promissórias)</span>
+                  </>
+                )}
+                {activeMainTab === "operacionais" && (
+                  <>
+                    <Building className="w-4 h-4" />
+                    <span>Custos Operacionais da Loja (Aluguel, Folha, Contas)</span>
+                  </>
+                )}
+              </h4>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                Filtrado por: <strong>{periodoLabelTexto}</strong>
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] bg-brand-blue/10 text-brand-blue dark:bg-blue-900/40 dark:text-blue-300 px-3 py-1 rounded-lg font-bold">
+                {movimentacoesFiltradas.length} lançamento{movimentacoesFiltradas.length === 1 ? "" : "s"}
+              </span>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 text-gray-500 dark:text-gray-300">
-                  {activeMainTab === "veiculos" ? (
-                    <>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Veículo / Placa</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Categoria</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Descrição / Parcela</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Vencimento</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Valor (R$)</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Status</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider text-center">Ações</th>
-                    </>
-                  ) : (
-                    <>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Descrição do Custo</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Categoria</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Tipo</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Vencimento</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Valor (R$)</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Status</th>
-                      <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider text-center">Ações</th>
-                    </>
-                  )}
+                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Tipo</th>
+                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Descrição / Detalhes</th>
+                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Categoria</th>
+                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Veículo / Vínculo</th>
+                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Data</th>
+                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Valor (R$)</th>
+                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider">Status</th>
+                  <th className="p-3.5 text-[10px] font-bold uppercase tracking-wider text-center">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-slate-700 text-gray-700 dark:text-gray-300 text-xs">
                 {loading ? (
                   <tr>
-                    <td colSpan="7" className="p-12 text-center text-gray-400 text-xs">
+                    <td colSpan="8" className="p-12 text-center text-gray-400 text-xs">
                       <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-brand-blue mx-auto mb-2"></div>
-                      Carregando dados financeiros...
+                      Carregando fluxo financeiro...
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan="7" className="p-6 text-center text-red-600 text-xs font-semibold bg-red-50">{error}</td>
+                    <td colSpan="8" className="p-6 text-center text-red-600 text-xs font-semibold bg-red-50">{error}</td>
                   </tr>
-                ) : custosFiltrados.length === 0 ? (
+                ) : movimentacoesFiltradas.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-12 text-center text-gray-400 text-xs font-medium">
-                      Nenhum lançamento encontrado para os filtros selecionados nesta aba.
+                    <td colSpan="8" className="p-12 text-center text-gray-400 text-xs font-medium">
+                      Nenhuma movimentação financeira encontrada para os filtros selecionados ({periodoLabelTexto}).
                     </td>
                   </tr>
                 ) : (
-                  custosPaginados.map((c) => {
-                    const dataVencFmt = c.dataVencimento ? new Date(c.dataVencimento).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "-";
-                    const isPago = c.statusPagamento === "Pago";
-
-                    const veic = c.despesaVeiculo?.veiculo;
+                  movimentacoesPaginadas.map((m) => {
+                    const dataFmt = m.data instanceof Date && !isNaN(m.data.getTime())
+                      ? m.data.toLocaleDateString("pt-BR", { timeZone: "UTC" })
+                      : "-";
+                    const isEntrada = m.tipo === "entrada";
+                    const veic = m.veiculo;
 
                     return (
-                      <tr key={c.id} className="hover:bg-gray-50/70 dark:hover:bg-slate-800/50 transition-colors">
-                        {activeMainTab === "veiculos" ? (
-                          <>
-                            {/* Veículo / Placa */}
-                            <td className="p-3.5">
-                              {veic ? (
-                                <div>
-                                  <span className="bg-brand-blue/10 text-brand-blue dark:bg-blue-900/40 dark:text-blue-300 px-2 py-0.5 rounded font-mono text-[11px] font-extrabold uppercase">
-                                    {veic.placa || "SEM PLACA"}
-                                  </span>
-                                  <span className="block font-extrabold text-slate-900 dark:text-white text-xs mt-1">
-                                    {veic.marca} {veic.modelo}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className="text-gray-400 font-medium italic">Veículo não vinculado</span>
-                              )}
-                            </td>
+                      <tr 
+                        key={m.id} 
+                        className={`hover:bg-gray-50/70 dark:hover:bg-slate-800/50 transition-colors ${
+                          isEntrada ? "bg-emerald-50/20 dark:bg-emerald-950/10" : ""
+                        }`}
+                      >
+                        {/* 1. Tipo (Entrada vs Saída) */}
+                        <td className="p-3.5 whitespace-nowrap">
+                          {isEntrada ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
+                              <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" />
+                              Entrada
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-800 shadow-2xs">
+                              <ArrowDownRight className="w-3.5 h-3.5 text-rose-600" />
+                              Saída
+                            </span>
+                          )}
+                        </td>
 
-                            {/* Categoria */}
-                            <td className="p-3.5">
-                              <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                c.categoria === "Promissória"
-                                  ? "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200 border border-blue-200"
-                                  : "bg-gray-100 text-gray-800 dark:bg-slate-800 dark:text-slate-200"
-                              }`}>
-                                {c.categoria}
+                        {/* 2. Descrição / Detalhes */}
+                        <td className="p-3.5 font-bold text-slate-900 dark:text-white max-w-sm">
+                          <div className="flex flex-col">
+                            <span className="line-clamp-2">{m.descricao}</span>
+                            {m.detalheSecundario && (
+                              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold mt-0.5">
+                                {m.detalheSecundario}
                               </span>
-                            </td>
+                            )}
+                          </div>
+                        </td>
 
-                            {/* Descrição */}
-                            <td className="p-3.5 font-medium max-w-xs text-slate-900 dark:text-white">
-                              <p className="line-clamp-2">{c.descricao}</p>
-                            </td>
+                        {/* 3. Categoria */}
+                        <td className="p-3.5 whitespace-nowrap">
+                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                            isEntrada 
+                              ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200" 
+                              : m.categoria === "Promissória"
+                              ? "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200"
+                              : "bg-gray-100 text-gray-800 dark:bg-slate-800 dark:text-slate-200"
+                          }`}>
+                            {m.categoria}
+                          </span>
+                        </td>
 
-                            {/* Vencimento */}
-                            <td className="p-3.5 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                              <Calendar className="w-3.5 h-3.5 text-brand-blue inline-block mr-1" />
-                              {dataVencFmt}
-                            </td>
-
-                            {/* Valor */}
-                            <td className="p-3.5 font-extrabold text-red-600 dark:text-red-400 whitespace-nowrap text-sm">
-                              - R$ {Number(c.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            </td>
-
-                            {/* Status */}
-                            <td className="p-3.5 whitespace-nowrap">
-                              <button
-                                onClick={() => handleToggleStatus(c.id)}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase transition-all cursor-pointer ${
-                                  isPago
-                                    ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-950 dark:text-green-200"
-                                    : "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-200"
-                                }`}
-                                title="Clique para alternar status entre Pago e A Pagar"
-                              >
-                                {isPago ? "Pago" : "A Pagar"}
-                              </button>
-                            </td>
-
-                            {/* Ações */}
-                            <td className="p-3.5 text-center whitespace-nowrap">
-                              <div className="flex justify-center items-center gap-1.5">
-                                <button
-                                  onClick={() => startEditCusto(c)}
-                                  className="p-1.5 rounded-lg border border-brand-blue/40 text-brand-blue hover:bg-brand-blue hover:text-white transition-all cursor-pointer"
-                                  title="Editar"
-                                >
-                                  <Pencil className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteCusto(c.id)}
-                                  className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
-                                  title="Excluir"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            {/* Descrição Operacional */}
-                            <td className="p-3.5 font-bold text-slate-900 dark:text-white">
-                              <div className="flex items-center gap-2">
-                                {c.recorrenteId && (
-                                  <span className="text-[9px] font-black bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded uppercase" title="Custo Fixo Recorrente Mensal">
-                                    Fixo Mensal
-                                  </span>
-                                )}
-                                <span>{c.descricao}</span>
-                              </div>
-                            </td>
-
-                            {/* Categoria */}
-                            <td className="p-3.5">
-                              <span className="bg-gray-100 text-gray-800 dark:bg-slate-800 dark:text-slate-200 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold">
-                                {c.categoria}
+                        {/* 4. Veículo / Vínculo */}
+                        <td className="p-3.5 whitespace-nowrap">
+                          {veic ? (
+                            <div>
+                              <span className="bg-brand-blue/10 text-brand-blue dark:bg-blue-900/40 dark:text-blue-300 px-2 py-0.5 rounded font-mono text-[10px] font-extrabold uppercase">
+                                {veic.placa || "SEM PLACA"}
                               </span>
-                            </td>
+                              <span className="block font-bold text-slate-800 dark:text-slate-200 text-[11px] mt-0.5">
+                                {veic.marca} {veic.modelo}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 font-medium italic text-[11px]">Loja / Geral</span>
+                          )}
+                        </td>
 
-                            {/* Tipo */}
-                            <td className="p-3.5 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                              {c.tipo || "Fixo"}
-                            </td>
+                        {/* 5. Data */}
+                        <td className="p-3.5 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          <Calendar className="w-3.5 h-3.5 text-brand-blue inline-block mr-1" />
+                          {dataFmt}
+                        </td>
 
-                            {/* Vencimento */}
-                            <td className="p-3.5 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                              <Calendar className="w-3.5 h-3.5 text-brand-blue inline-block mr-1" />
-                              {dataVencFmt}
-                            </td>
+                        {/* 6. Valor */}
+                        <td className="p-3.5 whitespace-nowrap">
+                          <span className={`font-extrabold text-sm ${
+                            isEntrada 
+                              ? "text-emerald-600 dark:text-emerald-400" 
+                              : "text-rose-600 dark:text-rose-400"
+                          }`}>
+                            {isEntrada ? "+" : "-"} R$ {Number(m.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </span>
+                        </td>
 
-                            {/* Valor */}
-                            <td className="p-3.5 font-extrabold text-red-600 dark:text-red-400 whitespace-nowrap text-sm">
-                              - R$ {Number(c.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            </td>
+                        {/* 7. Status */}
+                        <td className="p-3.5 whitespace-nowrap">
+                          {isEntrada ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                              <CheckCircle className="w-3 h-3 text-emerald-600" />
+                              Recebido
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleToggleStatus(m.rawCusto?.id)}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase transition-all cursor-pointer ${
+                                m.isPago
+                                  ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-950 dark:text-green-200"
+                                  : "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-200"
+                              }`}
+                              title="Clique para alternar status entre Pago e A Pagar"
+                            >
+                              {m.isPago ? "Pago" : "A Pagar"}
+                            </button>
+                          )}
+                        </td>
 
-                            {/* Status */}
-                            <td className="p-3.5 whitespace-nowrap">
+                        {/* 8. Ações */}
+                        <td className="p-3.5 text-center whitespace-nowrap">
+                          {isEntrada ? (
+                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800">
+                              Venda Concluída
+                            </span>
+                          ) : (
+                            <div className="flex justify-center items-center gap-1.5">
                               <button
-                                onClick={() => handleToggleStatus(c.id)}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase transition-all cursor-pointer ${
-                                  isPago
-                                    ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-950 dark:text-green-200"
-                                    : "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-200"
-                                }`}
-                                title="Clique para alternar status entre Pago e A Pagar"
+                                onClick={() => startEditCusto(m.rawCusto)}
+                                className="p-1.5 rounded-lg border border-brand-blue/40 text-brand-blue hover:bg-brand-blue hover:text-white transition-all cursor-pointer"
+                                title="Editar"
                               >
-                                {isPago ? "Pago" : "A Pagar"}
+                                <Pencil className="w-3.5 h-3.5" />
                               </button>
-                            </td>
-
-                            {/* Ações */}
-                            <td className="p-3.5 text-center whitespace-nowrap">
-                              <div className="flex justify-center items-center gap-1.5">
-                                <button
-                                  onClick={() => startEditCusto(c)}
-                                  className="p-1.5 rounded-lg border border-brand-blue/40 text-brand-blue hover:bg-brand-blue hover:text-white transition-all cursor-pointer"
-                                  title="Editar"
-                                >
-                                  <Pencil className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteCusto(c.id)}
-                                  className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
-                                  title="Excluir"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        )}
+                              <button
+                                onClick={() => handleDeleteCusto(m.rawCusto?.id)}
+                                className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
                       </tr>
                     );
                   })
@@ -1088,12 +1404,12 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
           </div>
 
           {/* Paginação */}
-          {custosFiltrados.length > 0 && (
+          {movimentacoesFiltradas.length > 0 && (
             <div className="bg-gray-50/80 dark:bg-slate-800/80 border-t border-gray-200 dark:border-slate-700 px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <span className="text-gray-500 dark:text-gray-400 font-semibold text-[11px]">
                 Mostrando <span className="font-extrabold text-slate-900 dark:text-white">{inicioIndex + 1}</span> a{" "}
-                <span className="font-extrabold text-slate-900 dark:text-white">{Math.min(fimIndex, custosFiltrados.length)}</span> de{" "}
-                <span className="font-extrabold text-brand-blue">{custosFiltrados.length}</span> lançamentos
+                <span className="font-extrabold text-slate-900 dark:text-white">{Math.min(fimIndex, movimentacoesFiltradas.length)}</span> de{" "}
+                <span className="font-extrabold text-brand-blue">{movimentacoesFiltradas.length}</span> lançamentos no período
               </span>
 
               <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
@@ -1141,7 +1457,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                 <h3 className="font-extrabold text-base">
                   {formCusto.id ? "Editar Lançamento de Custo" : "Novo Lançamento Financeiro"}
                 </h3>
-                <p className="text-xs text-blue-200 font-medium">Preencha os detalhes do custo ou despesa</p>
+                <p className="text-xs text-blue-200 font-medium">Preencha os detalhes da despesa ou custo</p>
               </div>
               <button
                 onClick={() => setShowForm(false)}
@@ -1227,7 +1543,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                     <label className="block font-bold text-gray-700 uppercase mb-1">Descrição / Observação</label>
                     <input
                       type="text"
-                      placeholder="Ex: Troca de óleo, pastilhas, parcela..."
+                      placeholder="Ex: Troca de óleo, pastilhas, reparo de lataria..."
                       value={formCusto.descricao}
                       onChange={(e) => setFormCusto({ ...formCusto, descricao: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-medium focus:outline-none focus:border-brand-blue"
@@ -1241,7 +1557,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                     <input
                       type="text"
                       required
-                      placeholder="Ex: Aluguel do pátio, Conta de energia Copel..."
+                      placeholder="Ex: Aluguel do pátio, Conta de energia Copel, Internet..."
                       value={formCusto.descricao}
                       onChange={(e) => setFormCusto({ ...formCusto, descricao: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-slate-900 font-medium focus:outline-none focus:border-brand-blue"

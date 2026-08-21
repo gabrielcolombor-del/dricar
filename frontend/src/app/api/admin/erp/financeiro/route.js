@@ -71,7 +71,7 @@ export async function GET(request) {
     // Garante que custos recorrentes do mês vigente estejam gerados
     await syncRecorrentesForCurrentMonth();
 
-    const [custos, recorrentes] = await Promise.all([
+    const [custos, recorrentes, vendas] = await Promise.all([
       prisma.custoFixo.findMany({
         include: {
           recorrente: true,
@@ -99,6 +99,33 @@ export async function GET(request) {
             orderBy: [{ diaVencimento: "asc" }, { createdAt: "desc" }],
           })
         : [],
+      prisma.venda.findMany({
+        include: {
+          veiculo: {
+            select: {
+              id: true,
+              placa: true,
+              marca: true,
+              modelo: true,
+              anoFab: true,
+              anoMod: true,
+              valorCompra: true,
+              status: true,
+            },
+          },
+          cliente: {
+            select: {
+              id: true,
+              nome: true,
+              telefone: true,
+              cpfCnpj: true,
+            },
+          },
+        },
+        orderBy: {
+          dataVenda: "desc",
+        },
+      }),
     ]);
 
     // Calcula o total mensal de custos fixos ativos apenas se for Administrador
@@ -136,13 +163,14 @@ export async function GET(request) {
 
     return NextResponse.json({
       custos: sanitizedCustos,
+      vendas: vendas || [],
       recorrentes: isAdmin ? recorrentes : [],
       totalCustosFixosMensais: isAdmin ? totalCustosFixosMensais : 0,
       isAdmin,
     });
   } catch (error) {
     console.error("Erro ao carregar finanças:", error);
-    return NextResponse.json({ error: "Erro ao buscar custos gerais." }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao buscar dados financeiros." }, { status: 500 });
   }
 }
 
