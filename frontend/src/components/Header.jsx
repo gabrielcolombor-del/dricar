@@ -41,7 +41,7 @@ export default function Header() {
 
         {/* Desktop Button */}
         <a 
-          href="https://wa.me/5527999361212" 
+          href="https://wa.me/5527996361212" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="hidden sm:flex items-center gap-2 border border-white rounded-[25px] py-2 px-6 text-[14px] font-medium hover:bg-white hover:text-brand-blue transition-colors"
@@ -100,7 +100,7 @@ export default function Header() {
           </Link>
 
           <a 
-            href="https://wa.me/5527999361212" 
+            href="https://wa.me/5527996361212" 
             target="_blank" 
             rel="noopener noreferrer" 
             onClick={() => setIsMenuOpen(false)}

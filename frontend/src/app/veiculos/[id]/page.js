@@ -204,16 +204,21 @@ export default function ProductPage() {
 
               <div className="flex flex-col gap-3">
                 <a 
-                  href={`https://wa.me/5527999361212?text=Olá! Gostaria de saber mais informações sobre o ${car.title} ${car.subtitle} (${car.year}) anunciado por ${car.isOffer && car.promoPrice ? car.promoPrice : car.price}`}
+                  href={`https://wa.me/5527996361212?text=Olá! Gostaria de saber mais informações sobre o ${car.title} ${car.subtitle} (${car.year}) anunciado por ${car.isOffer && car.promoPrice ? car.promoPrice : car.price}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-brand-blue dark:bg-blue-600 text-white rounded-[25px] w-full py-3 text-center font-bold text-lg hover:bg-blue-900 dark:hover:bg-blue-500 transition-colors shadow-md flex items-center justify-center"
+                  className="bg-brand-blue dark:bg-blue-600 text-white rounded-[25px] w-full py-3 text-center font-bold text-lg hover:bg-blue-900 dark:hover:bg-blue-500 transition-colors shadow-md flex items-center justify-center cursor-pointer"
                 >
                   Fale conosco
                 </a>
-                <button className="border border-brand-blue dark:border-blue-400 text-brand-blue dark:text-blue-400 bg-white dark:bg-transparent rounded-[25px] w-full py-3 text-center font-bold text-lg hover:bg-brand-blue dark:hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                <a
+                  href={`https://wa.me/5527996361212?text=Olá! Gostaria de fazer uma simulação de financiamento para o ${car.title} ${car.subtitle} (${car.year}) anunciado por ${car.isOffer && car.promoPrice ? car.promoPrice : car.price}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="border border-brand-blue dark:border-blue-400 text-brand-blue dark:text-blue-400 bg-white dark:bg-transparent rounded-[25px] w-full py-3 text-center font-bold text-lg hover:bg-brand-blue dark:hover:bg-blue-600 hover:text-white transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                >
                   Simular Financiamento
-                </button>
+                </a>
               </div>
             </div>
           </div>

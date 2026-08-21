@@ -205,7 +205,7 @@ export default function AvalieSeuUsadoPage() {
 
     // Redireciona diretamente para o WhatsApp da DRI-CAR
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/5527999361212?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/5527996361212?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
   };
 
