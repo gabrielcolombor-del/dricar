@@ -321,7 +321,32 @@ export async function POST(request) {
       });
       return NextResponse.json({ success: true, custo: updated });
     } else {
-      // Criar novo lançamento
+      const { parcelas } = body;
+
+      if (parcelas && Array.isArray(parcelas) && parcelas.length > 0) {
+        const createdList = [];
+        for (const p of parcelas) {
+          const pValor = parseFloat(p.valor);
+          if (!isNaN(pValor) && pValor > 0) {
+            const pVenc = p.dataVencimento ? new Date(p.dataVencimento.includes("T") ? p.dataVencimento : p.dataVencimento + "T00:00:00Z") : new Date();
+            const newCusto = await prisma.custoFixo.create({
+              data: {
+                descricao: p.descricao ? p.descricao.trim() : descricao.trim(),
+                valor: pValor,
+                dataVencimento: pVenc,
+                statusPagamento: p.statusPagamento || statusPagamento || "A Pagar",
+                tipo: "Variável",
+                categoria: categoria ? categoria.trim() : "Geral",
+                origem: origem ? origem.trim() : "Operacional",
+              },
+            });
+            createdList.push(newCusto);
+          }
+        }
+        return NextResponse.json({ success: true, custos: createdList });
+      }
+
+      // Criar novo lançamento individual
       const valorFloat = parseFloat(valor);
 
       // Se marcou como Fixo Recorrente e é Admin, cria também o CustoRecorrente
@@ -345,8 +370,8 @@ export async function POST(request) {
         data: {
           descricao: descricao.trim(),
           valor: valorFloat,
-          dataVencimento: new Date(dataVencimento),
-          statusPagamento: statusPagamento || "Pendente",
+          dataVencimento: new Date(dataVencimento.includes("T") ? dataVencimento : dataVencimento + "T00:00:00Z"),
+          statusPagamento: statusPagamento || "A Pagar",
           tipo: isFixoRecorrente || tipo === "Fixo" ? "Fixo" : "Variável",
           categoria: categoria ? categoria.trim() : "Geral",
           origem: origem ? origem.trim() : "Operacional",

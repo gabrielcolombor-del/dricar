@@ -159,6 +159,54 @@ export async function POST(request) {
       return NextResponse.json({ success: true, despesa: updatedDespesa });
     }
 
+    if (parcelas && Array.isArray(parcelas) && parcelas.length > 0) {
+      const veiculo = await prisma.veiculo.findUnique({
+        where: { id: veiculoId },
+      });
+      if (!veiculo) {
+        return NextResponse.json({ error: "Veículo não encontrado." }, { status: 404 });
+      }
+
+      const origemFinal = origem || "Estoque";
+      const createdDespesas = [];
+
+      for (const p of parcelas) {
+        const pValor = parseFloat(p.valor);
+        if (!isNaN(pValor) && pValor > 0) {
+          const pVenc = p.dataVencimento ? new Date(p.dataVencimento.includes("T") ? p.dataVencimento : p.dataVencimento + "T00:00:00Z") : new Date();
+          const pDesc = p.descricao ? p.descricao.trim() : (descricao ? descricao.trim() : categoria.trim());
+          const descCustoFixo = `Despesa Placa: ${veiculo.placa || "SEM PLACA"} (${veiculo.marca} ${veiculo.modelo}) - ${categoria.trim()} - ${pDesc}`;
+
+          const newCusto = await prisma.custoFixo.create({
+            data: {
+              descricao: descCustoFixo,
+              valor: pValor,
+              dataVencimento: pVenc,
+              statusPagamento: p.statusPagamento || statusPagamento || "A Pagar",
+              tipo: "Variável",
+              categoria: categoria.trim(),
+              origem: origemFinal,
+            },
+          });
+
+          const newDep = await prisma.despesaVeiculo.create({
+            data: {
+              veiculoId,
+              categoria: categoria.trim(),
+              descricao: pDesc,
+              valor: pValor,
+              dataDespesa: pVenc,
+              custoFixoId: newCusto.id,
+            },
+          });
+
+          createdDespesas.push(newDep);
+        }
+      }
+
+      return NextResponse.json({ success: true, despesas: createdDespesas });
+    }
+
     const veiculo = await prisma.veiculo.findUnique({
       where: { id: veiculoId }
     });
@@ -167,15 +215,15 @@ export async function POST(request) {
     }
 
     const descAdicional = descricao && descricao.trim() ? ` - ${descricao.trim()}` : "";
-    const origemFinal = origem || "Pós Venda";
+    const origemFinal = origem || "Estoque";
 
     // Criar registro correspondente no Financeiro Geral (custos_fixos)
     const newCusto = await prisma.custoFixo.create({
       data: {
         descricao: `Despesa Placa: ${veiculo.placa || "SEM PLACA"} (${veiculo.marca} ${veiculo.modelo}) - ${categoria.trim()}${descAdicional}`,
         valor: parseFloat(valor),
-        dataVencimento: new Date(dataDespesa),
-        statusPagamento: "Pago",
+        dataVencimento: new Date(dataDespesa.includes("T") ? dataDespesa : dataDespesa + "T00:00:00Z"),
+        statusPagamento: statusPagamento || "A Pagar",
         tipo: "Variável",
         categoria: categoria.trim(),
         origem: origemFinal,
@@ -188,7 +236,7 @@ export async function POST(request) {
         categoria: categoria.trim(),
         descricao: descricao ? descricao.trim() : null,
         valor: parseFloat(valor),
-        dataDespesa: new Date(dataDespesa),
+        dataDespesa: new Date(dataDespesa.includes("T") ? dataDespesa : dataDespesa + "T00:00:00Z"),
         custoFixoId: newCusto.id,
       },
     });

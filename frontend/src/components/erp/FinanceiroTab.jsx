@@ -30,7 +30,8 @@ import {
   Filter,
   DollarSign,
   User,
-  HelpCircle
+  HelpCircle,
+  SplitSquareVertical
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from "react";
 
@@ -48,6 +49,27 @@ const MESES = [
   { value: "10", label: "Novembro" },
   { value: "11", label: "Dezembro" },
 ];
+
+// Helper para somar meses a uma data ISO (YYYY-MM-DD) preservando dia com segurança
+function addMonthsToIsoDate(baseIsoDate, monthsToAdd) {
+  if (!baseIsoDate) return new Date().toISOString().split("T")[0];
+  const [yearStr, monthStr, dayStr] = baseIsoDate.split("-");
+  let year = parseInt(yearStr, 10);
+  let month = parseInt(monthStr, 10) - 1; // 0-indexed
+  let day = parseInt(dayStr, 10);
+
+  month += monthsToAdd;
+  year += Math.floor(month / 12);
+  month = ((month % 12) + 12) % 12;
+
+  // Ajusta dia máximo para meses com menos dias (ex: 31 de Jan + 1 mês -> 28/29 de Fev)
+  const maxDaysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const validDay = Math.min(day, maxDaysInMonth);
+
+  const mm = String(month + 1).padStart(2, "0");
+  const dd = String(validDay).padStart(2, "0");
+  return `${year}-${mm}-${dd}`;
+}
 
 export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
   const [custos, setCustos] = useState([]);
@@ -91,7 +113,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const ITENS_POR_PAGINA = 15;
 
-  // Modal Lançamento de Custo Individual
+  // Modal Lançamento de Custo Individual / Parcelado
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -108,6 +130,10 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
     isFixoRecorrente: false,
     veiculoId: "",
     categoriaVeiculo: "Mecânica",
+    // Parcelamento
+    isParcelado: false,
+    qtdParcelas: "2",
+    modoValorParcela: "total", // 'total' (valor digitado é o total a dividir) ou 'parcela' (valor digitado é por parcela)
   });
 
   // Modal Gestão de Custo Fixo Recorrente (Exclusivo Administrador)
@@ -175,7 +201,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
     setFormRecorrente(prev => ({ ...prev, valor: formatted }));
   };
 
-  // Salvar Lançamento Individual (Custo de Veículo ou Custo Operacional)
+  // Salvar Lançamento Individual ou Parcelado
   const handleSubmitCusto = async (e) => {
     e.preventDefault();
     setFormLoading(true);
@@ -191,35 +217,92 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
     try {
       let res;
-      if (formMode === "veiculo") {
-        if (!formCusto.veiculoId) {
-          setFormError("Selecione o veículo responsável.");
-          setFormLoading(false);
-          return;
+
+      // Se for um novo lançamento com parcelamento ativado
+      if (formCusto.isParcelado && !formCusto.id) {
+        const qtd = Math.max(parseInt(formCusto.qtdParcelas) || 2, 2);
+        const valorPorParcela = formCusto.modoValorParcela === "total"
+          ? valorNum / qtd
+          : valorNum;
+
+        const baseDesc = formCusto.descricao.trim();
+        const parcelas = [];
+
+        for (let i = 1; i <= qtd; i++) {
+          const dataVencIso = addMonthsToIsoDate(formCusto.dataVencimento, i - 1);
+          parcelas.push({
+            numero: i,
+            totalParcelas: qtd,
+            descricao: `${baseDesc} (${i}/${qtd})`,
+            valor: valorPorParcela,
+            dataVencimento: dataVencIso,
+            statusPagamento: formCusto.statusPagamento || "A Pagar",
+          });
         }
 
-        res = await fetch("/api/admin/erp/despesas-veiculos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            veiculoId: formCusto.veiculoId,
-            categoria: formCusto.categoriaVeiculo,
-            descricao: formCusto.descricao,
-            valor: valorNum,
-            dataDespesa: formCusto.dataVencimento,
-            origem: "Estoque",
-          }),
-        });
+        if (formMode === "veiculo") {
+          if (!formCusto.veiculoId) {
+            setFormError("Selecione o veículo responsável.");
+            setFormLoading(false);
+            return;
+          }
+
+          res = await fetch("/api/admin/erp/despesas-veiculos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              veiculoId: formCusto.veiculoId,
+              categoria: formCusto.categoriaVeiculo,
+              descricao: formCusto.descricao,
+              parcelas,
+              origem: "Estoque",
+              statusPagamento: formCusto.statusPagamento,
+            }),
+          });
+        } else {
+          // Custo Operacional Geral Parcelado
+          res = await fetch("/api/admin/erp/financeiro", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...formCusto,
+              parcelas,
+            }),
+          });
+        }
       } else {
-        // Custo Operacional Geral
-        res = await fetch("/api/admin/erp/financeiro", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...formCusto,
-            valor: valorNum,
-          }),
-        });
+        // Lançamento Individual Simples (ou Edição)
+        if (formMode === "veiculo") {
+          if (!formCusto.veiculoId) {
+            setFormError("Selecione o veículo responsável.");
+            setFormLoading(false);
+            return;
+          }
+
+          res = await fetch("/api/admin/erp/despesas-veiculos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              veiculoId: formCusto.veiculoId,
+              categoria: formCusto.categoriaVeiculo,
+              descricao: formCusto.descricao,
+              valor: valorNum,
+              dataDespesa: formCusto.dataVencimento,
+              origem: "Estoque",
+              statusPagamento: formCusto.statusPagamento,
+            }),
+          });
+        } else {
+          // Custo Operacional Geral
+          res = await fetch("/api/admin/erp/financeiro", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...formCusto,
+              valor: valorNum,
+            }),
+          });
+        }
       }
 
       const data = await res.json();
@@ -237,6 +320,9 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
           isFixoRecorrente: false,
           veiculoId: "",
           categoriaVeiculo: "Mecânica",
+          isParcelado: false,
+          qtdParcelas: "2",
+          modoValorParcela: "total",
         });
         fetchData();
       } else {
@@ -385,6 +471,9 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
       isFixoRecorrente: false,
       veiculoId: "",
       categoriaVeiculo: "Mecânica",
+      isParcelado: false,
+      qtdParcelas: "2",
+      modoValorParcela: "total",
     });
     setFormError("");
     setShowForm(true);
@@ -684,6 +773,46 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
     ? `Período personalizado (${dataInicio ? new Date(dataInicio + "T00:00:00Z").toLocaleDateString("pt-BR") : "Início"} até ${dataFim ? new Date(dataFim + "T23:59:59Z").toLocaleDateString("pt-BR") : "Fim"})`
     : `${mesLabelAtual} de ${filtroAno || "Todos os Anos"}`;
 
+  // Cálculo ao vivo para a pré-visualização das parcelas no modal
+  const parcelamentoPreview = useMemo(() => {
+    if (!formCusto.isParcelado) return null;
+
+    const clean = formCusto.valor.replace(/\D/g, "");
+    const valorDigitadoNum = (parseFloat(clean) || 0) / 100;
+    const qtd = Math.max(parseInt(formCusto.qtdParcelas) || 2, 2);
+
+    let totalNum = 0;
+    let valorParcelaNum = 0;
+
+    if (formCusto.modoValorParcela === "total") {
+      totalNum = valorDigitadoNum;
+      valorParcelaNum = totalNum / qtd;
+    } else {
+      valorParcelaNum = valorDigitadoNum;
+      totalNum = valorParcelaNum * qtd;
+    }
+
+    const parcelas = [];
+    const baseDate = formCusto.dataVencimento || new Date().toISOString().split("T")[0];
+
+    for (let i = 1; i <= qtd; i++) {
+      const dIso = addMonthsToIsoDate(baseDate, i - 1);
+      parcelas.push({
+        numero: i,
+        totalParcelas: qtd,
+        dataVencimento: dIso,
+        valor: valorParcelaNum,
+      });
+    }
+
+    return {
+      qtd,
+      totalNum,
+      valorParcelaNum,
+      parcelas,
+    };
+  }, [formCusto.isParcelado, formCusto.valor, formCusto.qtdParcelas, formCusto.modoValorParcela, formCusto.dataVencimento]);
+
   return (
     <div className="space-y-6 text-gray-800 animate-fade-in">
       
@@ -735,6 +864,9 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                 isFixoRecorrente: false,
                 veiculoId: "",
                 categoriaVeiculo: "Mecânica",
+                isParcelado: false,
+                qtdParcelas: "2",
+                modoValorParcela: "total",
               });
               setFormMode(activeMainTab === "veiculos" ? "veiculo" : "geral");
               setFormError("");
@@ -1541,8 +1673,8 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
       {/* MODAL: NOVO / EDITAR LANÇAMENTO DE CUSTO */}
       {showForm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-gray-200 animate-scale-in">
-            <div className="bg-brand-blue p-5 text-white flex justify-between items-center">
+          <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-gray-200 animate-scale-in max-h-[90vh] flex flex-col">
+            <div className="bg-brand-blue p-5 text-white flex justify-between items-center shrink-0">
               <div>
                 <h3 className="font-extrabold text-base">
                   {formCusto.id ? "Editar Lançamento" : "Novo Lançamento Financeiro"}
@@ -1557,7 +1689,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitCusto} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSubmitCusto} className="p-6 space-y-4 text-xs overflow-y-auto">
               {formError && (
                 <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-200 font-bold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -1677,7 +1809,11 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Valor (R$) *</label>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">
+                    {formCusto.isParcelado
+                      ? (formCusto.modoValorParcela === "total" ? "Valor Total (R$) *" : "Valor por Parcela (R$) *")
+                      : "Valor (R$) *"}
+                  </label>
                   <input
                     type="text"
                     required
@@ -1689,7 +1825,9 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Data de Vencimento *</label>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">
+                    {formCusto.isParcelado ? "1º Vencimento *" : "Data de Vencimento *"}
+                  </label>
                   <input
                     type="date"
                     required
@@ -1701,7 +1839,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 uppercase mb-1">Status do Pagamento *</label>
+                <label className="block font-bold text-gray-700 uppercase mb-1">Status Inicial do Pagamento *</label>
                 <select
                   value={formCusto.statusPagamento}
                   onChange={(e) => setFormCusto({ ...formCusto, statusPagamento: e.target.value })}
@@ -1711,6 +1849,113 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                   <option value="Pago">Pago</option>
                 </select>
               </div>
+
+              {/* OPÇÃO DE PARCELAMENTO (NOVO LANÇAMENTO) */}
+              {!formCusto.id && (
+                <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={formCusto.isParcelado}
+                        onChange={(e) => setFormCusto({ ...formCusto, isParcelado: e.target.checked })}
+                        className="w-4 h-4 text-brand-blue rounded border-gray-300 focus:ring-brand-blue cursor-pointer"
+                      />
+                      <span className="font-extrabold text-brand-blue text-xs uppercase flex items-center gap-1.5">
+                        <SplitSquareVertical className="w-4 h-4 text-brand-blue" />
+                        Parcelar este custo em várias vezes (Cobranças Futuras)
+                      </span>
+                    </label>
+                  </div>
+
+                  {formCusto.isParcelado && (
+                    <div className="space-y-3 pt-2 border-t border-blue-200/80 animate-fade-in">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-gray-700 uppercase mb-1">
+                            Número de Parcelas *
+                          </label>
+                          <select
+                            value={formCusto.qtdParcelas}
+                            onChange={(e) => setFormCusto({ ...formCusto, qtdParcelas: e.target.value })}
+                            className="w-full border border-blue-300 rounded-lg p-2 bg-white text-slate-900 font-extrabold text-xs focus:outline-none focus:border-brand-blue"
+                          >
+                            {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 18, 24, 36, 48, 60].map((num) => (
+                              <option key={num} value={String(num)}>
+                                {num}x ({num} parcelas mensais)
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-gray-700 uppercase mb-1">
+                            Definição do Valor *
+                          </label>
+                          <div className="grid grid-cols-2 gap-1 bg-white p-1 rounded-lg border border-blue-300 text-[11px]">
+                            <button
+                              type="button"
+                              onClick={() => setFormCusto({ ...formCusto, modoValorParcela: "total" })}
+                              className={`py-1 rounded font-bold transition-all cursor-pointer ${
+                                formCusto.modoValorParcela === "total"
+                                  ? "bg-brand-blue text-white shadow-2xs"
+                                  : "text-gray-600 hover:text-gray-900"
+                              }`}
+                            >
+                              Valor Total
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setFormCusto({ ...formCusto, modoValorParcela: "parcela" })}
+                              className={`py-1 rounded font-bold transition-all cursor-pointer ${
+                                formCusto.modoValorParcela === "parcela"
+                                  ? "bg-brand-blue text-white shadow-2xs"
+                                  : "text-gray-600 hover:text-gray-900"
+                              }`}
+                            >
+                              Por Parcela
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Pré-visualização do Cronograma de Parcelas */}
+                      {parcelamentoPreview && (
+                        <div className="bg-white border border-blue-200 rounded-xl p-3 text-[11px] space-y-2">
+                          <div className="flex items-center justify-between font-extrabold text-slate-800">
+                            <span>Resumo do Parcelamento:</span>
+                            <span className="text-brand-blue">
+                              {parcelamentoPreview.qtd}x de R$ {parcelamentoPreview.valorParcelaNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-gray-500 font-semibold">
+                            Total: <strong className="text-rose-600 font-bold">R$ {parcelamentoPreview.totalNum.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> distribuído mês a mês:
+                          </div>
+
+                          <div className="max-h-28 overflow-y-auto space-y-1 pr-1 divide-y divide-gray-100">
+                            {parcelamentoPreview.parcelas.map((p) => {
+                              const [y, m, d] = p.dataVencimento.split("-");
+                              return (
+                                <div key={p.numero} className="flex items-center justify-between py-1 text-[10px]">
+                                  <span className="font-bold text-gray-700">
+                                    Parcela {p.numero}/{p.totalParcelas}
+                                  </span>
+                                  <span className="text-gray-500 font-medium">
+                                    📅 {d}/{m}/{y}
+                                  </span>
+                                  <span className="font-extrabold text-rose-600">
+                                    - R$ {p.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex justify-end gap-2.5 pt-3 border-t border-gray-200">
                 <button
@@ -1723,9 +1968,11 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-5 py-2 rounded-xl bg-brand-blue text-white font-extrabold hover:opacity-90 transition-all shadow-sm cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-brand-blue text-white font-extrabold hover:opacity-90 transition-all shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  {formLoading ? "Salvando..." : "Salvar Lançamento"}
+                  {formLoading ? "Salvando..." : (
+                    formCusto.isParcelado ? `Salvar Custo Parcelado (${formCusto.qtdParcelas}x)` : "Salvar Lançamento"
+                  )}
                 </button>
               </div>
             </form>
