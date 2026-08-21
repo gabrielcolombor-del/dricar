@@ -255,18 +255,18 @@ export async function POST(request) {
       data: { status: "sold" },
     });
 
-    // Se houver parcelas de Nota Promissória, cadastrar cada parcela no Financeiro Geral
+    // Se houver parcelas de Nota Promissória, cadastrar cada parcela no Financeiro Geral como Recebimento Futuro
     if (promissoriaParcelas && Array.isArray(promissoriaParcelas) && promissoriaParcelas.length > 0) {
       for (const p of promissoriaParcelas) {
         const pValor = parseFloat(p.valor);
         if (!isNaN(pValor) && pValor > 0) {
-          const pVencimento = p.dataVencimento ? new Date(p.dataVencimento) : new Date();
+          const pVencimento = p.dataVencimento ? new Date(p.dataVencimento.includes("T") ? p.dataVencimento : p.dataVencimento + "T00:00:00Z") : new Date();
           const newCusto = await prisma.custoFixo.create({
             data: {
               descricao: `Nota Promissória (${p.numero}/${p.totalParcelas}) - Placa: ${veiculo.placa || "SEM PLACA"} (${veiculo.marca} ${veiculo.modelo}) - Comprador: ${buyerName || "Cliente"}`,
               valor: pValor,
               dataVencimento: pVencimento,
-              statusPagamento: "A Pagar",
+              statusPagamento: "A Receber",
               tipo: "Variável",
               categoria: "Promissória",
               origem: "Venda",

@@ -29,7 +29,8 @@ import {
   Wallet,
   Filter,
   DollarSign,
-  User
+  User,
+  HelpCircle
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from "react";
 
@@ -66,8 +67,8 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
   // Navegação Principal de Abas
   // 'extrato' = Extrato & Fluxo Geral (Todas as Entradas e Saídas unificadas)
-  // 'entradas' = Entradas (Vendas de Veículos)
-  // 'veiculos' = Custos de Veículos (despesas de preparação, peças, oficina, promissórias)
+  // 'entradas' = Entradas & Recebimentos (Vendas de Veículos + Notas Promissórias a receber/recebidas)
+  // 'veiculos' = Custos de Veículos (despesas de preparação, peças, oficina)
   // 'operacionais' = Custos Operacionais da Loja (aluguel, salários, água, luz, contas)
   const [activeMainTab, setActiveMainTab] = useState("extrato");
 
@@ -84,7 +85,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
   // Filtros Avançados de Busca
   const [busca, setBusca] = useState("");
-  const [filtroTipo, setFiltroTipo] = useState(""); // '' = Todos, 'entrada' = Entradas, 'saida' = Saídas
+  const [filtroTipo, setFiltroTipo] = useState(""); // '' = Todos, 'entrada' = Entradas, 'promissoria' = Promissórias, 'saida' = Saídas
   const [filtroCategoria, setFiltroCategoria] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -299,7 +300,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
     }
   };
 
-  // Alternar Status de Pagamento (Pago <-> A Pagar)
+  // Alternar Status (Pago <-> A Pagar para custos; Recebido <-> A Receber para promissórias)
   const handleToggleStatus = async (id) => {
     try {
       const res = await fetch("/api/admin/erp/financeiro", {
@@ -403,24 +404,32 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
     setShowRecorrenteModal(true);
   };
 
-  // Auxiliares de Origem e Categoria
-  const isCustoVeiculo = (c) => {
+  // Identificador de Nota Promissória (Recebimento de Venda)
+  const isPromissoria = (c) => {
     return Boolean(
-      c.despesaVeiculo ||
-      c.origem === "Estoque" ||
-      c.origem === "Pós Venda" ||
-      c.origem === "Venda" ||
       c.categoria === "Promissória" ||
-      c.descricao?.toLowerCase().startsWith("despesa placa:") ||
+      c.categoria === "Nota Promissória" ||
+      c.origem === "Venda" ||
       c.descricao?.toLowerCase().startsWith("nota promissória")
     );
   };
 
-  // Consolidar todas as movimentações financeiras (Entradas das Vendas + Saídas dos Custos)
+  // Identificador de Custo de Veículo (Despesa real de oficina/estoque, exceto promissória)
+  const isCustoVeiculo = (c) => {
+    if (isPromissoria(c)) return false;
+    return Boolean(
+      c.despesaVeiculo ||
+      c.origem === "Estoque" ||
+      c.origem === "Pós Venda" ||
+      c.descricao?.toLowerCase().startsWith("despesa placa:")
+    );
+  };
+
+  // Consolidar todas as movimentações financeiras (Vendas + Promissórias a receber/recebidas + Saídas dos Custos)
   const todasMovimentacoes = useMemo(() => {
     const lista = [];
 
-    // 1. Inserir ENTRADAS (Vendas de Veículos)
+    // 1. Inserir ENTRADAS DIRETAS (Vendas de Veículos)
     vendas.forEach(v => {
       const valorVenda = parseFloat(v.valorVendaVeiculo) || 0;
       const valorRetorno = parseFloat(v.valorRetornoBancario) || 0;
@@ -430,6 +439,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
       lista.push({
         id: `venda-${v.id}`,
         tipo: "entrada",
+        isPromissoria: false,
         tipoLabel: "Entrada (Venda)",
         categoria: "Venda de Veículo",
         descricao: `Venda ${v.veiculo ? `${v.veiculo.marca} ${v.veiculo.modelo} [${v.veiculo.placa || 'SEM PLACA'}]` : 'Veículo'}${compradorNome ? ` • Comprador: ${compradorNome}` : ''}`,
@@ -449,27 +459,53 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
       });
     });
 
-    // 2. Inserir SAÍDAS (Custos de Veículos e Custos Operacionais)
+    // 2. Processar registros de CUSTOS / NOTAS PROMISSÓRIAS
     custos.forEach(c => {
-      const isVeic = isCustoVeiculo(c);
-      lista.push({
-        id: `custo-${c.id}`,
-        tipo: "saida",
-        tipoLabel: isVeic ? "Saída (Veículo)" : "Saída (Operacional)",
-        categoria: c.categoria || "Geral",
-        descricao: c.descricao,
-        detalheSecundario: c.recorrenteId ? "Custo Fixo Recorrente Mensal" : null,
-        data: c.dataVencimento ? new Date(c.dataVencimento) : (c.createdAt ? new Date(c.createdAt) : new Date()),
-        dataRaw: c.dataVencimento || c.createdAt,
-        valor: parseFloat(c.valor) || 0,
-        status: c.statusPagamento || "A Pagar",
-        isPago: c.statusPagamento === "Pago",
-        origem: c.origem || (isVeic ? "Estoque" : "Operacional"),
-        tipoCusto: c.tipo || "Fixo",
-        veiculo: c.despesaVeiculo?.veiculo,
-        recorrenteId: c.recorrenteId,
-        rawCusto: c,
-      });
+      if (isPromissoria(c)) {
+        // NOTA PROMISSÓRIA = ENTRADA / RECEBIMENTO (A Receber ou Recebido)
+        const isRecebido = c.statusPagamento === "Recebido" || c.statusPagamento === "Pago";
+        lista.push({
+          id: `custo-${c.id}`,
+          tipo: "entrada",
+          isPromissoria: true,
+          tipoLabel: "Entrada (Promissória)",
+          categoria: "Nota Promissória",
+          descricao: c.descricao,
+          detalheSecundario: isRecebido ? "Parcela quitada / recebida" : "Recebimento pendente do cliente",
+          data: c.dataVencimento ? new Date(c.dataVencimento) : (c.createdAt ? new Date(c.createdAt) : new Date()),
+          dataRaw: c.dataVencimento || c.createdAt,
+          valor: parseFloat(c.valor) || 0,
+          status: isRecebido ? "Recebido" : "A Receber",
+          isPago: isRecebido,
+          origem: "Venda",
+          tipoCusto: "Promissória",
+          veiculo: c.despesaVeiculo?.veiculo,
+          rawCusto: c,
+        });
+      } else {
+        // CUSTO / DESPESA REAL = SAÍDA (Veículo ou Operacional)
+        const isVeic = isCustoVeiculo(c);
+        const isPago = c.statusPagamento === "Pago";
+        lista.push({
+          id: `custo-${c.id}`,
+          tipo: "saida",
+          isPromissoria: false,
+          tipoLabel: isVeic ? "Saída (Veículo)" : "Saída (Operacional)",
+          categoria: c.categoria || "Geral",
+          descricao: c.descricao,
+          detalheSecundario: c.recorrenteId ? "Custo Fixo Recorrente Mensal" : null,
+          data: c.dataVencimento ? new Date(c.dataVencimento) : (c.createdAt ? new Date(c.createdAt) : new Date()),
+          dataRaw: c.dataVencimento || c.createdAt,
+          valor: parseFloat(c.valor) || 0,
+          status: isPago ? "Pago" : "A Pagar",
+          isPago: isPago,
+          origem: c.origem || (isVeic ? "Estoque" : "Operacional"),
+          tipoCusto: c.tipo || "Fixo",
+          veiculo: c.despesaVeiculo?.veiculo,
+          recorrenteId: c.recorrenteId,
+          rawCusto: c,
+        });
+      }
     });
 
     // Ordenação decrescente por data
@@ -506,13 +542,14 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
         }
       }
       if (activeMainTab === "operacionais") {
-        if (m.tipo !== "saida" || isCustoVeiculo(m.rawCusto)) {
+        if (m.tipo !== "saida" || isCustoVeiculo(m.rawCusto) || isPromissoria(m.rawCusto)) {
           return false;
         }
       }
 
       // 2. Filtro de Tipo de Movimentação (dentro do Extrato)
       if (filtroTipo === "entrada" && m.tipo !== "entrada") return false;
+      if (filtroTipo === "promissoria" && !m.isPromissoria) return false;
       if (filtroTipo === "saida" && m.tipo !== "saida") return false;
 
       // 3. Filtro de Texto / Busca Geral
@@ -544,8 +581,10 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
       // 5. Filtro por Status
       if (filtroStatus) {
-        if (filtroStatus === "Pago" && !m.isPago) return false;
-        if (filtroStatus === "A Pagar" && m.isPago) return false;
+        if (filtroStatus === "Recebido" && (!m.isPago || m.tipo !== "entrada")) return false;
+        if (filtroStatus === "A Receber" && (m.isPago || m.tipo !== "entrada")) return false;
+        if (filtroStatus === "Pago" && (!m.isPago || m.tipo !== "saida")) return false;
+        if (filtroStatus === "A Pagar" && (m.isPago || m.tipo !== "saida")) return false;
       }
 
       // 6. Filtro por Data (Período de Datas Personalizado ou Mês/Ano)
@@ -575,16 +614,25 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
   // Métricas / KPIs calculados com base no filtro atual
   const metricas = useMemo(() => {
-    let totalEntradas = 0;
+    let totalEntradasRecebidas = 0;
+    let totalRecebimentosPendentes = 0;
     let qtdVendas = 0;
+    let qtdPromissoriasPendentes = 0;
+    let qtdPromissoriasRecebidas = 0;
     let totalSaidas = 0;
     let totalSaidasPagas = 0;
     let totalSaidasPendentes = 0;
 
     movimentacoesFiltradas.forEach(m => {
       if (m.tipo === "entrada") {
-        totalEntradas += m.valor;
-        qtdVendas += 1;
+        if (m.isPago) {
+          totalEntradasRecebidas += m.valor;
+          if (m.isPromissoria) qtdPromissoriasRecebidas += 1;
+          else qtdVendas += 1;
+        } else {
+          totalRecebimentosPendentes += m.valor;
+          if (m.isPromissoria) qtdPromissoriasPendentes += 1;
+        }
       } else {
         totalSaidas += m.valor;
         if (m.isPago) {
@@ -595,17 +643,22 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
       }
     });
 
-    const saldoLiquido = totalEntradas - totalSaidas;
-    const margemLucro = totalEntradas > 0 ? (saldoLiquido / totalEntradas) * 100 : 0;
+    const totalEntradasGeral = totalEntradasRecebidas + totalRecebimentosPendentes;
+    const saldoLiquidoRealizado = totalEntradasRecebidas - totalSaidasPagas;
+    const saldoLiquidoProjetado = totalEntradasGeral - totalSaidas;
 
     return {
-      totalEntradas,
+      totalEntradasRecebidas,
+      totalRecebimentosPendentes,
+      totalEntradasGeral,
       qtdVendas,
+      qtdPromissoriasPendentes,
+      qtdPromissoriasRecebidas,
       totalSaidas,
       totalSaidasPagas,
       totalSaidasPendentes,
-      saldoLiquido,
-      margemLucro,
+      saldoLiquidoRealizado,
+      saldoLiquidoProjetado,
       totalMovimentacoes: movimentacoesFiltradas.length,
     };
   }, [movimentacoesFiltradas]);
@@ -642,7 +695,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             Central Financeira & Fluxo de Caixa Geral
           </h4>
           <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">
-            Gestão integrada de entradas de vendas, despesas de veículos, contas operacionais e custos fixos recorrentes.
+            Gestão integrada de vendas de veículos, notas promissórias parceladas, despesas de estoque e custos operacionais.
           </p>
         </div>
 
@@ -697,25 +750,44 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
       {/* KPI STATS CARDS (FLUXO DE CAIXA COMPLETO) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {/* CARD 1: Total Entradas (Vendas de Carros) */}
+        {/* CARD 1: Entradas Recebidas (Vendas & Pagamentos) */}
         <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-emerald-500">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block">
-              Entradas (Vendas de Carros)
+              Entradas Recebidas
             </span>
             <span className="p-1 rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
               <ArrowUpRight className="w-4 h-4" />
             </span>
           </div>
           <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-            + R$ {metricas.totalEntradas.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            + R$ {metricas.totalEntradasRecebidas.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <span className="text-[11px] text-gray-400 mt-1 block font-medium">
-            {metricas.qtdVendas} veículo{metricas.qtdVendas === 1 ? "" : "s"} vendido{metricas.qtdVendas === 1 ? "" : "s"} no período
+            {metricas.qtdVendas} venda{metricas.qtdVendas === 1 ? "" : "s"}
+            {metricas.qtdPromissoriasRecebidas > 0 ? ` • ${metricas.qtdPromissoriasRecebidas} promissória(s) quitada(s)` : ""}
           </span>
         </div>
 
-        {/* CARD 2: Total Saídas (Custos & Despesas) */}
+        {/* CARD 2: Recebimentos Pendentes (Promissórias A Receber) */}
+        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-blue-500">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block">
+              Recebimentos Pendentes (Promissórias)
+            </span>
+            <span className="p-1 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+              <Clock className="w-4 h-4" />
+            </span>
+          </div>
+          <p className="text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">
+            + R$ {metricas.totalRecebimentosPendentes.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <span className="text-[11px] text-gray-400 mt-1 block font-medium">
+            {metricas.qtdPromissoriasPendentes} parcela{metricas.qtdPromissoriasPendentes === 1 ? "" : "s"} a receber em {periodoLabelTexto}
+          </span>
+        </div>
+
+        {/* CARD 3: Saídas (Custos & Despesas) */}
         <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-rose-500">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block">
@@ -729,49 +801,31 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             - R$ {metricas.totalSaidas.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <span className="text-[11px] text-gray-400 mt-1 block font-medium">
-            Pago: R$ {metricas.totalSaidasPagas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            Pago: R$ {metricas.totalSaidasPagas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} • A Pagar: R$ {metricas.totalSaidasPendentes.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </span>
         </div>
 
-        {/* CARD 3: Balanço / Saldo Líquido do Período */}
+        {/* CARD 4: Balanço / Saldo Líquido do Período */}
         <div className={`rounded-2xl p-4 sm:p-5 shadow-sm border ${
-          metricas.saldoLiquido >= 0
+          metricas.saldoLiquidoRealizado >= 0
             ? "bg-gradient-to-br from-slate-900 to-blue-950 text-white border-slate-800"
             : "bg-gradient-to-br from-rose-950 to-slate-900 text-white border-rose-900"
         }`}>
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider block">
-              Balanço Líquido do Mês
+              Balanço Líquido (Realizado)
             </span>
             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-              metricas.saldoLiquido >= 0 ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40" : "bg-rose-500/30 text-rose-300 border border-rose-500/40"
+              metricas.saldoLiquidoRealizado >= 0 ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40" : "bg-rose-500/30 text-rose-300 border border-rose-500/40"
             }`}>
-              {metricas.saldoLiquido >= 0 ? "Superávit / Lucro" : "Déficit"}
+              {metricas.saldoLiquidoRealizado >= 0 ? "Superávit" : "Déficit"}
             </span>
           </div>
-          <p className={`text-xl sm:text-2xl font-extrabold mt-1 ${metricas.saldoLiquido >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-            {metricas.saldoLiquido >= 0 ? "+ " : "" }R$ {metricas.saldoLiquido.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <p className={`text-xl sm:text-2xl font-extrabold mt-1 ${metricas.saldoLiquidoRealizado >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+            {metricas.saldoLiquidoRealizado >= 0 ? "+ " : "" }R$ {metricas.saldoLiquidoRealizado.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <span className="text-[11px] text-blue-200/80 mt-1 block font-medium">
-            Entradas (-) Saídas em {periodoLabelTexto}
-          </span>
-        </div>
-
-        {/* CARD 4: Total A Pagar / Pendente ou Custos Fixos */}
-        <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-5 shadow-sm border-l-4 border-l-amber-500">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block">
-              Despesas A Pagar (Pendente)
-            </span>
-            <span className="p-1 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-              <Clock className="w-4 h-4" />
-            </span>
-          </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
-            R$ {metricas.totalSaidasPendentes.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-          <span className="text-[11px] text-gray-400 mt-1 block font-medium">
-            {effectiveIsAdmin ? `Custos Fixos Mensais: R$ ${totalCustosFixosMensais.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "Aguardando quitação"}
+            Projetado c/ pendências: R$ {metricas.saldoLiquidoProjetado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </span>
         </div>
       </div>
@@ -872,7 +926,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Buscar por placa, modelo, comprador, despesa, aluguel..."
+                placeholder="Buscar por placa, modelo, comprador, promissória, despesa..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
                 className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 pl-8 pr-7 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium placeholder-gray-400 focus:outline-none focus:border-brand-blue"
@@ -892,16 +946,17 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
           </div>
 
           {/* Filtro por Tipo de Movimentação */}
-          <div className="w-full sm:w-auto min-w-[140px]">
+          <div className="w-full sm:w-auto min-w-[150px]">
             <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">Tipo</label>
             <select
               value={filtroTipo}
               onChange={(e) => setFiltroTipo(e.target.value)}
               className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
             >
-              <option value="">Todas (Entradas e Saídas)</option>
-              <option value="entrada">🟢 Apenas Entradas (Vendas)</option>
-              <option value="saida">🔴 Apenas Saídas (Despesas)</option>
+              <option value="">Todas as Movimentações</option>
+              <option value="entrada">🟢 Apenas Entradas (Vendas & Promissórias)</option>
+              <option value="promissoria">📜 Apenas Notas Promissórias</option>
+              <option value="saida">🔴 Apenas Saídas (Custos & Despesas)</option>
             </select>
           </div>
 
@@ -915,14 +970,15 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             >
               <option value="">Todas as Categorias</option>
               <option value="Venda de Veículo">Venda de Veículo (Entrada)</option>
-              {categoriasDisponiveis.filter(c => c !== "Venda de Veículo").map(c => (
+              <option value="Nota Promissória">Nota Promissória (Entrada)</option>
+              {categoriasDisponiveis.filter(c => c !== "Venda de Veículo" && c !== "Nota Promissória").map(c => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
 
           {/* Filtro por Status */}
-          <div className="w-full sm:w-auto min-w-[130px]">
+          <div className="w-full sm:w-auto min-w-[140px]">
             <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider mb-1">Status</label>
             <select
               value={filtroStatus}
@@ -930,8 +986,10 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
               className="w-full border border-gray-300 dark:border-slate-700 rounded-lg py-2 px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
             >
               <option value="">Todos os Status</option>
-              <option value="Pago">Pago / Recebido</option>
-              <option value="A Pagar">A Pagar / Pendente</option>
+              <option value="Recebido">✅ Recebido (Entrada)</option>
+              <option value="A Receber">🕒 A Receber (Promissória Pendente)</option>
+              <option value="Pago">✅ Pago (Despesa)</option>
+              <option value="A Pagar">🟡 A Pagar (Despesa Pendente)</option>
             </select>
           </div>
         </div>
@@ -1003,7 +1061,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             <span>Extrato & Fluxo Geral</span>
           </button>
 
-          {/* ABA 2: Entradas (Vendas de Veículos) */}
+          {/* ABA 2: Entradas & Recebimentos (Vendas + Promissórias) */}
           <button
             onClick={() => setActiveMainTab("entradas")}
             className={`px-4 py-2.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 ${
@@ -1013,7 +1071,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             }`}
           >
             <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400 group-hover:text-white" />
-            <span>Entradas (Vendas)</span>
+            <span>Entradas & Recebimentos</span>
           </button>
 
           {/* ABA 3: Custos de Veículos */}
@@ -1186,7 +1244,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
           </div>
         </div>
       ) : (
-        /* TABELA DE MOVIMENTAÇÕES (EXTRATO GERAL / ENTRADAS / CUSTOS DE VEÍCULOS / CUSTOS OPERACIONAIS) */
+        /* TABELA DE MOVIMENTAÇÕES (EXTRATO GERAL / ENTRADAS & PROMISSÓRIAS / CUSTOS DE VEÍCULOS / CUSTOS OPERACIONAIS) */
         <div className="bg-white dark:bg-[#0e1b42] border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-2 bg-gray-50/50 dark:bg-slate-800/50">
             <div>
@@ -1194,19 +1252,19 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                 {activeMainTab === "extrato" && (
                   <>
                     <BarChart2 className="w-4 h-4" />
-                    <span>Extrato & Fluxo de Caixa Geral (Entradas e Saídas)</span>
+                    <span>Extrato & Fluxo de Caixa Geral (Entradas, Promissórias e Saídas)</span>
                   </>
                 )}
                 {activeMainTab === "entradas" && (
                   <>
                     <TrendingUp className="w-4 h-4 text-emerald-600" />
-                    <span>Registro de Entradas Financeiras (Vendas de Veículos)</span>
+                    <span>Entradas Financeiras & Promissórias Parceladas</span>
                   </>
                 )}
                 {activeMainTab === "veiculos" && (
                   <>
                     <Car className="w-4 h-4" />
-                    <span>Custos e Despesas de Veículos (Preparação, Oficina, Promissórias)</span>
+                    <span>Custos e Despesas de Veículos (Preparação, Oficina, Peças)</span>
                   </>
                 )}
                 {activeMainTab === "operacionais" && (
@@ -1266,18 +1324,28 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                       ? m.data.toLocaleDateString("pt-BR", { timeZone: "UTC" })
                       : "-";
                     const isEntrada = m.tipo === "entrada";
+                    const isProm = m.isPromissoria;
                     const veic = m.veiculo;
 
                     return (
                       <tr 
                         key={m.id} 
                         className={`hover:bg-gray-50/70 dark:hover:bg-slate-800/50 transition-colors ${
-                          isEntrada ? "bg-emerald-50/20 dark:bg-emerald-950/10" : ""
+                          isProm 
+                            ? "bg-blue-50/20 dark:bg-blue-950/10"
+                            : isEntrada 
+                            ? "bg-emerald-50/20 dark:bg-emerald-950/10" 
+                            : ""
                         }`}
                       >
-                        {/* 1. Tipo (Entrada vs Saída) */}
+                        {/* 1. Tipo (Entrada vs Promissória vs Saída) */}
                         <td className="p-3.5 whitespace-nowrap">
-                          {isEntrada ? (
+                          {isProm ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200 border border-blue-300 dark:border-blue-800 shadow-2xs">
+                              <ArrowUpRight className="w-3.5 h-3.5 text-blue-600" />
+                              Promissória
+                            </span>
+                          ) : isEntrada ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 shadow-2xs">
                               <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" />
                               Entrada
@@ -1305,10 +1373,10 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                         {/* 3. Categoria */}
                         <td className="p-3.5 whitespace-nowrap">
                           <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                            isEntrada 
+                            isProm
+                              ? "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200 border border-blue-200"
+                              : isEntrada 
                               ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200" 
-                              : m.categoria === "Promissória"
-                              ? "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200"
                               : "bg-gray-100 text-gray-800 dark:bg-slate-800 dark:text-slate-200"
                           }`}>
                             {m.categoria}
@@ -1350,7 +1418,29 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
                         {/* 7. Status */}
                         <td className="p-3.5 whitespace-nowrap">
-                          {isEntrada ? (
+                          {isProm ? (
+                            <button
+                              onClick={() => handleToggleStatus(m.rawCusto?.id)}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase transition-all cursor-pointer ${
+                                m.isPago
+                                  ? "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-950 dark:text-green-200"
+                                  : "bg-blue-100 text-blue-900 hover:bg-blue-200 dark:bg-blue-950 dark:text-blue-200 border border-blue-300"
+                              }`}
+                              title="Clique para alternar entre Recebido e A Receber"
+                            >
+                              {m.isPago ? (
+                                <>
+                                  <CheckCircle className="w-3 h-3 text-green-600" />
+                                  <span>Recebido</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Clock className="w-3 h-3 text-blue-600" />
+                                  <span>A Receber</span>
+                                </>
+                              )}
+                            </button>
+                          ) : isEntrada ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
                               <CheckCircle className="w-3 h-3 text-emerald-600" />
                               Recebido
@@ -1372,7 +1462,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
                         {/* 8. Ações */}
                         <td className="p-3.5 text-center whitespace-nowrap">
-                          {isEntrada ? (
+                          {isEntrada && !isProm ? (
                             <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded border border-emerald-200 dark:border-emerald-800">
                               Venda Concluída
                             </span>
@@ -1455,9 +1545,9 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             <div className="bg-brand-blue p-5 text-white flex justify-between items-center">
               <div>
                 <h3 className="font-extrabold text-base">
-                  {formCusto.id ? "Editar Lançamento de Custo" : "Novo Lançamento Financeiro"}
+                  {formCusto.id ? "Editar Lançamento" : "Novo Lançamento Financeiro"}
                 </h3>
-                <p className="text-xs text-blue-200 font-medium">Preencha os detalhes da despesa ou custo</p>
+                <p className="text-xs text-blue-200 font-medium">Preencha os detalhes do custo ou despesa</p>
               </div>
               <button
                 onClick={() => setShowForm(false)}
@@ -1529,7 +1619,6 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                     >
                       <option value="Mecânica">Mecânica</option>
                       <option value="Funilaria">Funilaria</option>
-                      <option value="Promissória">Nota Promissória</option>
                       <option value="Lavagem">Lavagem</option>
                       <option value="IPVA">IPVA</option>
                       <option value="Documento">Documento</option>

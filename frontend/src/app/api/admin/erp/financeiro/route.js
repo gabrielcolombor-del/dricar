@@ -290,7 +290,14 @@ export async function POST(request) {
       const custo = await prisma.custoFixo.findUnique({ where: { id } });
       if (!custo) return NextResponse.json({ error: "Lançamento não encontrado." }, { status: 404 });
 
-      const newStatus = custo.statusPagamento === "Pago" ? "A Pagar" : "Pago";
+      const isRecebimento = custo.categoria === "Promissória" || custo.origem === "Venda" || custo.descricao?.toLowerCase().includes("nota promissória");
+      let newStatus;
+      if (isRecebimento) {
+        newStatus = (custo.statusPagamento === "Recebido" || custo.statusPagamento === "Pago") ? "A Receber" : "Recebido";
+      } else {
+        newStatus = custo.statusPagamento === "Pago" ? "A Pagar" : "Pago";
+      }
+
       const updated = await prisma.custoFixo.update({
         where: { id },
         data: { statusPagamento: newStatus },
