@@ -99,11 +99,9 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
   // 'recorrentes' = Configuração de Custos Fixos Recorrentes (Aluguel, Salários, etc.)
   const [activeOperacionalSubTab, setActiveOperacionalSubTab] = useState("lancamentos");
 
-  // Filtros de Mês, Ano e Período
+  // Filtros de Mês e Ano
   const [filtroMes, setFiltroMes] = useState(mesAtualStr); // Padrão: Mês Atual
   const [filtroAno, setFiltroAno] = useState(anoAtualStr); // Padrão: Ano Atual
-  const [dataInicio, setDataInicio] = useState("");
-  const [dataFim, setDataFim] = useState("");
 
   // Filtros Avançados de Busca
   const [busca, setBusca] = useState("");
@@ -152,7 +150,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
   // Resetar paginação ao alterar qualquer filtro
   useEffect(() => {
     setPaginaAtual(1);
-  }, [busca, filtroMes, filtroAno, dataInicio, dataFim, filtroTipo, filtroCategoria, filtroStatus, activeMainTab, activeOperacionalSubTab]);
+  }, [busca, filtroMes, filtroAno, filtroTipo, filtroCategoria, filtroStatus, activeMainTab, activeOperacionalSubTab]);
 
   async function fetchData() {
     setLoading(true);
@@ -676,30 +674,19 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
         if (filtroStatus === "A Pagar" && (m.isPago || m.tipo !== "saida")) return false;
       }
 
-      // 6. Filtro por Data (Período de Datas Personalizado ou Mês/Ano)
-      if (dataInicio || dataFim) {
-        const dInicio = dataInicio ? new Date(dataInicio + "T00:00:00Z") : null;
-        const dFim = dataFim ? new Date(dataFim + "T23:59:59Z") : null;
-        const dt = m.data;
-        if (dt) {
-          if (dInicio && dt < dInicio) return false;
-          if (dFim && dt > dFim) return false;
-        }
-      } else {
-        // Se não tem período de datas específico preenchido, usa Filtro de Mês e Ano
-        if (filtroAno) {
-          const anoMov = m.data.getFullYear();
-          if (anoMov !== parseInt(filtroAno)) return false;
-        }
-        if (filtroMes !== "") {
-          const mesMov = m.data.getMonth(); // 0 a 11
-          if (mesMov !== parseInt(filtroMes)) return false;
-        }
+      // 6. Filtro por Mês e Ano
+      if (filtroAno) {
+        const anoMov = m.data.getFullYear();
+        if (anoMov !== parseInt(filtroAno)) return false;
+      }
+      if (filtroMes !== "") {
+        const mesMov = m.data.getMonth(); // 0 a 11
+        if (mesMov !== parseInt(filtroMes)) return false;
       }
 
       return true;
     });
-  }, [todasMovimentacoes, activeMainTab, filtroTipo, busca, filtroCategoria, filtroStatus, dataInicio, dataFim, filtroAno, filtroMes]);
+  }, [todasMovimentacoes, activeMainTab, filtroTipo, busca, filtroCategoria, filtroStatus, filtroAno, filtroMes]);
 
   // Métricas / KPIs calculados com base no filtro atual
   const metricas = useMemo(() => {
@@ -769,9 +756,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
 
   // Label do mês e ano filtrado para exibição nos cabeçalhos
   const mesLabelAtual = filtroMes !== "" ? MESES.find(m => m.value === filtroMes)?.label : "Todos os Meses";
-  const periodoLabelTexto = (dataInicio || dataFim)
-    ? `Período personalizado (${dataInicio ? new Date(dataInicio + "T00:00:00Z").toLocaleDateString("pt-BR") : "Início"} até ${dataFim ? new Date(dataFim + "T23:59:59Z").toLocaleDateString("pt-BR") : "Fim"})`
-    : `${mesLabelAtual} de ${filtroAno || "Todos os Anos"}`;
+  const periodoLabelTexto = `${mesLabelAtual} de ${filtroAno || "Todos os Anos"}`;
 
   // Cálculo ao vivo para a pré-visualização das parcelas no modal
   const parcelamentoPreview = useMemo(() => {
@@ -976,12 +961,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             {/* Seletor de Mês */}
             <select
               value={filtroMes}
-              onChange={(e) => {
-                setFiltroMes(e.target.value);
-                // Limpa período personalizado para dar preferência ao mês
-                setDataInicio("");
-                setDataFim("");
-              }}
+              onChange={(e) => setFiltroMes(e.target.value)}
               className="border border-blue-200 dark:border-slate-600 rounded-lg py-1.5 px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-extrabold focus:outline-none focus:border-brand-blue"
             >
               <option value="">Todos os Meses</option>
@@ -995,11 +975,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             {/* Seletor de Ano */}
             <select
               value={filtroAno}
-              onChange={(e) => {
-                setFiltroAno(e.target.value);
-                setDataInicio("");
-                setDataFim("");
-              }}
+              onChange={(e) => setFiltroAno(e.target.value)}
               className="border border-blue-200 dark:border-slate-600 rounded-lg py-1.5 px-3 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-extrabold focus:outline-none focus:border-brand-blue"
             >
               <option value="">Todos os Anos</option>
@@ -1011,13 +987,11 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             </select>
 
             {/* Atalho Mês Atual */}
-            {(filtroMes !== mesAtualStr || filtroAno !== anoAtualStr || dataInicio || dataFim) && (
+            {(filtroMes !== mesAtualStr || filtroAno !== anoAtualStr) && (
               <button
                 onClick={() => {
                   setFiltroMes(mesAtualStr);
                   setFiltroAno(anoAtualStr);
-                  setDataInicio("");
-                  setDataFim("");
                 }}
                 className="bg-brand-blue text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-all cursor-pointer shadow-xs flex items-center gap-1"
                 title="Voltar para o mês corrente"
@@ -1032,8 +1006,6 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
                 onClick={() => {
                   setFiltroMes("");
                   setFiltroAno("");
-                  setDataInicio("");
-                  setDataFim("");
                 }}
                 className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-[11px] font-bold px-2 py-1 rounded-md transition-colors cursor-pointer"
               >
@@ -1047,7 +1019,7 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
           </div>
         </div>
 
-        {/* LINHA DE FILTROS SECUNDÁRIOS: BUSCA, TIPO, CATEGORIA, STATUS E PERÍODO PERSONALIZADO */}
+        {/* LINHA DE FILTROS SECUNDÁRIOS: BUSCA, TIPO, CATEGORIA E STATUS */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Campo de Busca Geral */}
           <div className="flex-grow min-w-[220px]">
@@ -1124,54 +1096,6 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
               <option value="A Pagar">🟡 A Pagar (Despesa Pendente)</option>
             </select>
           </div>
-        </div>
-
-        {/* Período Personalizado (De / Até) */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-150 dark:border-slate-700 w-full text-xs">
-          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5 text-brand-blue" />
-            Ou selecione Período de Datas Específico:
-          </span>
-
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-gray-400 font-medium">De:</span>
-            <input
-              type="date"
-              value={dataInicio}
-              onChange={(e) => {
-                setDataInicio(e.target.value);
-                setFiltroMes("");
-              }}
-              className="border border-gray-300 dark:border-slate-700 rounded-lg py-1 px-2 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
-            />
-          </div>
-
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-gray-400 font-medium">Até:</span>
-            <input
-              type="date"
-              value={dataFim}
-              onChange={(e) => {
-                setDataFim(e.target.value);
-                setFiltroMes("");
-              }}
-              className="border border-gray-300 dark:border-slate-700 rounded-lg py-1 px-2 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-brand-blue"
-            />
-          </div>
-
-          {(dataInicio || dataFim) && (
-            <button
-              onClick={() => { 
-                setDataInicio(""); 
-                setDataFim("");
-                setFiltroMes(mesAtualStr);
-                setFiltroAno(anoAtualStr);
-              }}
-              className="text-red-600 hover:text-red-800 text-[11px] font-bold bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
-            >
-              ✕ Limpar Período
-            </button>
-          )}
         </div>
 
       </div>
