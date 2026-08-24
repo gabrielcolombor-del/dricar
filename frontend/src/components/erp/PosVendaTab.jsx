@@ -105,6 +105,7 @@ export default function PosVendaTab({ isAdmin = false }) {
           descricao: formExpense.descricao,
           valor: valorNum,
           dataDespesa: formExpense.dataDespesa,
+          origem: "Pós Venda",
         }),
       });
 
@@ -206,6 +207,7 @@ export default function PosVendaTab({ isAdmin = false }) {
           descricao: editExpense.descricao,
           valor: valorNum,
           dataDespesa: editExpense.dataDespesa,
+          origem: "Pós Venda",
         }),
       });
 

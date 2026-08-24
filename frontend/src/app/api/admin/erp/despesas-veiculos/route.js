@@ -53,7 +53,8 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { action, id, veiculoId, categoria, descricao, valor, dataDespesa, origem } = body;
+    console.log("Recebendo POST em despesas-veiculos:", body);
+    const { action, id, veiculoId, categoria, descricao, valor, dataDespesa, origem, parcelas, statusPagamento } = body;
 
     const role = session.user.role?.toLowerCase();
     if (role === "seller") {

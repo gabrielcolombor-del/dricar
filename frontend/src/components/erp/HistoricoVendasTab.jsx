@@ -255,6 +255,7 @@ export default function HistoricoVendasTab({ isAdmin = false }) {
           descricao: formExpense.descricao,
           valor: valorNum,
           dataDespesa: formExpense.dataDespesa,
+          origem: "Pós Venda",
         }),
       });
 

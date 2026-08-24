@@ -21,10 +21,15 @@ export const metadata = {
   description: "Encontre seu próximo carro na Dri-Car Veículos. As melhores ofertas de Hatch, Sedan e SUVs.",
 };
 
+export const viewport = {
+  colorScheme: "light",
+  themeColor: "#FFFFFF",
+};
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-BR" className={`${kantumruy.variable} ${louisGeorge.variable} antialiased h-full`}>
-      <body className="min-h-full flex flex-col bg-brand-white text-brand-blue dark:bg-[#070f26] dark:text-slate-100 transition-colors duration-300">
+    <html lang="pt-BR" style={{ colorScheme: "light" }} className={`${kantumruy.variable} ${louisGeorge.variable} antialiased h-full`}>
+      <body className="min-h-full flex flex-col bg-brand-white text-brand-blue transition-colors duration-300">
         <ThemeProvider>
           {children}
         </ThemeProvider>
