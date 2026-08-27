@@ -73,7 +73,7 @@ export default function PosVendaTab({ isAdmin = false }) {
   const handlePriceChange = (val) => {
     const clean = val.replace(/\D/g, "");
     if (!clean) return setFormExpense(prev => ({ ...prev, valor: "" }));
-    const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
+    const formatted = "R$ " + (Number(clean) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     setFormExpense(prev => ({ ...prev, valor: formatted }));
   };
 
@@ -174,7 +174,7 @@ export default function PosVendaTab({ isAdmin = false }) {
   const handleEditPriceChange = (val) => {
     const clean = val.replace(/\D/g, "");
     if (!clean) return setEditExpense(prev => ({ ...prev, valor: "" }));
-    const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
+    const formatted = "R$ " + (Number(clean) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     setEditExpense(prev => ({ ...prev, valor: formatted }));
   };
 

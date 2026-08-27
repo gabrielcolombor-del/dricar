@@ -250,7 +250,7 @@ export default function CrmTab() {
   const handlePriceChange = (val, field) => {
     const clean = val.replace(/\D/g, "");
     if (!clean) return setFormVenda(prev => ({ ...prev, [field]: "" }));
-    const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
+    const formatted = "R$ " + (Number(clean) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     setFormVenda(prev => ({ ...prev, [field]: formatted }));
   };
 

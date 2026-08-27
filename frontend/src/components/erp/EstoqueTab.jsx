@@ -224,14 +224,14 @@ export default function EstoqueTab() {
   const handlePriceChange = (val, field) => {
     const clean = val.replace(/\D/g, "");
     if (!clean) return setFormVeiculo(prev => ({ ...prev, [field]: "" }));
-    const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
+    const formatted = "R$ " + (Number(clean) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     setFormVeiculo(prev => ({ ...prev, [field]: formatted }));
   };
 
   const handleExpensePriceChange = (val) => {
     const clean = val.replace(/\D/g, "");
     if (!clean) return setFormExpense(prev => ({ ...prev, valor: "" }));
-    const formatted = "R$ " + Number(clean).toLocaleString("pt-BR");
+    const formatted = "R$ " + (Number(clean) / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     setFormExpense(prev => ({ ...prev, valor: formatted }));
   };
 

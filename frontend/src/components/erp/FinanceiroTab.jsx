@@ -31,9 +31,11 @@ import {
   DollarSign,
   User,
   HelpCircle,
-  SplitSquareVertical
+  SplitSquareVertical,
+  Download
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from "react";
+import * as XLSX from "xlsx";
 
 const MESES = [
   { value: "0", label: "Janeiro" },
@@ -688,6 +690,29 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
     });
   }, [todasMovimentacoes, activeMainTab, filtroTipo, busca, filtroCategoria, filtroStatus, filtroAno, filtroMes]);
 
+  // Função para exportar os dados exibidos para Excel
+  const handleExportExcel = () => {
+    const dataToExport = movimentacoesFiltradas.map(m => {
+      const isEntrada = m.tipo === "entrada";
+      const valorNum = Number(m.valor) || 0;
+      return {
+        "Data": m.data instanceof Date && !isNaN(m.data.getTime()) ? m.data.toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "-",
+        "Tipo": isEntrada ? "Entrada" : "Saída",
+        "Categoria": m.categoria || "-",
+        "Descrição": m.descricao || "-",
+        "Veículo/Placa": m.veiculo ? `${m.veiculo.placa || "Sem Placa"} - ${m.veiculo.marca} ${m.veiculo.modelo}` : "-",
+        "Status": m.status || "-",
+        "Valor (R$)": isEntrada ? valorNum : -valorNum,
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Finanças");
+    
+    XLSX.writeFile(workbook, `Relatorio_Financeiro_${periodoLabelTexto.replace(/ /g, "_")}.xlsx`);
+  };
+
   // Métricas / KPIs calculados com base no filtro atual
   const metricas = useMemo(() => {
     let totalEntradasRecebidas = 0;
@@ -1014,8 +1039,19 @@ export default function FinanceiroTab({ isAdmin: propIsAdmin = false }) {
             )}
           </div>
 
-          <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400">
-            Visualizando: <span className="font-extrabold text-brand-blue dark:text-blue-300">{periodoLabelTexto}</span>
+          <div className="flex items-center gap-4">
+            <div className="text-[11px] font-bold text-gray-500 dark:text-gray-400">
+              Visualizando: <span className="font-extrabold text-brand-blue dark:text-blue-300">{periodoLabelTexto}</span>
+            </div>
+            
+            <button
+              onClick={handleExportExcel}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+              title="Baixar em Excel"
+            >
+              <Download className="w-4 h-4" />
+              <span>Exportar</span>
+            </button>
           </div>
         </div>
 
