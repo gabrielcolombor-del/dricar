@@ -1055,7 +1055,7 @@ export default function AdminPage() {
                     </button>
                   )}
                   
-                  {(isAdmin || user?.role?.toLowerCase() === "manager") && (
+                  {(isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && (
                     <button 
                       onClick={() => { setActiveTab("erp_historico_vendas"); setEditingCar(null); clearUploadStates(); }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${activeTab === "erp_historico_vendas" ? "bg-brand-blue text-white shadow-sm dark:bg-blue-600" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800/80"}`}
@@ -1189,7 +1189,7 @@ export default function AdminPage() {
             {/* ERP TABS RENDERING */}
             {activeTab === "erp_dashboard" && isAdmin && <DashboardTab />}
             {activeTab === "erp_estoque" && (isAdmin || user?.role?.toLowerCase() === "manager") && <EstoqueTab />}
-            {activeTab === "erp_historico_vendas" && (isAdmin || user?.role?.toLowerCase() === "manager") && <HistoricoVendasTab isAdmin={isAdmin} />}
+            {activeTab === "erp_historico_vendas" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <HistoricoVendasTab isAdmin={isAdmin} />}
             {activeTab === "erp_crm" && <CrmTab />}
             {activeTab === "erp_clientes" && (isAdmin || user?.role?.toLowerCase() === "manager") && <ClientesTab />}
             {activeTab === "erp_posvenda" && (isAdmin || user?.role?.toLowerCase() === "manager" || user?.role?.toLowerCase() === "posvenda") && <PosVendaTab isAdmin={isAdmin} />}
