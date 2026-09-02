@@ -125,7 +125,7 @@ export default function AdminPage() {
       setActiveTab("erp_crm");
     } else if (role === "manager" && !["erp_estoque", "erp_crm", "erp_clientes", "erp_posvenda", "erp_financeiro", "estoque", "cadastrar"].includes(activeTab)) {
       setActiveTab("erp_estoque");
-    } else if (role === "posvenda" && !["erp_crm", "erp_posvenda"].includes(activeTab)) {
+    } else if (role === "posvenda" && !["erp_crm", "erp_posvenda", "erp_historico_vendas"].includes(activeTab)) {
       setActiveTab("erp_posvenda");
     }
   }, [user, activeTab]);
