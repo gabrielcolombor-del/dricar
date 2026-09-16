@@ -22,6 +22,7 @@ export async function GET(request) {
           despesas: {
             orderBy: { dataDespesa: "desc" },
           },
+          car: true,
           vendas: {
             include: { cliente: true },
           },
@@ -33,6 +34,7 @@ export async function GET(request) {
     const veiculos = await prisma.veiculo.findMany({
       include: {
         despesas: true,
+        car: true,
         vendas: {
           include: { cliente: true },
         },

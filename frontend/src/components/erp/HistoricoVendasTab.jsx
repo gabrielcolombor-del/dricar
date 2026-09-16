@@ -476,7 +476,10 @@ export default function HistoricoVendasTab({ isAdmin = false }) {
                           {v.placa}
                         </td>
                         <td className="p-4 text-xs font-bold">
-                          {v.marca} {v.modelo}
+                          <div>{v.marca} {v.modelo}</div>
+                          <div className="text-[10px] text-gray-500 font-medium mt-0.5">
+                            KM: {v.car?.mileage || "Não informada"}
+                          </div>
                         </td>
                         <td className="p-4 text-xs text-gray-500 dark:text-gray-400">
                           {v.anoFab}/{v.anoMod}
@@ -595,6 +598,9 @@ export default function HistoricoVendasTab({ isAdmin = false }) {
                   Placa: {selectedVeiculo.placa}
                 </h4>
                 <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">{selectedVeiculo.marca} {selectedVeiculo.modelo}</p>
+                <p className="text-[11px] font-medium text-gray-500 mt-1">
+                  KM Entrada: <span className="font-bold text-slate-800 dark:text-slate-200">{selectedVeiculo.car?.mileage || "Não informada"}</span>
+                </p>
               </div>
               <button
                 onClick={() => setSelectedVeiculo(null)}
