@@ -243,24 +243,15 @@ export default function ProductPage() {
             {/* Gallery Main Image */}
             <div className="flex-1">
               <div 
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                className="relative bg-gray-100 dark:bg-slate-800/80 w-full aspect-[4/3] rounded-xl flex items-center justify-center text-gray-400 dark:text-gray-500 overflow-hidden shadow-md group border border-transparent dark:border-white/10"
+                onClick={() => setIsModalOpen(true)}
+                className="relative bg-gray-100 dark:bg-slate-800/80 w-full aspect-[4/3] rounded-xl flex items-center justify-center text-gray-400 dark:text-gray-500 overflow-hidden shadow-md group border border-transparent dark:border-white/10 cursor-pointer hover:opacity-95 transition-opacity"
               >
                 {carImages.length > 0 ? (
-                  <>
-                    <img 
-                      src={carImages[activeImageIndex]} 
-                      alt={`${car.title} ${car.subtitle} - Foto ${activeImageIndex + 1}`} 
-                      className="w-full h-full object-cover transition-all duration-300 pointer-events-none" 
-                    />
-                    {/* Invisible overlay that perfectly catches all clicks over the image area */}
-                    <div 
-                      className="absolute inset-0 z-0 cursor-pointer"
-                      onClick={() => setIsModalOpen(true)}
-                    />
-                  </>
+                  <img 
+                    src={carImages[activeImageIndex]} 
+                    alt={`${car.title} ${car.subtitle} - Foto ${activeImageIndex + 1}`} 
+                    className="w-full h-full object-cover transition-all duration-300 pointer-events-none" 
+                  />
                 ) : (
                   <span className="text-sm z-10 relative pointer-events-none">Sem Foto</span>
                 )}
@@ -270,8 +261,6 @@ export default function ProductPage() {
                   <>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev === 0 ? carImages.length - 1 : prev - 1)); }}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      onTouchEnd={(e) => e.stopPropagation()}
                       className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2.5 shadow-md transition-colors cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 flex items-center justify-center z-10"
                       title="Anterior"
                     >
@@ -281,8 +270,6 @@ export default function ProductPage() {
                     </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev === carImages.length - 1 ? 0 : prev + 1)); }}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      onTouchEnd={(e) => e.stopPropagation()}
                       className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2.5 shadow-md transition-colors cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 flex items-center justify-center z-10"
                       title="Próxima"
                     >
@@ -300,8 +287,6 @@ export default function ProductPage() {
                       <button
                         key={index}
                         onClick={(e) => { e.stopPropagation(); setActiveImageIndex(index); }}
-                        onTouchStart={(e) => e.stopPropagation()}
-                        onTouchEnd={(e) => e.stopPropagation()}
                         className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
                           activeImageIndex === index ? "bg-white scale-125" : "bg-white/50 hover:bg-white/80"
                         }`}
