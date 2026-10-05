@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CarCard from "@/components/CarCard";
@@ -15,8 +15,20 @@ export default function ProductPage() {
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isModalOpen]);
 
   useEffect(() => {
     async function fetchCars() {
@@ -78,33 +90,152 @@ export default function ProductPage() {
     : (car.imageUrl ? [car.imageUrl] : ["/images/ford ka.png"]);
 
   const handleTouchStart = (e) => {
-    setTouchStart(e.targetTouches[0].clientX);
+    touchStartRef.current = e.targetTouches[0].clientX;
+    touchEndRef.current = null;
   };
 
   const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
+    touchEndRef.current = e.targetTouches[0].clientX;
   };
 
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
+  const handleTouchEnd = (e) => {
+    if (touchStartRef.current === null) return;
+    
+    const distance = touchEndRef.current !== null ? touchStartRef.current - touchEndRef.current : 0;
+    
+    // It's a tap. Real mobile devices often suppress native clicks if touch handlers exist.
+    // So we explicitly open the modal here.
+    if (touchEndRef.current === null || Math.abs(distance) < 10) {
+      setIsModalOpen(true);
+      touchStartRef.current = null;
+      touchEndRef.current = null;
+      return;
+    }
+
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
     
     if (isLeftSwipe) {
       setActiveImageIndex(prev => (prev === carImages.length - 1 ? 0 : prev + 1));
-    }
-    if (isRightSwipe) {
+    } else if (isRightSwipe) {
       setActiveImageIndex(prev => (prev === 0 ? carImages.length - 1 : prev - 1));
     }
-    setTouchStart(0);
-    setTouchEnd(0);
+    
+    touchStartRef.current = null;
+    touchEndRef.current = null;
   };
 
   return (
     <>
       <Header />
       
+      {/* Fullscreen Image Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[99999] bg-black flex flex-col touch-none overscroll-none">
+          
+          {/* Header do modal */}
+          <div className="flex items-center justify-between p-4 z-50 bg-black/80">
+            <span className="text-white font-bold text-base md:text-lg px-1 md:px-2">
+              {activeImageIndex + 1} / {carImages.length}
+            </span>
+            <div className="flex items-center gap-3 md:gap-5 text-white px-1 md:px-2">
+              {/* Zoom */}
+              <button className="hover:text-gray-300 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                </svg>
+              </button>
+              {/* Play */}
+              <button className="hover:text-gray-300 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" />
+                </svg>
+              </button>
+              {/* Fullscreen */}
+              <button className="hover:text-gray-300 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+              </button>
+              {/* Grid */}
+              <button className="hover:text-gray-300 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5 md:w-6 md:h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 0120.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+              </button>
+              {/* Close */}
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsModalOpen(false); }}
+                className="hover:text-gray-300 transition-colors ml-1 md:ml-2"
+                title="Fechar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6 md:w-7 md:h-7">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          {/* Container da imagem */}
+          <div 
+            className="relative flex-1 w-full flex items-center justify-center p-0"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <img 
+              src={carImages[activeImageIndex]} 
+              alt="Foto ampliada" 
+              className="w-full h-auto max-h-full object-contain select-none cursor-default"
+            />
+            
+            {carImages.length > 1 && (
+              <>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev === 0 ? carImages.length - 1 : prev - 1)); }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full p-3 shadow-lg transition-colors z-50 cursor-pointer border border-white/20"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev === carImages.length - 1 ? 0 : prev + 1)); }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full p-3 shadow-lg transition-colors z-50 cursor-pointer border border-white/20"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
+          
+          {/* Miniaturas do Modal (Bottom) */}
+          {carImages.length > 1 && (
+            <div className="w-full bg-black/90 p-4 pt-2" onClick={(e) => e.stopPropagation()}>
+              <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2">
+                {carImages.map((imgUrl, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => { e.stopPropagation(); setActiveImageIndex(index); }}
+                    className={`relative w-20 aspect-[4/3] rounded overflow-hidden flex-shrink-0 transition-all cursor-pointer ${
+                      activeImageIndex === index ? "border-2 border-red-600 opacity-100" : "border-2 border-transparent opacity-60 hover:opacity-100"
+                    }`}
+                  >
+                    <img 
+                      src={imgUrl} 
+                      alt={`Miniatura modal ${index + 1}`} 
+                      className="w-full h-full object-cover" 
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <main className="flex-1 w-full max-w-[1200px] mx-auto py-12 px-6">
         {/* Product Details Section */}
         <section className="flex flex-col gap-8 mb-16">
@@ -118,20 +249,29 @@ export default function ProductPage() {
                 className="relative bg-gray-100 dark:bg-slate-800/80 w-full aspect-[4/3] rounded-xl flex items-center justify-center text-gray-400 dark:text-gray-500 overflow-hidden shadow-md group border border-transparent dark:border-white/10"
               >
                 {carImages.length > 0 ? (
-                  <img 
-                    src={carImages[activeImageIndex]} 
-                    alt={`${car.title} ${car.subtitle} - Foto ${activeImageIndex + 1}`} 
-                    className="w-full h-full object-cover transition-all duration-300" 
-                  />
+                  <>
+                    <img 
+                      src={carImages[activeImageIndex]} 
+                      alt={`${car.title} ${car.subtitle} - Foto ${activeImageIndex + 1}`} 
+                      className="w-full h-full object-cover transition-all duration-300 pointer-events-none" 
+                    />
+                    {/* Invisible overlay that perfectly catches all clicks over the image area */}
+                    <div 
+                      className="absolute inset-0 z-0 cursor-pointer"
+                      onClick={() => setIsModalOpen(true)}
+                    />
+                  </>
                 ) : (
-                  <span className="text-sm">Sem Foto</span>
+                  <span className="text-sm z-10 relative pointer-events-none">Sem Foto</span>
                 )}
 
                 {/* Setas de navegação lateral (só aparecem se houver mais de 1 imagem) */}
                 {carImages.length > 1 && (
                   <>
                     <button 
-                      onClick={() => setActiveImageIndex(prev => (prev === 0 ? carImages.length - 1 : prev - 1))}
+                      onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev === 0 ? carImages.length - 1 : prev - 1)); }}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onTouchEnd={(e) => e.stopPropagation()}
                       className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2.5 shadow-md transition-colors cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 flex items-center justify-center z-10"
                       title="Anterior"
                     >
@@ -140,7 +280,9 @@ export default function ProductPage() {
                       </svg>
                     </button>
                     <button 
-                      onClick={() => setActiveImageIndex(prev => (prev === carImages.length - 1 ? 0 : prev + 1))}
+                      onClick={(e) => { e.stopPropagation(); setActiveImageIndex(prev => (prev === carImages.length - 1 ? 0 : prev + 1)); }}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onTouchEnd={(e) => e.stopPropagation()}
                       className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2.5 shadow-md transition-colors cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 flex items-center justify-center z-10"
                       title="Próxima"
                     >
@@ -157,7 +299,9 @@ export default function ProductPage() {
                     {carImages.map((_, index) => (
                       <button
                         key={index}
-                        onClick={() => setActiveImageIndex(index)}
+                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex(index); }}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onTouchEnd={(e) => e.stopPropagation()}
                         className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
                           activeImageIndex === index ? "bg-white scale-125" : "bg-white/50 hover:bg-white/80"
                         }`}
