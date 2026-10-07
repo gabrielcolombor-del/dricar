@@ -130,15 +130,15 @@ export default function Home() {
               <div className="flex justify-center py-12 text-gray-500 font-semibold">Nenhum veículo disponível no momento.</div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {cars.slice((currentPage - 1) * 12, currentPage * 12).map((car, index) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                  {cars.slice((currentPage - 1) * 15, currentPage * 15).map((car, index) => (
                     <CarCard key={index} {...car} />
                   ))}
                 </div>
                 
-                {Math.ceil(cars.length / 12) > 1 && (
+                {Math.ceil(cars.length / 15) > 1 && (
                   <div className="flex justify-center mt-12 space-x-3">
-                    {Array.from({ length: Math.ceil(cars.length / 12) }, (_, i) => i + 1).map((pageNumber) => (
+                    {Array.from({ length: Math.ceil(cars.length / 15) }, (_, i) => i + 1).map((pageNumber) => (
                       <button
                         key={pageNumber}
                         onClick={() => setCurrentPage(pageNumber)}
