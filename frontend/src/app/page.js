@@ -15,6 +15,7 @@ export default function Home() {
   const [activeHighlight, setActiveHighlight] = useState(0);
   const [isAutoSlideActive, setIsAutoSlideActive] = useState(true);
   const [activeCategory, setActiveCategory] = useState(1); // 0: Hatch, 1: Sedan, 2: SUVs, 3: Picape
+  const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
 
   const getCategoryClass = (index) => {
@@ -118,8 +119,8 @@ export default function Home() {
                 <h2 className="text-[32px] font-extrabold text-brand-blue dark:text-blue-400 uppercase leading-none mb-1">Carros</h2>
                 <h4 className="text-[20px] font-bold text-gray-800 dark:text-gray-200 lowercase">mais buscados</h4>
               </div>
-              <Link href="/veiculos" className="font-bold text-[15px] text-gray-800 dark:text-gray-300 hover:text-brand-blue dark:hover:text-white transition-colors">
-                ver todos
+              <Link href="/veiculos" className="bg-brand-blue text-white font-bold text-[15px] px-6 py-2.5 rounded-full hover:bg-blue-800 transition-colors shadow-md text-center">
+                Ver Todos
               </Link>
             </div>
 
@@ -128,127 +129,36 @@ export default function Home() {
             ) : cars.length === 0 ? (
               <div className="flex justify-center py-12 text-gray-500 font-semibold">Nenhum veículo disponível no momento.</div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-                {cars.slice(0, 10).map((car, index) => (
-                  <CarCard key={index} {...car} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {cars.slice((currentPage - 1) * 12, currentPage * 12).map((car, index) => (
+                    <CarCard key={index} {...car} />
+                  ))}
+                </div>
+                
+                {Math.ceil(cars.length / 12) > 1 && (
+                  <div className="flex justify-center mt-12 space-x-3">
+                    {Array.from({ length: Math.ceil(cars.length / 12) }, (_, i) => i + 1).map((pageNumber) => (
+                      <button
+                        key={pageNumber}
+                        onClick={() => setCurrentPage(pageNumber)}
+                        className={`w-11 h-11 rounded-full font-bold flex items-center justify-center transition-all ${
+                          currentPage === pageNumber
+                            ? "bg-brand-blue text-white shadow-md scale-110"
+                            : "bg-white text-gray-600 border border-gray-300 hover:bg-gray-100 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-300 dark:hover:bg-slate-700 hover:scale-105"
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </section>
 
-        {/* Highlights Section */}
-        {/* Mobile View: Slider */}
-        <section 
-          onMouseEnter={handleHighlightInteract}
-          onTouchStart={handleHighlightInteract}
-          className="md:hidden relative w-full h-[400px] overflow-hidden py-10 flex items-center justify-center bg-white dark:bg-[#070f26] border-b border-gray-100 dark:border-white/10 px-8 transition-colors duration-300"
-        >
-          {/* Left Navigation Arrow */}
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleHighlightInteract();
-              setActiveHighlight(prev => (prev === 0 ? 1 : 0));
-            }}
-            className="absolute left-1 sm:left-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
-            aria-label="Destaque anterior"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-          </button>
 
-          {/* Card 0: Avalie seu usado */}
-          <div 
-            onClick={() => {
-              handleHighlightInteract();
-              setActiveHighlight(0);
-            }}
-            className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[480px] h-[320px] transition-all duration-700 ease-in-out bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 flex flex-col shadow-xl select-none ${
-              activeHighlight === 0 
-                ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default" 
-                : "left-[calc(50%-220px)] sm:left-[calc(50%-380px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
-            }`}
-          >
-            <h3 className="text-[20px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
-              Avalie seu usado
-            </h3>
-            <p className="text-[13px] text-gray-200 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
-              Quer vender ou trocar de carro? Avaliamos seu usado na hora com a melhor avaliação do mercado!
-            </p>
-            <Link href="/avalie-seu-usado" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
-            <div className="absolute bottom-4 right-4 w-[90px] h-[90px] flex items-center justify-center">
-              <Image src="/images/troca.png" alt="Avalie seu usado" width={140} height={140} className="w-full h-full object-contain" />
-            </div>
-          </div>
-
-          {/* Card 1: Financiamento */}
-          <div 
-            onClick={() => {
-              handleHighlightInteract();
-              setActiveHighlight(1);
-            }}
-            className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[480px] h-[320px] transition-all duration-700 ease-in-out bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 flex flex-col shadow-md border border-gray-100 select-none ${
-              activeHighlight === 1 
-                ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default" 
-                : "left-[calc(50%+220px)] sm:left-[calc(50%+380px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
-            }`}
-          >
-            <h3 className="text-[20px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
-              Financiamento
-            </h3>
-            <p className="text-[13px] text-gray-600 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
-              Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
-            </p>
-            <Link href="/financiamento" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
-            <div className="absolute bottom-4 right-4 w-[80px] h-[80px] flex items-center justify-center">
-              <Image src="/images/financia.png" alt="Financiamento" width={120} height={120} className="w-full h-full object-contain" />
-            </div>
-          </div>
-
-          {/* Right Navigation Arrow */}
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleHighlightInteract();
-              setActiveHighlight(prev => (prev === 0 ? 1 : 0));
-            }}
-            className="absolute right-1 sm:right-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
-            aria-label="Próximo destaque"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-          </button>
-        </section>
-
-        {/* Desktop View: Side-by-side Cards */}
-        <section className="hidden md:flex max-w-[1100px] mx-auto py-12 md:py-20 px-6 flex-row gap-8 justify-center items-center">
-          {/* Card 0: Avalie seu usado */}
-          <div className="bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-xl hover:-translate-y-1 transition-transform">
-            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8 h-[72px]">
-              Avalie seu usado
-            </h3>
-            <p className="text-[14px] md:text-[15px] text-gray-200 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
-              Quer vender ou trocar de carro? Avaliamos seu usado na hora com a melhor avaliação do mercado!
-            </p>
-            <Link href="/avalie-seu-usado" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
-            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[100px] h-[100px] md:w-[150px] md:h-[150px] flex items-center justify-center">
-              <Image src="/images/troca.png" alt="Avalie seu usado" width={150} height={150} className="w-full h-full object-contain" />
-            </div>
-          </div>
-
-          {/* Card 1: Financiamento */}
-          <div className="bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-md hover:-translate-y-1 transition-transform border border-gray-100">
-            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8 h-[72px]">
-              Financiamento
-            </h3>
-            <p className="text-[14px] md:text-[15px] text-gray-600 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
-              Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
-            </p>
-            <Link href="/financiamento" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
-            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[90px] h-[90px] md:w-[130px] md:h-[130px] flex items-center justify-center">
-              <Image src="/images/financia.png" alt="Financiamento" width={130} height={130} className="w-full h-full object-contain" />
-            </div>
-          </div>
-        </section>
 
         {/* Categorias */}
         <section className="max-w-[1200px] mx-auto py-16 px-6">
@@ -376,6 +286,119 @@ export default function Home() {
                 ))}
               </div>
             )}
+          </div>
+        </section>
+
+        {/* Highlights Section */}
+        {/* Mobile View: Slider */}
+        <section 
+          onMouseEnter={handleHighlightInteract}
+          onTouchStart={handleHighlightInteract}
+          className="md:hidden relative w-full h-[400px] overflow-hidden py-10 flex items-center justify-center bg-white dark:bg-[#070f26] border-b border-gray-100 dark:border-white/10 px-8 transition-colors duration-300"
+        >
+          {/* Left Navigation Arrow */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleHighlightInteract();
+              setActiveHighlight(prev => (prev === 0 ? 1 : 0));
+            }}
+            className="absolute left-1 sm:left-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
+            aria-label="Destaque anterior"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+          </button>
+
+          {/* Card 0: Avalie seu usado */}
+          <div 
+            onClick={() => {
+              handleHighlightInteract();
+              setActiveHighlight(0);
+            }}
+            className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[480px] h-[320px] transition-all duration-700 ease-in-out bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 flex flex-col shadow-xl select-none ${
+              activeHighlight === 0 
+                ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default" 
+                : "left-[calc(50%-220px)] sm:left-[calc(50%-380px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
+            }`}
+          >
+            <h3 className="text-[20px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
+              Avalie seu usado
+            </h3>
+            <p className="text-[13px] text-gray-200 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
+              Quer vender ou trocar de carro? Avaliamos seu usado na hora com a melhor avaliação do mercado!
+            </p>
+            <Link href="/avalie-seu-usado" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
+            <div className="absolute bottom-4 right-4 w-[90px] h-[90px] flex items-center justify-center">
+              <Image src="/images/troca.png" alt="Avalie seu usado" width={140} height={140} className="w-full h-full object-contain" />
+            </div>
+          </div>
+
+          {/* Card 1: Financiamento */}
+          <div 
+            onClick={() => {
+              handleHighlightInteract();
+              setActiveHighlight(1);
+            }}
+            className={`absolute top-1/2 -translate-y-1/2 w-[80%] max-w-[480px] h-[320px] transition-all duration-700 ease-in-out bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 flex flex-col shadow-md border border-gray-100 select-none ${
+              activeHighlight === 1 
+                ? "left-1/2 -translate-x-1/2 scale-100 z-20 opacity-100 cursor-default" 
+                : "left-[calc(50%+220px)] sm:left-[calc(50%+380px)] -translate-x-1/2 scale-85 z-10 opacity-30 cursor-pointer hover:opacity-50 pointer-events-auto"
+            }`}
+          >
+            <h3 className="text-[20px] font-extrabold uppercase mb-4 leading-tight w-[65%] mt-2">
+              Financiamento
+            </h3>
+            <p className="text-[13px] text-gray-600 leading-relaxed font-light mb-6 max-w-[65%] sm:max-w-[80%]">
+              Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
+            </p>
+            <Link href="/financiamento" className="underline mt-auto inline-block text-[14px] font-medium w-fit">Saiba mais</Link>
+            <div className="absolute bottom-4 right-4 w-[80px] h-[80px] flex items-center justify-center">
+              <Image src="/images/financia.png" alt="Financiamento" width={120} height={120} className="w-full h-full object-contain" />
+            </div>
+          </div>
+
+          {/* Right Navigation Arrow */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleHighlightInteract();
+              setActiveHighlight(prev => (prev === 0 ? 1 : 0));
+            }}
+            className="absolute right-1 sm:right-2 z-30 w-11 h-11 bg-brand-blue/90 hover:bg-brand-blue text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all active:scale-95 hover:scale-105"
+            aria-label="Próximo destaque"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          </button>
+        </section>
+
+        {/* Desktop View: Side-by-side Cards */}
+        <section className="hidden md:flex max-w-[1100px] mx-auto py-12 md:py-20 px-6 flex-row gap-8 justify-center items-center">
+          {/* Card 0: Avalie seu usado */}
+          <div className="bg-brand-blue text-white rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-xl hover:-translate-y-1 transition-transform">
+            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8 h-[72px]">
+              Avalie seu usado
+            </h3>
+            <p className="text-[14px] md:text-[15px] text-gray-200 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
+              Quer vender ou trocar de carro? Avaliamos seu usado na hora com a melhor avaliação do mercado!
+            </p>
+            <Link href="/avalie-seu-usado" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
+            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[100px] h-[100px] md:w-[150px] md:h-[150px] flex items-center justify-center">
+              <Image src="/images/troca.png" alt="Avalie seu usado" width={150} height={150} className="w-full h-full object-contain" />
+            </div>
+          </div>
+
+          {/* Card 1: Financiamento */}
+          <div className="bg-[#F8F8F8] text-brand-blue rounded-[25px] p-6 sm:p-10 w-full md:w-[525px] h-auto min-h-[280px] md:h-[340px] flex flex-col relative shadow-md hover:-translate-y-1 transition-transform border border-gray-100">
+            <h3 className="text-[22px] md:text-[26px] font-extrabold uppercase mb-4 md:mb-6 leading-tight w-[65%] sm:w-[60%] mt-2 md:mt-8 h-[72px]">
+              Financiamento
+            </h3>
+            <p className="text-[14px] md:text-[15px] text-gray-600 leading-relaxed font-light mb-6 md:mb-8 max-w-[65%] sm:max-w-[85%]">
+              Conquiste seu carro com parcelas que cabem no seu bolso. Financiamento rápido, fácil e sem complicação!
+            </p>
+            <Link href="/financiamento" className="underline mt-auto inline-block text-[15px] font-medium w-fit">Saiba mais</Link>
+            <div className="absolute bottom-4 right-4 md:top-6 md:right-8 w-[90px] h-[90px] md:w-[130px] md:h-[130px] flex items-center justify-center">
+              <Image src="/images/financia.png" alt="Financiamento" width={130} height={130} className="w-full h-full object-contain" />
+            </div>
           </div>
         </section>
 
