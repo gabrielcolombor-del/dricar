@@ -13,17 +13,50 @@ export async function GET(request) {
     }
 
     const clientes = await prisma.clienteCrm.findMany({
-      include: {
+      select: {
+        id: true,
+        nome: true,
+        telefone: true,
+        cpfCnpj: true,
+        statusFunil: true,
+        veiculoInteresseId: true,
         veiculoInteresse: {
-          include: {
-            car: true,
+          select: {
+            id: true,
+            placa: true,
+            marca: true,
+            modelo: true,
+            anoFab: true,
+            anoMod: true,
+            car: {
+              select: {
+                mileage: true,
+                price: true,
+                description: true,
+              },
+            },
           },
         },
         vendas: {
-          include: {
+          select: {
+            id: true,
+            dataVenda: true,
+            valorVendaVeiculo: true,
             veiculo: {
-              include: {
-                car: true,
+              select: {
+                id: true,
+                placa: true,
+                marca: true,
+                modelo: true,
+                anoFab: true,
+                anoMod: true,
+                car: {
+                  select: {
+                    mileage: true,
+                    price: true,
+                    description: true,
+                  },
+                },
               },
             },
           },

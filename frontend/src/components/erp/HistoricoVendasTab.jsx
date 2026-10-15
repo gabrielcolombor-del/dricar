@@ -168,13 +168,21 @@ export default function HistoricoVendasTab({ isAdmin = false }) {
 
   // Baixar Contrato
   const handleDownloadContract = async (v, venda) => {
-    if (!venda || !venda.contratoPayload) {
-      alert("Os dados completos do contrato não estão disponíveis para este veículo.");
-      return;
-    }
-
     try {
-      const payload = venda.contratoPayload;
+      let payload = venda?.contratoPayload;
+      if (!payload) {
+        const res = await fetch(`/api/admin/erp/veiculos?id=${v.id}`);
+        if (res.ok) {
+          const detail = await res.json();
+          payload = detail?.vendas?.[0]?.contratoPayload;
+        }
+      }
+
+      if (!payload) {
+        alert("Os dados completos do contrato não estão disponíveis para este veículo.");
+        return;
+      }
+
       await generateSalePdf({
         veiculo: v,
         buyerName: payload.buyerName,
@@ -462,7 +470,7 @@ export default function HistoricoVendasTab({ isAdmin = false }) {
 
                     const dtVenda = venda?.dataVenda ? new Date(venda.dataVenda) : null;
                     const diffDays = dtVenda ? (new Date() - dtVenda) / (1000 * 60 * 60 * 24) : 999;
-                    const contratoDisponivel = diffDays <= 90 && venda?.contratoPayload;
+                    const contratoDisponivel = diffDays <= 90;
 
                     return (
                       <tr
@@ -612,7 +620,7 @@ export default function HistoricoVendasTab({ isAdmin = false }) {
 
             {/* Ações Rápidas */}
             <div className="flex flex-col gap-2">
-              {selectedVeiculo.vendas && selectedVeiculo.vendas.length > 0 && selectedVeiculo.vendas[0].contratoPayload && (
+              {selectedVeiculo.vendas && selectedVeiculo.vendas.length > 0 && (
                 <button
                   onClick={() => handleDownloadContract(selectedVeiculo, selectedVeiculo.vendas[0])}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"

@@ -11,8 +11,8 @@ import { findCarBySlugOrId } from "@/lib/slug";
 export default function ProductPage() {
   const params = useParams();
   const id = params?.id || params?.slug;
-  const [cars, setCars] = useState([]);
   const [car, setCar] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const touchStartRef = useRef(null);
@@ -31,17 +31,16 @@ export default function ProductPage() {
   }, [isModalOpen]);
 
   useEffect(() => {
-    async function fetchCars() {
+    async function fetchCarDetails() {
+      if (!id) return;
       try {
-        const res = await fetch("/api/cars");
+        const res = await fetch(`/api/cars/${encodeURIComponent(id)}`);
         if (res.ok) {
           const data = await res.json();
-          setCars(data);
-          
-          const found = findCarBySlugOrId(data, id);
-          if (found) {
-            setCar(found);
-          }
+          setCar(data.car || data);
+          setRecommendations(data.recommendations || []);
+        } else {
+          setCar(null);
         }
       } catch (err) {
         console.error("Failed to fetch car data:", err);
@@ -49,7 +48,7 @@ export default function ProductPage() {
         setLoading(false);
       }
     }
-    fetchCars();
+    fetchCarDetails();
   }, [id]);
 
   if (loading) {
@@ -81,9 +80,6 @@ export default function ProductPage() {
   const halfLength = Math.ceil(car.accessories.length / 2);
   const leftColAccessories = car.accessories.slice(0, halfLength);
   const rightColAccessories = car.accessories.slice(halfLength);
-
-  // Recommendations: exclude current car, take up to 5 cars
-  const recommendations = cars.filter(c => String(c.id) !== String(car.id)).slice(0, 5);
 
   const carImages = car.images && car.images.length > 0 
     ? car.images 

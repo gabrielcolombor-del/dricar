@@ -48,10 +48,19 @@ export async function GET(request) {
     const anoAnterior = anoAtual - 1;
     const mesAtualIndex = anoAtual === currentYear ? hoje.getMonth() : 11;
 
-    // Buscar TODAS as vendas do banco de dados com relação ao veículo
+    // Buscar vendas com projeção restrita para evitar tráfego de contratoPayload (JSON pesado)
     const todasVendas = await prisma.venda.findMany({
-      include: {
-        veiculo: true,
+      select: {
+        id: true,
+        dataVenda: true,
+        valorVendaVeiculo: true,
+        valorRetornoBancario: true,
+        veiculo: {
+          select: {
+            marca: true,
+            modelo: true,
+          },
+        },
       },
       orderBy: { dataVenda: "asc" },
     });

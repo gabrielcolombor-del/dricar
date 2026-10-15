@@ -46,10 +46,6 @@ export default function Home() {
       }
     }
     fetchCars();
-
-    // Consult the database/spreadsheet periodically every 30 seconds
-    const interval = setInterval(fetchCars, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   // Auto slide interval for highlights (every 5 seconds) - cleared when user interacts
@@ -116,8 +112,8 @@ export default function Home() {
           <div className="max-w-[1200px] mx-auto px-6">
             <div className="flex justify-between items-end mb-10">
               <div>
-                <h2 className="text-[32px] font-extrabold text-brand-blue dark:text-blue-400 uppercase leading-none mb-1">Carros</h2>
-                <h4 className="text-[20px] font-bold text-gray-800 dark:text-gray-200 lowercase">mais buscados</h4>
+                <h2 className="text-[32px] font-extrabold text-brand-blue dark:text-blue-400 uppercase leading-none mb-1">Veículos</h2>
+                <h4 className="text-[20px] font-bold text-gray-800 dark:text-gray-200 lowercase">disponíveis</h4>
               </div>
               <Link href="/veiculos" className="bg-brand-blue text-white font-bold text-[15px] px-6 py-2.5 rounded-full hover:bg-blue-800 transition-colors shadow-md text-center">
                 Ver Todos

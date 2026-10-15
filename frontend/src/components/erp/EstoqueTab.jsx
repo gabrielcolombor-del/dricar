@@ -553,13 +553,20 @@ export default function EstoqueTab() {
 
   // Regenerar/Baixar Contrato salvo de venda (Disponível por 3 meses)
   const handleDownloadContract = async (v, venda) => {
-    if (!venda || !venda.contratoPayload) {
-      alert("Os dados completos do contrato não estão disponíveis para este veículo.");
-      return;
-    }
-
     try {
-      const payload = venda.contratoPayload;
+      let payload = venda?.contratoPayload;
+      if (!payload) {
+        const res = await fetch(`/api/admin/erp/veiculos?id=${v.id}`);
+        if (res.ok) {
+          const detail = await res.json();
+          payload = detail?.vendas?.[0]?.contratoPayload;
+        }
+      }
+
+      if (!payload) {
+        alert("Os dados completos do contrato não estão disponíveis para este veículo.");
+        return;
+      }
       await generateSalePdf({
         veiculo: v,
         buyerName: payload.buyerName,

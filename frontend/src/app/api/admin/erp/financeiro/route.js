@@ -100,7 +100,12 @@ export async function GET(request) {
           })
         : [],
       prisma.venda.findMany({
-        include: {
+        select: {
+          id: true,
+          dataVenda: true,
+          valorVendaVeiculo: true,
+          valorRetornoBancario: true,
+          createdAt: true,
           veiculo: {
             select: {
               id: true,

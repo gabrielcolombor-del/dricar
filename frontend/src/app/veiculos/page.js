@@ -69,10 +69,6 @@ function VeiculosContent() {
       }
     }
     fetchCars();
-
-    // Consult the database/spreadsheet periodically every 30 seconds
-    const interval = setInterval(fetchCars, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   // Synchronize URL search parameters with React state

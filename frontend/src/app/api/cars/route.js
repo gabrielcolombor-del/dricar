@@ -2,16 +2,45 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCarSlug } from "@/lib/slug";
 
-// Rota dinâmica devido ao uso de query parameters (?all=true)
+// Força dynamic para suportar query parameter ?all=true com cache via headers CDN/Edge
 export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const showAll = searchParams.get("all") === "true";
 
-    // Busca os carros ordenando do mais recente para o mais antigo
+    // Filtro executado diretamente no PostgreSQL para não trafegar carros descartados
+    const whereClause = showAll
+      ? {}
+      : {
+          status: "active",
+          images: { isEmpty: false },
+        };
+
+    // Projeção seletiva de colunas para reduzir tráfego no pooler
     const dbCars = await prisma.car.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        brand: true,
+        model: true,
+        year: true,
+        mileage: true,
+        transmission: true,
+        price: true,
+        category: true,
+        description: true,
+        accessories: true,
+        images: true,
+        status: true,
+        isOffer: true,
+        promoPrice: true,
+        buyerName: showAll,
+        salePrice: showAll,
+        saleDate: showAll,
+      },
       orderBy: {
         createdAt: "desc",
       },
@@ -25,7 +54,7 @@ export async function GET(request) {
           ? car.accessories.split(",").map(item => item.trim()).filter(Boolean)
           : [];
 
-        // Trata o array de fotos no Supabase Storage.imageUrl aponta para a primeira foto
+        // Trata o array de fotos no Supabase Storage. imageUrl aponta para a primeira foto
         const primaryImage = car.images && car.images.length > 0 
           ? car.images[0] 
           : "/images/ford ka.png"; // Fallback caso esteja sem imagem
@@ -60,13 +89,17 @@ export async function GET(request) {
           saleDate: car.saleDate || "",
         };
       })
-      // Se showAll for falso, filtra apenas carros Ativos que possuam pelo menos 1 imagem cadastrada (esconde os vendidos e os sem fotos do catálogo público)
+      // Garante que apenas carros com pelo menos 1 imagem apareçam no catálogo público
       .filter((car) => {
         if (showAll) return true;
         return car.status.toLowerCase() === "ativo" && car.images && car.images.length > 0;
       });
 
-    return NextResponse.json(formattedCars);
+    return NextResponse.json(formattedCars, {
+      headers: {
+        "Cache-Control": showAll ? "no-store" : "public, s-maxage=60, stale-while-revalidate=120",
+      },
+    });
   } catch (error) {
     console.error("Erro na leitura de veículos (GET /api/cars):", error);
     return NextResponse.json({ error: "Falha ao carregar catálogo do banco PostgreSQL." }, { status: 500 });

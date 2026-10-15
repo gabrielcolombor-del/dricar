@@ -57,7 +57,7 @@ export async function GET(request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const type = (searchParams.get("type") || "all").toLowerCase();
+    const type = (searchParams.get("type") || "resumo").toLowerCase();
     const limitParam = searchParams.get("limit");
     const pageParam = searchParams.get("page");
     const includeRelations = searchParams.get("include_relations") === "true";
